@@ -97,9 +97,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Here we demonstrate various self-supervised learning algorithms for solving imaging inverse problems, and compare them on a standard set up of accelerated MRI reconstruction using the <a href="https://fastmri.med.nyu.edu">FastMRI dataset</a>.</p>
 <p>Contents</p>
 <ol start="0" type="1">
-<li>Define experiment training using DeepInverse<br>
+<li><a href="#0-define-experiment-training-using-deepinverse">Define experiment training using DeepInverse</a><br>
 </li>
-<li>Equivariant Imaging
+<li><a href="#1-equivariant-imaging">Equivariant Imaging</a>
 <ol type="a">
 <li>Diffeomorphic-Equivariant Imaging<br>
 </li>
@@ -118,143 +118,115 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li>Millard &amp; Chiew</li>
 </ol></li>
 </ol>
+<div class="cell" data-execution_count="2">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> deepinv <span class="im">as</span> dinv</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> torch</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> torchvision.transforms <span class="im">import</span> Resize</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
 <section id="define-experiment-training-using-deepinverse" class="level3">
 <h3 class="anchored" data-anchor-id="define-experiment-training-using-deepinverse">0. Define experiment training using DeepInverse</h3>
 <p>First, define all common code for training (model, data etc.):</p>
-<div class="cell" data-execution_count="2">
-<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> munch <span class="im">import</span> DefaultMunch</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> wandb</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> torch</span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> deepinv <span class="im">as</span> dinv</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
 <div class="cell" data-execution_count="3">
-<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>generator <span class="op">=</span> torch.Generator().manual_seed(config.seed)</span>
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>rng <span class="op">=</span> torch.Generator().manual_seed(<span class="dv">0</span>)</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>device <span class="op">=</span> dinv.utils.get_freer_gpu() <span class="cf">if</span> torch.cuda.is_available() <span class="cf">else</span> <span class="st">"cpu"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="cell" data-execution_count="4">
-<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>physics <span class="op">=</span> ...</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>physics_generator <span class="op">=</span> dinv.physics.generator.GaussianMaskGenerator(</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    img_size<span class="op">=</span>(<span class="dv">128</span>, <span class="dv">128</span>), acceleration<span class="op">=</span><span class="dv">4</span>, rng<span class="op">=</span>rng, device<span class="op">=</span>device</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>physics <span class="op">=</span> dinv.physics.MRI(img_size<span class="op">=</span>(<span class="dv">128</span>, <span class="dv">128</span>), device<span class="op">=</span>device)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>transform <span class="op">=</span> torchvision.transforms.Resize(<span class="dv">128</span>)</span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>knee_dataset <span class="op">=</span> dinv.datasets.SimpleFastMRISliceDataset(</span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    dinv.utils.get_data_home(),</span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    anatomy<span class="op">=</span><span class="st">"knee"</span>,</span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    transform<span class="op">=</span>transform,</span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    train<span class="op">=</span><span class="va">True</span>,</span>
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>train_dataset <span class="op">=</span> dinv.datasets.SimpleFastMRISliceDataset(</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"data"</span>,</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    file_name<span class="op">=</span><span class="st">"fastmri_knee_singlecoil.pt"</span>,</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    transform<span class="op">=</span>Resize(<span class="dv">128</span>),</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    train<span class="op">=</span><span class="va">True</span>,</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    train_percent<span class="op">=</span><span class="fl">0.8</span>,</span>
 <span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    download<span class="op">=</span><span class="va">True</span>,</span>
-<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>test_dataset <span class="op">=</span> dinv.datasets.SimpleFastMRISliceDataset(</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>    <span class="st">"data"</span>,</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>    file_name<span class="op">=</span><span class="st">"fastmri_knee_singlecoil.pt"</span>,</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>    transform<span class="op">=</span>Resize(<span class="dv">128</span>),</span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>    train<span class="op">=</span><span class="va">False</span>,</span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>    train_percent<span class="op">=</span><span class="fl">0.8</span>,</span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div class="cell" data-execution_count="5">
-<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>train_dataloader, test_dataloader <span class="op">=</span> ...</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>Dataset has been saved in Urban100</code></pre>
-</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>dataset_path <span class="op">=</span> dinv.datasets.generate_dataset(</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    train_dataset<span class="op">=</span>train_dataset,</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    test_dataset<span class="op">=</span>test_dataset,</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    physics<span class="op">=</span>physics,</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    physics_generator<span class="op">=</span>physics_generator,</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    save_physics_generator_params<span class="op">=</span><span class="va">True</span>,</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    overwrite_existing<span class="op">=</span><span class="va">False</span>,</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    device<span class="op">=</span>device,</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>    save_dir<span class="op">=</span><span class="st">"data"</span>,</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>    batch_size<span class="op">=</span><span class="dv">1</span>,</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>train_dataset <span class="op">=</span> dinv.datasets.HDF5Dataset(</span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>    dataset_path, split<span class="op">=</span><span class="st">"train"</span>, load_physics_generator_params<span class="op">=</span><span class="va">True</span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>test_dataset <span class="op">=</span> dinv.datasets.HDF5Dataset(</span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>    dataset_path, split<span class="op">=</span><span class="st">"test"</span>, load_physics_generator_params<span class="op">=</span><span class="va">True</span></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>train_dataloader, test_dataloader <span class="op">=</span> torch.utils.data.DataLoader(train_dataset), torch.utils.data.DataLoader(test_dataset)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="cell" data-execution_count="6">
-<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> ...</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> <span class="kw">lambda</span> _: dinv.utils.demo.demo_mri_model(denoiser, num_iter<span class="op">=</span><span class="dv">2</span>, device<span class="op">=</span>device).to(device)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="cell" data-execution_count="7">
-<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>metrics <span class="op">=</span> ...</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>metrics <span class="op">=</span> dinv.metric.PSNR(complex_abs<span class="op">=</span><span class="va">True</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div class="cell" data-execution_count="8">
-<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>optimizer, scheduler <span class="op">=</span> ...</span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> train(loss):</span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>    <span class="co"># </span><span class="al">TODO</span><span class="co"> reset trainer (load model from scratch)</span></span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    trainer <span class="op">=</span> dinv.Trainer(</span>
-<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>        model <span class="op">=</span> model,</span>
-<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>        physics <span class="op">=</span> physics,</span>
-<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>        optimizer <span class="op">=</span> optimizer,</span>
-<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>        train_dataloader <span class="op">=</span> train_dataloader,</span>
-<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>        eval_dataloader <span class="op">=</span> test_dataloader,</span>
-<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>        epochs <span class="op">=</span> config.epochs,</span>
-<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>        losses <span class="op">=</span> loss,</span>
-<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>        scheduler <span class="op">=</span> <span class="va">None</span>,</span>
-<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>        metrics <span class="op">=</span> metrics,</span>
-<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>        online_measurements <span class="op">=</span> <span class="va">False</span>,</span>
-<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a>        ckp_interval <span class="op">=</span> <span class="dv">1000</span>,</span>
-<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a>        device <span class="op">=</span> device,</span>
-<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a>        eval_interval <span class="op">=</span> <span class="dv">1</span>,</span>
-<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a>        save_path <span class="op">=</span> <span class="va">None</span>,</span>
-<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a>        plot_images <span class="op">=</span> <span class="va">False</span>,</span>
-<span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a>        wandb_vis <span class="op">=</span> <span class="va">False</span>,</span>
-<span id="cb9-22"><a href="#cb9-22" aria-hidden="true" tabindex="-1"></a>    )</span>
-<span id="cb9-23"><a href="#cb9-23" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-24"><a href="#cb9-24" aria-hidden="true" tabindex="-1"></a>    trainer.train()</span>
-<span id="cb9-25"><a href="#cb9-25" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> trainer</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>The model has 443 trainable parameters</code></pre>
-</div>
-<div class="cell-output cell-output-stderr">
-<pre><code>Train epoch 1/10: 100%|██████████████████████████████████████████████████████████████████| 80/80 [00:00&lt;00:00, 137.42it/s, TotalLoss=0.171, PSNR=8.66]
-Eval epoch 1/10: 100%|████████████████████████████████████████████████████████████████████████████████████| 20/20 [00:00&lt;00:00, 226.00it/s, PSNR=11.5]
-Train epoch 2/10: 100%|███████████████████████████████████████████████████████████████████| 80/80 [00:00&lt;00:00, 146.47it/s, TotalLoss=0.0731, PSNR=12]
-Eval epoch 2/10: 100%|████████████████████████████████████████████████████████████████████████████████████| 20/20 [00:00&lt;00:00, 250.77it/s, PSNR=13.9]
-Train epoch 3/10: 100%|██████████████████████████████████████████████████████████████████| 80/80 [00:00&lt;00:00, 144.97it/s, TotalLoss=0.046, PSNR=13.9]
-Eval epoch 3/10: 100%|████████████████████████████████████████████████████████████████████████████████████| 20/20 [00:00&lt;00:00, 305.43it/s, PSNR=15.4]
-Train epoch 4/10: 100%|█████████████████████████████████████████████████████████████████| 80/80 [00:00&lt;00:00, 145.92it/s, TotalLoss=0.0337, PSNR=15.3]
-Eval epoch 4/10: 100%|████████████████████████████████████████████████████████████████████████████████████| 20/20 [00:00&lt;00:00, 250.73it/s, PSNR=16.5]
-Train epoch 5/10: 100%|█████████████████████████████████████████████████████████████████| 80/80 [00:00&lt;00:00, 141.59it/s, TotalLoss=0.0267, PSNR=16.3]
-Eval epoch 5/10: 100%|████████████████████████████████████████████████████████████████████████████████████| 20/20 [00:00&lt;00:00, 290.26it/s, PSNR=17.3]
-Train epoch 6/10: 100%|███████████████████████████████████████████████████████████████████| 80/80 [00:00&lt;00:00, 145.85it/s, TotalLoss=0.0224, PSNR=17]
-Eval epoch 6/10: 100%|██████████████████████████████████████████████████████████████████████████████████████| 20/20 [00:00&lt;00:00, 232.85it/s, PSNR=18]
-Train epoch 7/10: 100%|█████████████████████████████████████████████████████████████████| 80/80 [00:00&lt;00:00, 150.39it/s, TotalLoss=0.0194, PSNR=17.6]
-Eval epoch 7/10: 100%|████████████████████████████████████████████████████████████████████████████████████| 20/20 [00:00&lt;00:00, 260.66it/s, PSNR=18.5]
-Train epoch 8/10: 100%|█████████████████████████████████████████████████████████████████| 80/80 [00:00&lt;00:00, 135.47it/s, TotalLoss=0.0172, PSNR=18.2]
-Eval epoch 8/10: 100%|██████████████████████████████████████████████████████████████████████████████████████| 20/20 [00:00&lt;00:00, 284.22it/s, PSNR=19]
-Train epoch 9/10: 100%|█████████████████████████████████████████████████████████████████| 80/80 [00:00&lt;00:00, 133.29it/s, TotalLoss=0.0156, PSNR=18.6]
-Eval epoch 9/10: 100%|████████████████████████████████████████████████████████████████████████████████████| 20/20 [00:00&lt;00:00, 241.52it/s, PSNR=19.4]
-Train epoch 10/10: 100%|██████████████████████████████████████████████████████████████████| 80/80 [00:00&lt;00:00, 137.52it/s, TotalLoss=0.0144, PSNR=19]
-Eval epoch 10/10: 100%|███████████████████████████████████████████████████████████████████████████████████| 20/20 [00:00&lt;00:00, 248.78it/s, PSNR=19.7]</code></pre>
-</div>
-<div class="cell-output cell-output-display" data-execution_count="8">
-<pre><code>DnCNN(
-  (in_conv): Conv2d(3, 8, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
-  (conv_list): ModuleList()
-  (out_conv): Conv2d(8, 3, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
-  (nl_list): ModuleList(
-    (0): ReLU()
-  )
-)</code></pre>
-</div>
-</div>
-<div class="cell" data-execution_count="9">
-<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>trainer.plot_images <span class="op">=</span> <span class="va">True</span></span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>trainer.test(test_dataloader)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stderr">
-<pre><code>Test:   0%|                                                                                  | 0/20 [00:00&lt;?, ?it/s, PSNR=19.7, PSNR no learning=11.1]Test: 100%|█████████████████████████████████████████████████████████████████████████| 20/20 [00:00&lt;00:00, 63.56it/s, PSNR=19.7, PSNR no learning=11.1]</code></pre>
-</div>
-<div class="cell-output cell-output-display">
-<p><img src="demo_files/figure-html/cell-10-output-2.png" class="img-fluid"></p>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code>Test results:
-PSNR no learning: 11.100 +- 2.250
-PSNR: 19.696 +- 2.488</code></pre>
-</div>
-<div class="cell-output cell-output-display" data-execution_count="9">
-<pre><code>{'PSNR no learning': 11.10047914981842,
- 'PSNR no learning_std': 2.2499061065290054,
- 'PSNR': 19.696006774902344,
- 'PSNR_std': 2.48835083477134}</code></pre>
-</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>optimizer, scheduler <span class="op">=</span> ...</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> train(loss: dinv.loss.Loss, epochs: <span class="bu">int</span> <span class="op">=</span> <span class="dv">0</span>):</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    _model <span class="op">=</span> model()</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>    physics_generator.reset_rng()</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>    trainer <span class="op">=</span> dinv.Trainer(</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>        model <span class="op">=</span> _model,</span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>        physics <span class="op">=</span> physics,</span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>        optimizer <span class="op">=</span> optimizer,</span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>        train_dataloader <span class="op">=</span> train_dataloader,</span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>        eval_dataloader <span class="op">=</span> test_dataloader,</span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>        epochs <span class="op">=</span> <span class="dv">20</span>,</span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>        losses <span class="op">=</span> loss,</span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>        scheduler <span class="op">=</span> <span class="va">None</span>,</span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>        metrics <span class="op">=</span> metrics,</span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>        ckp_interval <span class="op">=</span> <span class="dv">1000</span>,</span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>        device <span class="op">=</span> device,</span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a>        eval_interval <span class="op">=</span> <span class="dv">1</span>,</span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a>        save_path <span class="op">=</span> <span class="st">"models"</span>,</span>
+<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a>        plot_images <span class="op">=</span> <span class="va">False</span>,</span>
+<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a>        wandb_vis <span class="op">=</span> <span class="va">False</span>,</span>
+<span id="cb8-24"><a href="#cb8-24" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb8-25"><a href="#cb8-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-26"><a href="#cb8-26" aria-hidden="true" tabindex="-1"></a>    trainer.train()</span>
+<span id="cb8-27"><a href="#cb8-27" aria-hidden="true" tabindex="-1"></a>    trainer.plot_images <span class="op">=</span> <span class="va">True</span></span>
+<span id="cb8-28"><a href="#cb8-28" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> trainer</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="equivariant-imaging" class="level3">
 <h3 class="anchored" data-anchor-id="equivariant-imaging">1. Equivariant Imaging</h3>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>loss <span class="op">=</span> ...</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>loss <span class="op">=</span> ...</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>trainer <span class="op">=</span> train(loss)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>trainer <span class="op">=</span> train(loss, epochs<span class="op">=</span><span class="dv">0</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co">#TODO load pretrained model</span></span>
-<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>trainer.model.load()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>trainer.ckpt_pretrained <span class="op">=</span> <span class="st">"models/pretrained/..."</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>trainer.load_model()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>trainer.test(...)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>trainer.test(test_dataloader)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="section" class="level3">
