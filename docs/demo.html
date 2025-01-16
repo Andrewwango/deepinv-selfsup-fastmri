@@ -68,13 +68,40 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="demo_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
 <link href="demo_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
 
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
 
 </head>
 
-<body class="fullcontent">
+<body>
 
 <div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
-
+<div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+  <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#define-experiment-training-using-deepinverse" id="toc-define-experiment-training-using-deepinverse" class="nav-link active" data-scroll-target="#define-experiment-training-using-deepinverse">0. Define experiment training using DeepInverse</a></li>
+  <li><a href="#equivariant-imaging-methods" id="toc-equivariant-imaging-methods" class="nav-link" data-scroll-target="#equivariant-imaging-methods">1. Equivariant imaging methods</a>
+  <ul class="collapse">
+  <li><a href="#a.-equivariant-imaging-ei" id="toc-a.-equivariant-imaging-ei" class="nav-link" data-scroll-target="#a.-equivariant-imaging-ei">1a. Equivariant imaging (EI)</a></li>
+  </ul></li>
+  <li><a href="#b.-diffeomorphic-equivariant-imaging" id="toc-b.-diffeomorphic-equivariant-imaging" class="nav-link" data-scroll-target="#b.-diffeomorphic-equivariant-imaging">1b. Diffeomorphic-equivariant imaging</a></li>
+  <li><a href="#multi-operator-methods" id="toc-multi-operator-methods" class="nav-link" data-scroll-target="#multi-operator-methods">2. Multi-operator methods</a>
+  <ul class="collapse">
+  <li><a href="#a.-multi-operator-imaging-moi" id="toc-a.-multi-operator-imaging-moi" class="nav-link" data-scroll-target="#a.-multi-operator-imaging-moi">2a. Multi-operator imaging (MOI)</a></li>
+  <li><a href="#b.-multi-operator-equivariant-imaging-mo-ei" id="toc-b.-multi-operator-equivariant-imaging-mo-ei" class="nav-link" data-scroll-target="#b.-multi-operator-equivariant-imaging-mo-ei">2b. Multi-operator equivariant imaging (MO-EI)</a></li>
+  </ul></li>
+  <li><a href="#measurement-splititng-methods" id="toc-measurement-splititng-methods" class="nav-link" data-scroll-target="#measurement-splititng-methods">3. Measurement splititng methods</a>
+  <ul class="collapse">
+  <li><a href="#a.-self-supervised-data-undersampling-ssdu" id="toc-a.-self-supervised-data-undersampling-ssdu" class="nav-link" data-scroll-target="#a.-self-supervised-data-undersampling-ssdu">3a. Self-supervised data undersampling (SSDU)</a></li>
+  <li><a href="#b.-noise2inverse" id="toc-b.-noise2inverse" class="nav-link" data-scroll-target="#b.-noise2inverse">3b. Noise2Inverse</a></li>
+  <li><a href="#c.-noisier2noise-ssdu" id="toc-c.-noisier2noise-ssdu" class="nav-link" data-scroll-target="#c.-noisier2noise-ssdu">3c. Noisier2Noise-SSDU</a></li>
+  </ul></li>
+  <li><a href="#compare-models" id="toc-compare-models" class="nav-link" data-scroll-target="#compare-models">4. Compare models</a></li>
+  </ul>
+</nav>
+</div>
 <main class="content" id="quarto-document-content">
 
 <header id="title-block-header" class="quarto-title-block default">
@@ -94,148 +121,352 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 </header>
 
+<p><a href="https://andrewwango.github.io">Andrew Wang</a> &amp; <a href="https://tachella.github.io">Julián Tachella</a> | ICMS Self-Supervised Machine Learning workshop | 24-25th Feb 2025</p>
 <p>Here we demonstrate various self-supervised learning algorithms for solving imaging inverse problems, and compare them on a standard set up of accelerated MRI reconstruction using the <a href="https://fastmri.med.nyu.edu">FastMRI dataset</a>.</p>
 <p>Contents</p>
 <ol start="0" type="1">
 <li><a href="#0-define-experiment-training-using-deepinverse">Define experiment training using DeepInverse</a><br>
 </li>
-<li><a href="#1-equivariant-imaging">Equivariant Imaging</a>
+<li>Equivariant Imaging methods
 <ol type="a">
-<li>Diffeomorphic-Equivariant Imaging<br>
+<li><a href="#1a-equivariant-imaging-ei">Equivariant Imaging</a> (EI)<br>
+</li>
+<li><a href="#1b-diffeomorphic-equivariant-imaging">Diffeomorphic-Equivariant Imaging</a> (Diffeo-EI)<br>
 </li>
 </ol></li>
-<li>Multi-operator Imaging
+<li>Multi-operator methods
 <ol type="a">
-<li>Multi-operator Equivariant Imaging<br>
+<li><a href="#2a-multi-operator-imaging-moi">Multi-operator Imaging</a> (MOI)<br>
+</li>
+<li><a href="#2b-multi-operator-equivariant-imaging-mo-ei">Multi-operator Equivariant Imaging</a> (MO-EI)<br>
 </li>
 </ol></li>
-<li>Measurement splitting
+<li>Measurement splitting methods
 <ol type="a">
-<li>SSDU, Artifact2Artifact etc.<br>
+<li><a href="#3a-self-supervised-data-undersampling-ssdu">Self-supervised data undersampling</a> (SSDU) including Artifact2Artifact<br>
 </li>
-<li>Noise2Inverse<br>
+<li><a href="#3b-noise2inverse">Noise2Inverse</a><br>
 </li>
-<li>Millard &amp; Chiew</li>
+<li><a href="#3c-noisier2noise-ssdu">Noisier2Noise-SSDU</a></li>
 </ol></li>
 </ol>
-<div class="cell" data-execution_count="2">
+<p>Notes:</p>
+<ul>
+<li>We assume, in the general case, that measurements are generated from multiple random operators that span the whole space as this is required for many of the algorithms (but not all, including EI).</li>
+</ul>
+<div class="cell" data-execution_count="1">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> deepinv <span class="im">as</span> dinv</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> torch</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> torchvision.transforms <span class="im">import</span> Resize</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> torchvision.transforms <span class="im">import</span> Resize</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>rng <span class="op">=</span> torch.Generator().manual_seed(<span class="dv">0</span>)</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>device <span class="op">=</span> dinv.utils.get_freer_gpu() <span class="cf">if</span> torch.cuda.is_available() <span class="cf">else</span> <span class="st">"cpu"</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>results <span class="op">=</span> {}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>c:\Users\s2558406\Documents\Repos\deepinv-selfsup-fastmri\venv\lib\site-packages\tqdm\auto.py:21: TqdmWarning: IProgress not found. Please update jupyter and ipywidgets. See https://ipywidgets.readthedocs.io/en/stable/user_install.html
+  from .autonotebook import tqdm as notebook_tqdm</code></pre>
+</div>
 </div>
 <section id="define-experiment-training-using-deepinverse" class="level3">
 <h3 class="anchored" data-anchor-id="define-experiment-training-using-deepinverse">0. Define experiment training using DeepInverse</h3>
-<p>First, define all common code for training (model, data etc.):</p>
-<div class="cell" data-execution_count="3">
-<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>rng <span class="op">=</span> torch.Generator().manual_seed(<span class="dv">0</span>)</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>device <span class="op">=</span> dinv.utils.get_freer_gpu() <span class="cf">if</span> torch.cuda.is_available() <span class="cf">else</span> <span class="st">"cpu"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>First, define all common code for training (MRI physics, masking, model, data and metrics):</p>
+<div class="cell" data-execution_count="2">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Define MRI physics with random masks</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>physics_generator <span class="op">=</span> dinv.physics.generator.GaussianMaskGenerator(</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    img_size<span class="op">=</span>(<span class="dv">128</span>, <span class="dv">128</span>), acceleration<span class="op">=</span><span class="dv">4</span>, rng<span class="op">=</span>rng, device<span class="op">=</span>device</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>physics <span class="op">=</span> dinv.physics.MRI(img_size<span class="op">=</span>(<span class="dv">128</span>, <span class="dv">128</span>), device<span class="op">=</span>device)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-execution_count="13">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Define unrolled network</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> <span class="kw">lambda</span>: dinv.utils.demo.demo_mri_model(num_iter<span class="op">=</span><span class="dv">2</span>, device<span class="op">=</span>device).to(device)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="cell" data-execution_count="4">
-<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>physics_generator <span class="op">=</span> dinv.physics.generator.GaussianMaskGenerator(</span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    img_size<span class="op">=</span>(<span class="dv">128</span>, <span class="dv">128</span>), acceleration<span class="op">=</span><span class="dv">4</span>, rng<span class="op">=</span>rng, device<span class="op">=</span>device</span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>physics <span class="op">=</span> dinv.physics.MRI(img_size<span class="op">=</span>(<span class="dv">128</span>, <span class="dv">128</span>), device<span class="op">=</span>device)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="cell">
 <details>
-<summary>Load dataset…</summary>
-<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>train_dataset <span class="op">=</span> dinv.datasets.SimpleFastMRISliceDataset(</span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"data"</span>,</span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    file_name<span class="op">=</span><span class="st">"fastmri_knee_singlecoil.pt"</span>,</span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    transform<span class="op">=</span>Resize(<span class="dv">128</span>),</span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    train<span class="op">=</span><span class="va">True</span>,</span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    train_percent<span class="op">=</span><span class="fl">0.8</span>,</span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    download<span class="op">=</span><span class="va">True</span>,</span>
-<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>test_dataset <span class="op">=</span> dinv.datasets.SimpleFastMRISliceDataset(</span>
-<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>    <span class="st">"data"</span>,</span>
-<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>    file_name<span class="op">=</span><span class="st">"fastmri_knee_singlecoil.pt"</span>,</span>
-<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>    transform<span class="op">=</span>Resize(<span class="dv">128</span>),</span>
-<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>    train<span class="op">=</span><span class="va">False</span>,</span>
-<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>    train_percent<span class="op">=</span><span class="fl">0.8</span>,</span>
-<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>dataset_path <span class="op">=</span> dinv.datasets.generate_dataset(</span>
-<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>    train_dataset<span class="op">=</span>train_dataset,</span>
-<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>    test_dataset<span class="op">=</span>test_dataset,</span>
-<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>    physics<span class="op">=</span>physics,</span>
-<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a>    physics_generator<span class="op">=</span>physics_generator,</span>
-<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a>    save_physics_generator_params<span class="op">=</span><span class="va">True</span>,</span>
-<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a>    overwrite_existing<span class="op">=</span><span class="va">False</span>,</span>
-<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a>    device<span class="op">=</span>device,</span>
-<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a>    save_dir<span class="op">=</span><span class="st">"data"</span>,</span>
-<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a>    batch_size<span class="op">=</span><span class="dv">1</span>,</span>
-<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-30"><a href="#cb4-30" aria-hidden="true" tabindex="-1"></a>train_dataset <span class="op">=</span> dinv.datasets.HDF5Dataset(</span>
-<span id="cb4-31"><a href="#cb4-31" aria-hidden="true" tabindex="-1"></a>    dataset_path, split<span class="op">=</span><span class="st">"train"</span>, load_physics_generator_params<span class="op">=</span><span class="va">True</span></span>
-<span id="cb4-32"><a href="#cb4-32" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb4-33"><a href="#cb4-33" aria-hidden="true" tabindex="-1"></a>test_dataset <span class="op">=</span> dinv.datasets.HDF5Dataset(</span>
-<span id="cb4-34"><a href="#cb4-34" aria-hidden="true" tabindex="-1"></a>    dataset_path, split<span class="op">=</span><span class="st">"test"</span>, load_physics_generator_params<span class="op">=</span><span class="va">True</span></span>
-<span id="cb4-35"><a href="#cb4-35" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb4-36"><a href="#cb4-36" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-37"><a href="#cb4-37" aria-hidden="true" tabindex="-1"></a>train_dataloader, test_dataloader <span class="op">=</span> torch.utils.data.DataLoader(train_dataset), torch.utils.data.DataLoader(test_dataset)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<summary>Generate dataset…</summary>
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Define FastMRI datasets</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>train_dataset <span class="op">=</span> dinv.datasets.SimpleFastMRISliceDataset(</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">"data"</span>,</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    file_name<span class="op">=</span><span class="st">"fastmri_knee_singlecoil.pt"</span>,</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    transform<span class="op">=</span>Resize(<span class="dv">128</span>),</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    train<span class="op">=</span><span class="va">True</span>,</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    train_percent<span class="op">=</span><span class="fl">0.8</span>,</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    download<span class="op">=</span><span class="va">True</span>,</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>test_dataset <span class="op">=</span> dinv.datasets.SimpleFastMRISliceDataset(</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>    <span class="st">"data"</span>,</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>    file_name<span class="op">=</span><span class="st">"fastmri_knee_singlecoil.pt"</span>,</span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>    transform<span class="op">=</span>Resize(<span class="dv">128</span>),</span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>    train<span class="op">=</span><span class="va">False</span>,</span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>    train_percent<span class="op">=</span><span class="fl">0.8</span>,</span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a><span class="co"># Simulate and save random measurements</span></span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>dataset_path <span class="op">=</span> dinv.datasets.generate_dataset(</span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>    train_dataset<span class="op">=</span>train_dataset,</span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>    test_dataset<span class="op">=</span>test_dataset,</span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>    physics<span class="op">=</span>physics,</span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>    physics_generator<span class="op">=</span>physics_generator,</span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a>    save_physics_generator_params<span class="op">=</span><span class="va">True</span>,</span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a>    overwrite_existing<span class="op">=</span><span class="va">False</span>,</span>
+<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a>    device<span class="op">=</span>device,</span>
+<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a>    save_dir<span class="op">=</span><span class="st">"data"</span>,</span>
+<span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a>    batch_size<span class="op">=</span><span class="dv">1</span>,</span>
+<span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb5-31"><a href="#cb5-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-32"><a href="#cb5-32" aria-hidden="true" tabindex="-1"></a><span class="co"># Load saved datasets</span></span>
+<span id="cb5-33"><a href="#cb5-33" aria-hidden="true" tabindex="-1"></a>train_dataset <span class="op">=</span> dinv.datasets.HDF5Dataset(dataset_path, split<span class="op">=</span><span class="st">"train"</span>, load_physics_generator_params<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb5-34"><a href="#cb5-34" aria-hidden="true" tabindex="-1"></a>test_dataset <span class="op">=</span> dinv.datasets.HDF5Dataset(dataset_path, split<span class="op">=</span><span class="st">"test"</span>, load_physics_generator_params<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb5-35"><a href="#cb5-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-36"><a href="#cb5-36" aria-hidden="true" tabindex="-1"></a>train_dataloader, test_dataloader <span class="op">=</span> torch.utils.data.DataLoader(train_dataset), torch.utils.data.DataLoader(test_dataset)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
+<div class="cell-output cell-output-stderr">
+<pre><code>c:\Users\s2558406\Documents\Repos\deepinv-selfsup-fastmri\venv\lib\site-packages\deepinv\datasets\fastmri.py:105: FutureWarning: You are using `torch.load` with `weights_only=False` (the current default value), which uses the default pickle module implicitly. It is possible to construct malicious pickle data which will execute arbitrary code during unpickling (See https://github.com/pytorch/pytorch/blob/main/SECURITY.md#untrusted-models for more details). In a future release, the default value for `weights_only` will be flipped to `True`. This limits the functions that could be executed during unpickling. Arbitrary objects will no longer be allowed to be loaded via this mode unless they are explicitly allowlisted by the user via `torch.serialization.add_safe_globals`. We recommend you start setting `weights_only=True` for any use case where you don't have full control of the loaded file. Please open an issue on GitHub for any issues related to this experimental feature.
+  x = torch.load(root_dir / file_name)</code></pre>
 </div>
-<div class="cell" data-execution_count="6">
-<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> <span class="kw">lambda</span> _: dinv.utils.demo.demo_mri_model(denoiser, num_iter<span class="op">=</span><span class="dv">2</span>, device<span class="op">=</span>device).to(device)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Dataset has been saved at data/dinv_dataset0.h5</code></pre>
+</div>
 </div>
 <div class="cell" data-execution_count="7">
-<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>metrics <span class="op">=</span> dinv.metric.PSNR(complex_abs<span class="op">=</span><span class="va">True</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Plot sample image</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>x, y, params <span class="op">=</span> <span class="bu">next</span>(<span class="bu">iter</span>(test_dataloader))</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>dinv.utils.plot({<span class="st">"x"</span>: x, <span class="st">"y"</span>: y, <span class="st">"Mask"</span>: params[<span class="st">"mask"</span>], <span class="st">"Zero-filled"</span>: physics.A_adjoint(y, <span class="op">**</span>params)})</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<p><img src="demo_files/figure-html/cell-6-output-1.png" class="img-fluid"></p>
 </div>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>optimizer, scheduler <span class="op">=</span> ...</span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> train(loss: dinv.loss.Loss, epochs: <span class="bu">int</span> <span class="op">=</span> <span class="dv">0</span>):</span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    _model <span class="op">=</span> model()</span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>    physics_generator.reset_rng()</span>
-<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>    trainer <span class="op">=</span> dinv.Trainer(</span>
-<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>        model <span class="op">=</span> _model,</span>
-<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>        physics <span class="op">=</span> physics,</span>
-<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>        optimizer <span class="op">=</span> optimizer,</span>
-<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>        train_dataloader <span class="op">=</span> train_dataloader,</span>
-<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>        eval_dataloader <span class="op">=</span> test_dataloader,</span>
-<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>        epochs <span class="op">=</span> <span class="dv">20</span>,</span>
-<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>        losses <span class="op">=</span> loss,</span>
-<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>        scheduler <span class="op">=</span> <span class="va">None</span>,</span>
-<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>        metrics <span class="op">=</span> metrics,</span>
-<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>        ckp_interval <span class="op">=</span> <span class="dv">1000</span>,</span>
-<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>        device <span class="op">=</span> device,</span>
-<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>        eval_interval <span class="op">=</span> <span class="dv">1</span>,</span>
-<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>        save_path <span class="op">=</span> <span class="st">"models"</span>,</span>
-<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a>        plot_images <span class="op">=</span> <span class="va">False</span>,</span>
-<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a>        wandb_vis <span class="op">=</span> <span class="va">False</span>,</span>
-<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a>    )</span>
-<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a>    trainer.train()</span>
-<span id="cb7-27"><a href="#cb7-27" aria-hidden="true" tabindex="-1"></a>    trainer.plot_images <span class="op">=</span> <span class="va">True</span></span>
-<span id="cb7-28"><a href="#cb7-28" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> trainer</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-</section>
-<section id="equivariant-imaging" class="level3">
-<h3 class="anchored" data-anchor-id="equivariant-imaging">1. Equivariant Imaging</h3>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>loss <span class="op">=</span> ...</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>trainer <span class="op">=</span> train(loss, epochs<span class="op">=</span><span class="dv">0</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>trainer.ckpt_pretrained <span class="op">=</span> <span class="st">"models/pretrained/..."</span></span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>trainer.load_model()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>trainer.test(test_dataloader)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell" data-execution_count="14">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> train(loss: dinv.loss.Loss, epochs: <span class="bu">int</span> <span class="op">=</span> <span class="dv">0</span>):</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    _model <span class="op">=</span> model()</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>    physics_generator.reset_rng()</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>    trainer <span class="op">=</span> dinv.Trainer(</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>        model <span class="op">=</span> _model,</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>        physics <span class="op">=</span> physics,</span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>        optimizer <span class="op">=</span> torch.optim.Adam(_model.parameters(), lr<span class="op">=</span><span class="fl">1e-3</span>),</span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>        train_dataloader <span class="op">=</span> train_dataloader,</span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>        eval_dataloader <span class="op">=</span> test_dataloader,</span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>        epochs <span class="op">=</span> epochs,</span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>        losses <span class="op">=</span> loss,</span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>        scheduler <span class="op">=</span> <span class="va">None</span>,</span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>        metrics <span class="op">=</span> dinv.metric.PSNR(complex_abs<span class="op">=</span><span class="va">True</span>),</span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a>        ckp_interval <span class="op">=</span> <span class="dv">1000</span>,</span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a>        device <span class="op">=</span> device,</span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a>        eval_interval <span class="op">=</span> <span class="dv">1</span>,</span>
+<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a>        save_path <span class="op">=</span> <span class="st">"models"</span>,</span>
+<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a>        plot_images <span class="op">=</span> <span class="va">False</span>,</span>
+<span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a>        wandb_vis <span class="op">=</span> <span class="va">False</span>,</span>
+<span id="cb9-22"><a href="#cb9-22" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb9-23"><a href="#cb9-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-24"><a href="#cb9-24" aria-hidden="true" tabindex="-1"></a>    trainer.train()</span>
+<span id="cb9-25"><a href="#cb9-25" aria-hidden="true" tabindex="-1"></a>    trainer.plot_images <span class="op">=</span> <span class="va">True</span></span>
+<span id="cb9-26"><a href="#cb9-26" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> trainer</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
-<section id="section" class="level3">
-<h3 class="anchored" data-anchor-id="section">2. …</h3>
+<section id="equivariant-imaging-methods" class="level2">
+<h2 class="anchored" data-anchor-id="equivariant-imaging-methods">1. Equivariant imaging methods</h2>
+<section id="a.-equivariant-imaging-ei" class="level3">
+<h3 class="anchored" data-anchor-id="a.-equivariant-imaging-ei">1a. Equivariant imaging (EI)</h3>
+<p>The EI self-supervised loss [1] assumes that the set of signals is invariant to a group of transformations in order to learn from incomplete measurement data alone:</p>
+<p><span class="math inline">\(\mathcal{L}_\text{EI}=\lVert T_g \hat{x} - f(A(T_g \hat{x}), A)\rVert_2^2\)</span></p>
+<p>where <span class="math inline">\(\hat{x}=f(y, A)\)</span> is a reconstructed signal and <span class="math inline">\(T_g\)</span> is a transformation sampled at random from a group <span class="math inline">\(g\sim G\)</span>. EI was applied to MRI in [2]. Note that this works even when <span class="math inline">\(A\)</span> is fixed across the dataset as it constructs multiple <em>virtual</em> operators.</p>
+<p>[1] Chen D., Tachella J. &amp; Davies M., <a href="https://arxiv.org/abs/2103.14756"><em>“Equivariant Imaging: Learning Beyond the Range Space”</em></a> [2] Chen D., Tachella J. &amp; Davies M., <a href="https://arxiv.org/abs/2111.12855"><em>“Robust Equivariant Imaging: a fully unsupervised framework for learning to image from noisy and partial measurements”</em></a></p>
+<div class="cell" data-execution_count="15">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>loss <span class="op">=</span> [</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>    dinv.loss.MCLoss(),</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    dinv.loss.EILoss(transform<span class="op">=</span>dinv.transform.Rotate())</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Set epochs &gt; 0 to train the model</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>trainer <span class="op">=</span> train(loss, epochs<span class="op">=</span><span class="dv">1</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Load pretrained model for 50 epochs, test on test dataset, and save sample reconstruction</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>trainer.ckpt_pretrained <span class="op">=</span> <span class="st">"models/pretrained/...pth.tar"</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>trainer.load_model()</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>results[<span class="st">"ei"</span>] <span class="op">=</span> trainer.test(test_dataloader)</span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>physics.update_parameters(<span class="op">**</span>params)</span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>results[<span class="st">"ei"</span>][<span class="st">"sample"</span>] <span class="op">=</span> model(y, physics)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
 </section>
-<section id="n.-compare-models" class="level3">
-<h3 class="anchored" data-anchor-id="n.-compare-models">N. compare models</h3>
+</section>
+<section id="b.-diffeomorphic-equivariant-imaging" class="level2">
+<h2 class="anchored" data-anchor-id="b.-diffeomorphic-equivariant-imaging">1b. Diffeomorphic-equivariant imaging</h2>
+<p>EI was extended beyond the Euclidean transformation group to the non-linear diffeomorphic group in [3] for MRI problems:</p>
+<p><span class="math inline">\(\mathcal{L}_\text{Diffeo-EI}=\mathcal{L}_\text{EI}\text{ where }G=\text{Diff}(\mathbb{R}^n)\)</span></p>
+<p>[3] Wang. A &amp; Davies M., <a href="https://arxiv.org/abs/2410.08646"><em>“Fully unsupervised dynamic MRI reconstruction via geometrotemporal equivariance”</em></a></p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>loss <span class="op">=</span> [</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>    dinv.loss.MCLoss(),</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    dinv.loss.EILoss(transform<span class="op">=</span>dinv.transform.CPABDiffeomorphism())</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Set epochs &gt; 0 to train the model</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>trainer <span class="op">=</span> train(loss, epochs<span class="op">=</span><span class="dv">0</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Load pretrained model for 50 epochs, test on test dataset, and save sample reconstruction</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>trainer.ckpt_pretrained <span class="op">=</span> <span class="st">"models/pretrained/...pth.tar"</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>trainer.load_model()</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>results[<span class="st">"diffeo-ei"</span>] <span class="op">=</span> trainer.test(test_dataloader)</span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>physics.update_parameters(<span class="op">**</span>params)</span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>results[<span class="st">"diffeo-ei"</span>][<span class="st">"sample"</span>] <span class="op">=</span> model(y, physics)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="multi-operator-methods" class="level2">
+<h2 class="anchored" data-anchor-id="multi-operator-methods">2. Multi-operator methods</h2>
+<section id="a.-multi-operator-imaging-moi" class="level3">
+<h3 class="anchored" data-anchor-id="a.-multi-operator-imaging-moi">2a. Multi-operator imaging (MOI)</h3>
+<p>The MOI self-supervised loss [4] can be used to learn when signals are observed via multiple (possibly incomplete) forward operators <span class="math inline">\(\{A_g\}_{g=1}^{G}\)</span>, i.e.&nbsp;<span class="math inline">\(y_i = A_{g_i}x_i\)</span> where <span class="math inline">\(g_i\in \{1,\dots,G\}\)</span>. The loss is constructed as follows:</p>
+<p><span class="math inline">\(\mathcal{L}_\text{MOI}=\lVert\hat{x} - f(A_g\hat{x},A_g)\rVert_2^2\)</span></p>
+<p>where <span class="math inline">\(\hat{x}=f(y,A_s)\)</span> is a reconstructed signal (observed via operator <span class="math inline">\(A_s\)</span>) and <span class="math inline">\(A_g\)</span> is a forward operator sampled at random from a set <span class="math inline">\(\{A_g\}_{g=1}^{G}\)</span>.</p>
+<p>[4] Chen D., Tachella J. &amp; Davies M., <a href="https://arxiv.org/abs/2201.12151"><em>“Unsupervised Learning From Incomplete Measurements for Inverse Problems”</em></a></p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>loss <span class="op">=</span> [</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>    dinv.loss.MCLoss(),</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>    dinv.loss.MOILoss(physics_generator<span class="op">=</span>physics_generator)</span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Set epochs &gt; 0 to train the model</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>trainer <span class="op">=</span> train(loss, epochs<span class="op">=</span><span class="dv">0</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Load pretrained model for 50 epochs, test on test dataset, and save sample reconstruction</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>trainer.ckpt_pretrained <span class="op">=</span> <span class="st">"models/pretrained/...pth.tar"</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>trainer.load_model()</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>results[<span class="st">"moi"</span>] <span class="op">=</span> trainer.test(test_dataloader)</span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>physics.update_parameters(<span class="op">**</span>params)</span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>results[<span class="st">"moi"</span>][<span class="st">"sample"</span>] <span class="op">=</span> model(y, physics)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="b.-multi-operator-equivariant-imaging-mo-ei" class="level3">
+<h3 class="anchored" data-anchor-id="b.-multi-operator-equivariant-imaging-mo-ei">2b. Multi-operator equivariant imaging (MO-EI)</h3>
+<p>One can combine the multi-operator and equivariant imaging losses to leverage an even greater set of virtual operators (using notation from above):</p>
+<p><span class="math inline">\(\mathcal{L}_\text{MO-EI}=\lVert T_g\hat{x} - f(A_h(T_g \hat{x}), A_h)\rVert_2^2,\quad A_h\in\{A_h\}_{h=1}^{H},g\in G\)</span></p>
+<p>where <span class="math inline">\(H\)</span> is the set of operators and <span class="math inline">\(G\)</span> is the group.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>loss <span class="op">=</span> [</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>    dinv.loss.MCLoss(),</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>    dinv.loss.MOEILoss(transform<span class="op">=</span>dinv.transform.CPABDiffeomorphism(), physics_generator<span class="op">=</span>physics_generator)</span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Set epochs &gt; 0 to train the model</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>trainer <span class="op">=</span> train(loss, epochs<span class="op">=</span><span class="dv">0</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Load pretrained model for 50 epochs, test on test dataset, and save sample reconstruction</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>trainer.ckpt_pretrained <span class="op">=</span> <span class="st">"models/pretrained/...pth.tar"</span></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>trainer.load_model()</span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>results[<span class="st">"moei"</span>] <span class="op">=</span> trainer.test(test_dataloader)</span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>physics.update_parameters(<span class="op">**</span>params)</span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a>results[<span class="st">"moei"</span>][<span class="st">"sample"</span>] <span class="op">=</span> model(y, physics)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+</section>
+<section id="measurement-splititng-methods" class="level2">
+<h2 class="anchored" data-anchor-id="measurement-splititng-methods">3. Measurement splititng methods</h2>
+<section id="a.-self-supervised-data-undersampling-ssdu" class="level3">
+<h3 class="anchored" data-anchor-id="a.-self-supervised-data-undersampling-ssdu">3a. Self-supervised data undersampling (SSDU)</h3>
+<p>The EI self-supervised loss [1] assumes that the set of signals is invariant to a group of transformations in order to learn from incomplete measurement data alone:</p>
+<p><span class="math inline">\(\mathcal{L}_\text{EI}=\lVert T_g \hat{x} - f(A(T_g \hat{x}))\rVert_2^2\)</span></p>
+<p>where <span class="math inline">\(\hat{x}=f(y)\)</span> is a reconstructed signal and <span class="math inline">\(T_g\)</span> is a transformation sampled at random from a group <span class="math inline">\(g\sim G\)</span>. EI was applied to MRI in [2].</p>
+<p>[1] Chen D., Tachella J. &amp; Davies M., <a href="https://arxiv.org/abs/2103.14756"><em>“Equivariant Imaging: Learning Beyond the Range Space”</em></a> [2] Chen D., Tachella J. &amp; Davies M., <a href="https://arxiv.org/abs/2111.12855"><em>“Robust Equivariant Imaging: a fully unsupervised framework for learning to image from noisy and partial measurements”</em></a></p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>loss <span class="op">=</span> [</span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>    dinv.loss.MCLoss(),</span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>    dinv.loss.EILoss(transform<span class="op">=</span>dinv.transform.Rotate())</span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Set epochs &gt; 0 to train the model</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>trainer <span class="op">=</span> train(loss, epochs<span class="op">=</span><span class="dv">0</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Load pretrained model for 50 epochs, test on test dataset, and save sample reconstruction</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>trainer.ckpt_pretrained <span class="op">=</span> <span class="st">"models/pretrained/...pth.tar"</span></span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>trainer.load_model()</span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>results[<span class="st">"ei"</span>] <span class="op">=</span> trainer.test(test_dataloader)</span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>physics.update_parameters(<span class="op">**</span>params)</span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a>results[<span class="st">"ei"</span>][<span class="st">"sample"</span>] <span class="op">=</span> model(y, physics)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="b.-noise2inverse" class="level3">
+<h3 class="anchored" data-anchor-id="b.-noise2inverse">3b. Noise2Inverse</h3>
+<p>The EI self-supervised loss [1] assumes that the set of signals is invariant to a group of transformations in order to learn from incomplete measurement data alone:</p>
+<p><span class="math inline">\(\mathcal{L}_\text{EI}=\lVert T_g \hat{x} - f(A(T_g \hat{x}))\rVert_2^2\)</span></p>
+<p>where <span class="math inline">\(\hat{x}=f(y)\)</span> is a reconstructed signal and <span class="math inline">\(T_g\)</span> is a transformation sampled at random from a group <span class="math inline">\(g\sim G\)</span>. EI was applied to MRI in [2].</p>
+<p>[1] Chen D., Tachella J. &amp; Davies M., <a href="https://arxiv.org/abs/2103.14756"><em>“Equivariant Imaging: Learning Beyond the Range Space”</em></a> [2] Chen D., Tachella J. &amp; Davies M., <a href="https://arxiv.org/abs/2111.12855"><em>“Robust Equivariant Imaging: a fully unsupervised framework for learning to image from noisy and partial measurements”</em></a></p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>loss <span class="op">=</span> [</span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>    dinv.loss.MCLoss(),</span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>    dinv.loss.EILoss(transform<span class="op">=</span>dinv.transform.Rotate())</span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Set epochs &gt; 0 to train the model</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>trainer <span class="op">=</span> train(loss, epochs<span class="op">=</span><span class="dv">0</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Load pretrained model for 50 epochs, test on test dataset, and save sample reconstruction</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>trainer.ckpt_pretrained <span class="op">=</span> <span class="st">"models/pretrained/...pth.tar"</span></span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>trainer.load_model()</span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>results[<span class="st">"ei"</span>] <span class="op">=</span> trainer.test(test_dataloader)</span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>physics.update_parameters(<span class="op">**</span>params)</span>
+<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a>results[<span class="st">"ei"</span>][<span class="st">"sample"</span>] <span class="op">=</span> model(y, physics)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="c.-noisier2noise-ssdu" class="level3">
+<h3 class="anchored" data-anchor-id="c.-noisier2noise-ssdu">3c. Noisier2Noise-SSDU</h3>
+<p>The EI self-supervised loss [1] assumes that the set of signals is invariant to a group of transformations in order to learn from incomplete measurement data alone:</p>
+<p><span class="math inline">\(\mathcal{L}_\text{EI}=\lVert T_g \hat{x} - f(A(T_g \hat{x}))\rVert_2^2\)</span></p>
+<p>where <span class="math inline">\(\hat{x}=f(y)\)</span> is a reconstructed signal and <span class="math inline">\(T_g\)</span> is a transformation sampled at random from a group <span class="math inline">\(g\sim G\)</span>. EI was applied to MRI in [2].</p>
+<p>[1] Chen D., Tachella J. &amp; Davies M., <a href="https://arxiv.org/abs/2103.14756"><em>“Equivariant Imaging: Learning Beyond the Range Space”</em></a> [2] Chen D., Tachella J. &amp; Davies M., <a href="https://arxiv.org/abs/2111.12855"><em>“Robust Equivariant Imaging: a fully unsupervised framework for learning to image from noisy and partial measurements”</em></a></p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>loss <span class="op">=</span> [</span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>    dinv.loss.MCLoss(),</span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>    dinv.loss.EILoss(transform<span class="op">=</span>dinv.transform.Rotate())</span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Set epochs &gt; 0 to train the model</span></span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>trainer <span class="op">=</span> train(loss, epochs<span class="op">=</span><span class="dv">0</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Load pretrained model for 50 epochs, test on test dataset, and save sample reconstruction</span></span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>trainer.ckpt_pretrained <span class="op">=</span> <span class="st">"models/pretrained/...pth.tar"</span></span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>trainer.load_model()</span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a>results[<span class="st">"ei"</span>] <span class="op">=</span> trainer.test(test_dataloader)</span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a>physics.update_parameters(<span class="op">**</span>params)</span>
+<span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a>results[<span class="st">"ei"</span>][<span class="st">"sample"</span>] <span class="op">=</span> model(y, physics)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+</section>
+<section id="compare-models" class="level2">
+<h2 class="anchored" data-anchor-id="compare-models">4. Compare models</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="cf">pass</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
 </section>
 
 </main>

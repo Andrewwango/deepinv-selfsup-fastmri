@@ -1,7 +1,6 @@
 project:
   output-dir: docs
 
-website:
-  sidebar:
-    contents: auto
-
+format:
+  html:
+    toc: true
