@@ -1,4 +1,5 @@
 *.onnx
+temp/*
 wandb/*
 !wandb/wandb/
 wandb/wandb/*
