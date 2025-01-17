@@ -17,7 +17,13 @@ physics = dinv.physics.MRI(img_size=(128, 128), device=device)
 
 # %%
 # Define unrolled network
-model = lambda: dinv.utils.demo.demo_mri_model(num_iter=2, device=device).to(device)
+denoiser = dinv.models.DnCNN(
+            in_channels=2,  # real + imaginary parts
+            out_channels=2,
+            pretrained=None,
+            depth=10,
+        )
+model = lambda: dinv.utils.demo.demo_mri_model(num_iter=3, device=device).to(device)
 
 # %%
 # Define FastMRI datasets
@@ -76,8 +82,9 @@ def train(loss: dinv.loss.Loss, epochs: int = 0):
         ckp_interval = 1000,
         device = device,
         eval_interval = 1,
+        freq_plot=10,
         save_path = f"/home/s2558406/RDS/models/deepinv-selfsup-fastmri/{args.loss}",
-        plot_images = False,
+        plot_images = True,
         wandb_vis = True,
     )
 
