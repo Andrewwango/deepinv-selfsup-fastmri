@@ -78,7 +78,7 @@ def train(loss: dinv.loss.Loss, epochs: int = 0):
         eval_interval = 1,
         save_path = f"/home/s2558406/RDS/models/deepinv-selfsup-fastmri/{args.loss}",
         plot_images = False,
-        wandb_vis = False,
+        wandb_vis = True,
     )
 
     trainer.train()
@@ -121,7 +121,9 @@ match args.loss:
         loss = ...
 
 # Set epochs > 0 to train the model
-trainer = train(loss, epochs=args.epochs)
+import wandb
+with wandb.init(project="metaml-experiments", config={"loss": args.loss}):
+    trainer = train(loss, epochs=args.epochs)
 results = trainer.test(test_dataloader)
 
 with open(f"/home/s2558406/RDS/models/deepinv-selfsup-fastmri/{args.loss}/results.json", "w") as f:
