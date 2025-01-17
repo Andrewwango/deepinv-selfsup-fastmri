@@ -66,9 +66,7 @@ train_dataloader, test_dataloader = torch.utils.data.DataLoader(train_dataset), 
 # %%
 def train(loss: dinv.loss.Loss, epochs: int = 0):
     _model = model()
-    
-    physics_generator.reset_rng()
-    
+        
     trainer = dinv.Trainer(
         model = _model,
         physics = physics,
@@ -90,6 +88,7 @@ def train(loss: dinv.loss.Loss, epochs: int = 0):
 
     trainer.train()
     trainer.plot_images = True
+    trainer.wandb_vis = False
     return trainer
 
 # %%
@@ -100,6 +99,8 @@ parser.add_argument("--loss", type=str, default="ei")
 parser.add_argument("--epochs", type=int, default=1)
 args = parser.parse_args()
 match args.loss:
+    case "sup":
+        loss = dinv.loss.SupLoss()
     case "ei":
         loss = [
             dinv.loss.MCLoss(),
