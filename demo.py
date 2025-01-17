@@ -108,7 +108,7 @@ match args.loss:
     case "diffeo-ei":
         loss = [
             dinv.loss.MCLoss(),
-            dinv.loss.EILoss(transform=dinv.transform.CPABDiffeomorphism())
+            dinv.loss.EILoss(transform=dinv.transform.CPABDiffeomorphism(device=device))
         ]
     case "moi":
         loss = [
