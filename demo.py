@@ -4,8 +4,8 @@ import deepinv as dinv
 import torch
 from torchvision.transforms import Resize
 
-rng = torch.Generator().manual_seed(0)
 device = dinv.utils.get_freer_gpu() if torch.cuda.is_available() else "cpu"
+rng = torch.Generator(device=device).manual_seed(0)
 results = {}
 
 # %%
