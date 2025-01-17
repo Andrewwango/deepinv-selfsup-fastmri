@@ -18,14 +18,6 @@ physics = dinv.physics.MRI(img_size=(128, 128), device=device)
 # %%
 # Define unrolled network
 
-denoiser = dinv.models.UNet(
-            in_channels=2,
-            out_channels=2,
-            residual=True, #ResUNet
-            batch_norm=True,
-            scales=3,
-        )
-
 denoiser = dinv.models.DnCNN(
             in_channels=2,  # real + imaginary parts
             out_channels=2,
@@ -33,7 +25,13 @@ denoiser = dinv.models.DnCNN(
             depth=10,
         )
 
-
+denoiser = dinv.models.UNet(
+            in_channels=2,
+            out_channels=2,
+            residual=True, #ResUNet
+            batch_norm=True,
+            scales=3,
+        )
 
 model = lambda: dinv.utils.demo.demo_mri_model(denoiser=denoiser, num_iter=3, device=device).to(device)
 
