@@ -23,6 +23,15 @@ denoiser = dinv.models.DnCNN(
             pretrained=None,
             depth=10,
         )
+
+denoiser = dinv.models.UNet(
+            in_channels=2,
+            out_channels=2,
+            residual=True, #ResUNet
+            batch_norm=True,
+            scales=3,
+        )
+
 model = lambda: dinv.utils.demo.demo_mri_model(num_iter=3, device=device).to(device)
 
 # %%
@@ -61,7 +70,7 @@ dataset_path = dinv.datasets.generate_dataset(
 train_dataset = dinv.datasets.HDF5Dataset(dataset_path, split="train", load_physics_generator_params=True)
 test_dataset = dinv.datasets.HDF5Dataset(dataset_path, split="test", load_physics_generator_params=True)
 
-train_dataloader, test_dataloader = torch.utils.data.DataLoader(train_dataset), torch.utils.data.DataLoader(test_dataset)
+train_dataloader, test_dataloader = torch.utils.data.DataLoader(train_dataset, shuffle=True), torch.utils.data.DataLoader(test_dataset)
 
 # %%
 def train(loss: dinv.loss.Loss, epochs: int = 0):
