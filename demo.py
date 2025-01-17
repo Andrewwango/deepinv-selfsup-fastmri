@@ -122,7 +122,7 @@ match args.loss:
 
 # Set epochs > 0 to train the model
 import wandb
-with wandb.init(project="metaml-experiments", config={"loss": args.loss}):
+with wandb.init(project="deepinv-selfsup-fastmri-experiments", config={"loss": args.loss}):
     trainer = train(loss, epochs=args.epochs)
 results = trainer.test(test_dataloader)
 
