@@ -76,7 +76,7 @@ def train(loss: dinv.loss.Loss, epochs: int = 0):
         ckp_interval = 1000,
         device = device,
         eval_interval = 1,
-        save_path = f"/home/RDS/models/deepinv-selfsup-fastmri/{args.loss}",
+        save_path = f"/home/s2558406/RDS/models/deepinv-selfsup-fastmri/{args.loss}",
         plot_images = False,
         wandb_vis = False,
     )
@@ -124,5 +124,5 @@ match args.loss:
 trainer = train(loss, epochs=args.epochs)
 results = trainer.test(test_dataloader)
 
-with open(f"/home/RDS/models/deepinv-selfsup-fastmri/{args.loss}/results.json", "w") as f:
+with open(f"/home/s2558406/RDS/models/deepinv-selfsup-fastmri/{args.loss}/results.json", "w") as f:
     json.dump(results, f)
