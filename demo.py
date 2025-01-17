@@ -99,6 +99,8 @@ parser.add_argument("--loss", type=str, default="ei")
 parser.add_argument("--epochs", type=int, default=1)
 args = parser.parse_args()
 match args.loss:
+    case "mc":
+        loss = dinv.loss.MCLoss()
     case "sup":
         loss = dinv.loss.SupLoss()
     case "ei":
