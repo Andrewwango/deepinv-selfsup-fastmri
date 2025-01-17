@@ -91,9 +91,8 @@ def train(loss: dinv.loss.Loss, epochs: int = 0):
         ckp_interval = 1000,
         device = device,
         eval_interval = 1,
-        freq_plot=10,
         save_path = f"/home/s2558406/RDS/models/deepinv-selfsup-fastmri/{args.loss}",
-        plot_images = True,
+        plot_images = False,
         wandb_vis = True,
     )
 
