@@ -129,9 +129,10 @@ match args.loss:
             dinv.loss.MOILoss(physics_generator=physics_generator)
         ]
     case "mo-ei":
+        from moi import MOEILoss
         loss = [
             dinv.loss.MCLoss(),
-            dinv.loss.MOEILoss(transform=dinv.transform.CPABDiffeomorphism(), physics_generator=physics_generator)
+            MOEILoss(transform=dinv.transform.CPABDiffeomorphism(), physics_generator=physics_generator)
         ]
     case "ssdu":
         loss = dinv.loss.SplittingLoss(split_ratio=0.6, eval_split_input=False)
