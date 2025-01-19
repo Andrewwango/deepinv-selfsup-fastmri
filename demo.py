@@ -132,7 +132,7 @@ match args.loss:
         from moi import MOEILoss
         loss = [
             dinv.loss.MCLoss(),
-            MOEILoss(transform=dinv.transform.CPABDiffeomorphism(), physics_generator=physics_generator)
+            MOEILoss(transform=dinv.transform.CPABDiffeomorphism(device=device), physics_generator=physics_generator)
         ]
     case "ssdu":
         loss = dinv.loss.SplittingLoss(split_ratio=0.6, eval_split_input=False)
