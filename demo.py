@@ -88,7 +88,7 @@ def train(loss: dinv.loss.Loss, epochs: int = 0):
         losses = loss,
         scheduler = None,
         metrics = dinv.metric.PSNR(complex_abs=True),
-        ckp_interval = 1000,
+        ckp_interval = 10,
         device = device,
         eval_interval = 1,
         save_path = f"/home/s2558406/RDS/models/deepinv-selfsup-fastmri/{args.loss}",
