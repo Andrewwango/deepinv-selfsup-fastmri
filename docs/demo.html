@@ -137,7 +137,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <section id="introduction" class="level2">
 <h2 class="anchored" data-anchor-id="introduction">Introduction</h2>
-<p>We compare self-supervised learning algorithms for solving imaging inverse problems on accelerated MRI reconstruction using the <a href="https://fastmri.med.nyu.edu">FastMRI dataset</a>.</p>
+<p>We compare self-supervised learning algorithms for solving imaging inverse problems for accelerated MRI reconstruction, using the latest <a href="https://deepinv.github.io">DeepInverse</a> library. Install using <a href="https://deepinv.github.io/deepinv/quickstart.html#:~:text=pip%20install%20git%2Bhttps%3A//github.com/deepinv/deepinv.git%23egg%3Ddeepinv"><code>pip</code></a>.</p>
 <p>Notes:</p>
 <ul>
 <li>We assume, in the general case, that measurements are generated from multiple random operators that span the whole space as this is required for many of the algorithms (but not all, including EI).</li>
@@ -161,7 +161,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div id="tabset-1-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-1-1-tab">
 <p>First, define all common code for training (MRI physics, masking, model, data and metrics).</p>
 <p>We provide many easy-to-use classes for MRI-related experiments. See <a href="https://deepinv.github.io/deepinv/auto_examples/basics/demo_tour_mri.html">Example - <em>“Tour of MRI functionality in DeepInverse”</em></a> for more.</p>
-<p>Note we train with a custom FastMRI subset of 973 images created using <a href="https://deepinv.github.io/deepinv/api/stubs/deepinv.datasets.FastMRISliceDataset.html#deepinv.datasets.FastMRISliceDataset.save_simple_dataset"><code>deepinv.datasets.FastMRISliceDataset.save_simple_dataset</code></a>. Because of <a href="https://fastmri.med.nyu.edu/">FastMRI data use agreement</a>, we do not provide this dataset. To run a quick demo, set <code>file_name=None</code> below to download our tiny demo subset. See <a href="https://deepinv.github.io/deepinv/api/stubs/deepinv.datasets.SimpleFastMRISliceDataset.html"><code>deepinv.datasets.SimpleFastMRISliceDataset</code></a> for more details.</p>
+<p>We train with a custom <a href="https://fastmri.med.nyu.edu">FastMRI</a> subset of 973 images created using <a href="https://deepinv.github.io/deepinv/api/stubs/deepinv.datasets.FastMRISliceDataset.html#deepinv.datasets.FastMRISliceDataset.save_simple_dataset"><code>deepinv.datasets.FastMRISliceDataset.save_simple_dataset</code></a>. Because of the <a href="https://fastmri.med.nyu.edu/">FastMRI data use agreement</a>, we do not provide this dataset. To run a quick demo, set <code>file_name=None</code> below to download our tiny demo subset. See <a href="https://deepinv.github.io/deepinv/api/stubs/deepinv.datasets.SimpleFastMRISliceDataset.html"><code>deepinv.datasets.SimpleFastMRISliceDataset</code></a> for more details.</p>
 <div class="cell" data-execution_count="2">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>file_name <span class="op">=</span> <span class="st">"fastmri_knee_singlecoil.pt"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
