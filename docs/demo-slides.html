@@ -455,7 +455,7 @@
 <section id="define-experiment-training" class="title-slide slide level2 center">
 <h2>0. Define experiment training</h2>
 <div class="panel-tabset">
-<ul id="tabset-1" class="panel-tabset-tabby"><li><a data-tabby-default="" href="#tabset-1-1">Summary</a></li><li><a href="#tabset-1-2">Code</a></li><li><a href="#tabset-1-3">Train</a></li></ul>
+<ul id="tabset-1" class="panel-tabset-tabby"><li><a data-tabby-default="" href="#tabset-1-1">Summary</a></li><li><a href="#tabset-1-2">Define physics &amp; model</a></li><li><a href="#tabset-1-3">Define data</a></li><li><a href="#tabset-1-4">Define trainer</a></li></ul>
 <div class="tab-content">
 <div id="tabset-1-1">
 <p>First, define all common code for training (MRI physics, masking, model, data and metrics).</p>
@@ -466,53 +466,30 @@
 </div>
 </div>
 <div id="tabset-1-2">
+<p>Define MRI physics where each image is masked with a random Gaussian-weighted Cartesian mask at 4x acceleration.</p>
 <div class="cell" data-execution_count="3">
-<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1"></a><span class="co"># Define MRI physics with random masks</span></span>
-<span id="cb3-2"><a href="#cb3-2"></a>physics_generator <span class="op">=</span> dinv.physics.generator.GaussianMaskGenerator(</span>
-<span id="cb3-3"><a href="#cb3-3"></a>    img_size<span class="op">=</span>(<span class="dv">128</span>, <span class="dv">128</span>), acceleration<span class="op">=</span><span class="dv">4</span>, rng<span class="op">=</span>rng, device<span class="op">=</span>device</span>
-<span id="cb3-4"><a href="#cb3-4"></a>)</span>
-<span id="cb3-5"><a href="#cb3-5"></a>physics <span class="op">=</span> dinv.physics.MRI(img_size<span class="op">=</span>(<span class="dv">128</span>, <span class="dv">128</span>), device<span class="op">=</span>device)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1"></a>physics_generator <span class="op">=</span> dinv.physics.generator.GaussianMaskGenerator(</span>
+<span id="cb3-2"><a href="#cb3-2"></a>    img_size<span class="op">=</span>(<span class="dv">128</span>, <span class="dv">128</span>), acceleration<span class="op">=</span><span class="dv">4</span>, rng<span class="op">=</span>rng, device<span class="op">=</span>device</span>
+<span id="cb3-3"><a href="#cb3-3"></a>)</span>
+<span id="cb3-4"><a href="#cb3-4"></a>physics <span class="op">=</span> dinv.physics.MRI(img_size<span class="op">=</span>(<span class="dv">128</span>, <span class="dv">128</span>), device<span class="op">=</span>device)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
+<p>Define an unrolled MoDL network with a small UNet backbone (3 scales) and 3 unrolled iterations. See <a href="https://deepinv.github.io/deepinv/auto_examples/basics/demo_tour_mri.html">Example - <em>“Tour of MRI functionality in DeepInverse”</em></a> for other examples.</p>
 <div class="cell" data-execution_count="4">
-<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1"></a><span class="co"># Define unrolled network with a small UNet backbone</span></span>
-<span id="cb4-2"><a href="#cb4-2"></a>denoiser <span class="op">=</span> dinv.models.UNet(<span class="dv">2</span>, <span class="dv">2</span>, scales<span class="op">=</span><span class="dv">3</span>)</span>
-<span id="cb4-3"><a href="#cb4-3"></a>model <span class="op">=</span> <span class="kw">lambda</span>: dinv.utils.demo.demo_mri_model(denoiser<span class="op">=</span>denoiser, num_iter<span class="op">=</span><span class="dv">3</span>, device<span class="op">=</span>device).to(device)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1"></a>denoiser <span class="op">=</span> dinv.models.UNet(<span class="dv">2</span>, <span class="dv">2</span>, scales<span class="op">=</span><span class="dv">3</span>)</span>
+<span id="cb4-2"><a href="#cb4-2"></a>model <span class="op">=</span> <span class="kw">lambda</span>: dinv.utils.demo.demo_mri_model(denoiser<span class="op">=</span>denoiser, num_iter<span class="op">=</span><span class="dv">3</span>, device<span class="op">=</span>device).to(device)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
+</div>
+<div id="tabset-1-3">
+<p>Define FastMRI small train and test datasets resized for speed, then simulate random k-space measurements using the physics, then load the generated measurements.</p>
 <div class="cell">
-<details>
-<summary>Generate dataset…</summary>
-<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1"></a><span class="co"># Define FastMRI datasets</span></span>
-<span id="cb5-2"><a href="#cb5-2"></a><span class="im">from</span> torchvision.transforms <span class="im">import</span> Resize</span>
-<span id="cb5-3"><a href="#cb5-3"></a>train_dataset <span class="op">=</span> dinv.datasets.SimpleFastMRISliceDataset(</span>
-<span id="cb5-4"><a href="#cb5-4"></a>    <span class="st">"data"</span>, file_name<span class="op">=</span>file_name, transform<span class="op">=</span>Resize(<span class="dv">128</span>),</span>
-<span id="cb5-5"><a href="#cb5-5"></a>    train<span class="op">=</span><span class="va">True</span>, train_percent<span class="op">=</span><span class="fl">0.8</span>, download<span class="op">=</span><span class="va">True</span></span>
-<span id="cb5-6"><a href="#cb5-6"></a>)</span>
-<span id="cb5-7"><a href="#cb5-7"></a></span>
-<span id="cb5-8"><a href="#cb5-8"></a>test_dataset <span class="op">=</span> dinv.datasets.SimpleFastMRISliceDataset(</span>
-<span id="cb5-9"><a href="#cb5-9"></a>    <span class="st">"data"</span>, file_name<span class="op">=</span>file_name, transform<span class="op">=</span>Resize(<span class="dv">128</span>),</span>
-<span id="cb5-10"><a href="#cb5-10"></a>    train<span class="op">=</span><span class="va">False</span>, train_percent<span class="op">=</span><span class="fl">0.8</span>,</span>
-<span id="cb5-11"><a href="#cb5-11"></a>)</span>
-<span id="cb5-12"><a href="#cb5-12"></a></span>
-<span id="cb5-13"><a href="#cb5-13"></a><span class="co"># Simulate and save random measurements</span></span>
-<span id="cb5-14"><a href="#cb5-14"></a>dataset_path <span class="op">=</span> dinv.datasets.generate_dataset(</span>
-<span id="cb5-15"><a href="#cb5-15"></a>    train_dataset<span class="op">=</span>train_dataset,</span>
-<span id="cb5-16"><a href="#cb5-16"></a>    test_dataset<span class="op">=</span>test_dataset,</span>
-<span id="cb5-17"><a href="#cb5-17"></a>    physics<span class="op">=</span>physics,</span>
-<span id="cb5-18"><a href="#cb5-18"></a>    physics_generator<span class="op">=</span>physics_generator,</span>
-<span id="cb5-19"><a href="#cb5-19"></a>    save_physics_generator_params<span class="op">=</span><span class="va">True</span>,</span>
-<span id="cb5-20"><a href="#cb5-20"></a>    overwrite_existing<span class="op">=</span><span class="va">False</span>,</span>
-<span id="cb5-21"><a href="#cb5-21"></a>    device<span class="op">=</span>device,</span>
-<span id="cb5-22"><a href="#cb5-22"></a>    save_dir<span class="op">=</span><span class="st">"data"</span>,</span>
-<span id="cb5-23"><a href="#cb5-23"></a>    batch_size<span class="op">=</span><span class="dv">1</span>,</span>
-<span id="cb5-24"><a href="#cb5-24"></a>)</span>
-<span id="cb5-25"><a href="#cb5-25"></a></span>
-<span id="cb5-26"><a href="#cb5-26"></a><span class="co"># Load saved datasets</span></span>
-<span id="cb5-27"><a href="#cb5-27"></a>train_dataset <span class="op">=</span> dinv.datasets.HDF5Dataset(dataset_path, split<span class="op">=</span><span class="st">"train"</span>, load_physics_generator_params<span class="op">=</span><span class="va">True</span>)</span>
-<span id="cb5-28"><a href="#cb5-28"></a>test_dataset <span class="op">=</span> dinv.datasets.HDF5Dataset(dataset_path, split<span class="op">=</span><span class="st">"test"</span>, load_physics_generator_params<span class="op">=</span><span class="va">True</span>)</span>
-<span id="cb5-29"><a href="#cb5-29"></a>test_dataset <span class="op">=</span> torch.utils.data.Subset(test_dataset, <span class="bu">range</span>(<span class="bu">min</span>(<span class="bu">len</span>(test_dataset), <span class="dv">50</span>)))</span>
-<span id="cb5-30"><a href="#cb5-30"></a></span>
-<span id="cb5-31"><a href="#cb5-31"></a>train_dataloader, test_dataloader <span class="op">=</span> torch.utils.data.DataLoader(train_dataset, shuffle<span class="op">=</span><span class="va">True</span>), torch.utils.data.DataLoader(test_dataset)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1"></a><span class="im">from</span> torchvision.transforms <span class="im">import</span> Resize</span>
+<span id="cb5-2"><a href="#cb5-2"></a>train_dataset <span class="op">=</span> dinv.datasets.SimpleFastMRISliceDataset(<span class="st">"data"</span>, file_name<span class="op">=</span>file_name, transform<span class="op">=</span>Resize(<span class="dv">128</span>), train<span class="op">=</span><span class="va">True</span>, train_percent<span class="op">=</span><span class="fl">0.8</span>, download<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb5-3"><a href="#cb5-3"></a>test_dataset <span class="op">=</span> dinv.datasets.SimpleFastMRISliceDataset(<span class="st">"data"</span>, file_name<span class="op">=</span>file_name, transform<span class="op">=</span>Resize(<span class="dv">128</span>), train<span class="op">=</span><span class="va">False</span>, train_percent<span class="op">=</span><span class="fl">0.8</span>,)</span>
+<span id="cb5-4"><a href="#cb5-4"></a></span>
+<span id="cb5-5"><a href="#cb5-5"></a>path <span class="op">=</span> dinv.datasets.generate_dataset(train_dataset<span class="op">=</span>train_dataset, test_dataset<span class="op">=</span>test_dataset, physics<span class="op">=</span>physics, physics_generator<span class="op">=</span>physics_generator, save_physics_generator_params<span class="op">=</span><span class="va">True</span>, overwrite_existing<span class="op">=</span><span class="va">False</span>, device<span class="op">=</span>device, save_dir<span class="op">=</span><span class="st">"data"</span>, batch_size<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb5-6"><a href="#cb5-6"></a></span>
+<span id="cb5-7"><a href="#cb5-7"></a>train_dataset, test_dataset <span class="op">=</span> dinv.datasets.HDF5Dataset(dataset_path, split<span class="op">=</span><span class="st">"train"</span>, load_physics_generator_params<span class="op">=</span><span class="va">True</span>), dinv.datasets.HDF5Dataset(dataset_path, split<span class="op">=</span><span class="st">"test"</span>, load_physics_generator_params<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb5-8"><a href="#cb5-8"></a>train_dataloader, test_dataloader <span class="op">=</span> torch.utils.data.DataLoader(train_dataset, shuffle<span class="op">=</span><span class="va">True</span>), torch.utils.data.DataLoader(torch.utils.data.Subset(test_dataset, <span class="bu">range</span>(<span class="bu">min</span>(<span class="bu">len</span>(test_dataset), <span class="dv">50</span>))))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="cell" data-execution_count="6">
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1"></a>x, y, params <span class="op">=</span> <span class="bu">next</span>(<span class="bu">iter</span>(test_dataloader))</span>
@@ -522,7 +499,7 @@
 </div>
 </div>
 </div>
-<div id="tabset-1-3">
+<div id="tabset-1-4">
 <div class="cell" data-execution_count="7">
 <div class="sourceCode cell-code" id="cb7"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1"></a><span class="kw">def</span> train(loss: dinv.loss.Loss, epochs: <span class="bu">int</span> <span class="op">=</span> <span class="dv">0</span>):</span>
 <span id="cb7-2"><a href="#cb7-2"></a>    _model <span class="op">=</span> model()</span>
