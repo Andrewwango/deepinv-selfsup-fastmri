@@ -77,7 +77,7 @@ train_dataloader, test_dataloader = torch.utils.data.DataLoader(train_dataset, s
 # %%
 def train(loss: dinv.loss.Loss, epochs: int = 0):
     _model = model()
-        
+    
     trainer = dinv.Trainer(
         model = _model,
         physics = physics,
@@ -135,7 +135,10 @@ match args.loss:
             MOEILoss(transform=dinv.transform.CPABDiffeomorphism(device=device), physics_generator=physics_generator)
         ]
     case "ssdu":
-        loss = dinv.loss.SplittingLoss(split_ratio=0.6, eval_split_input=False)
+        loss = dinv.loss.SplittingLoss(
+            mask_generator=dinv.physics.generator.GaussianSplittingMaskGenerator((2, 128, 128), split_ratio=0.6, device=device, rng=rng),
+            eval_split_input=False
+        )
     case "noise2inverse":
         loss = dinv.loss.SplittingLoss(
             mask_generator=dinv.physics.generator.GaussianSplittingMaskGenerator((2, 128, 128), split_ratio=0.6, device=device, rng=rng),
