@@ -428,7 +428,7 @@
 <li><a href="#/c.-noisier2noise-ssdu" id="/toc-c.-noisier2noise-ssdu">3c. Noisier2Noise-SSDU</a></li>
 </ul></li>
 <li><a href="#/baselines" id="/toc-baselines">4. Baselines</a></li>
-<li><a href="#/summary-9" id="/toc-summary-9">5. Summary</a></li>
+<li><a href="#/side-by-side-comparison" id="/toc-side-by-side-comparison">5. Side-by-side comparison</a></li>
 <li><a href="#/citation" id="/toc-citation">Citation</a></li>
 </ul>
 </nav>
@@ -935,9 +935,8 @@ PSNR: 26.896 +- 2.730</code></pre>
 </div>
 </section>
 
-<section id="summary-9" class="title-slide slide level2 center">
-<h2>5. Summary</h2>
-<p>We provide all the results below:</p>
+<section id="side-by-side-comparison" class="title-slide slide level2 center">
+<h2>5. Side-by-side comparison</h2>
 <div class="cell" data-execution_count="28">
 <div class="sourceCode cell-code" id="cb45"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb45-1"><a href="#cb45-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
 <span id="cb45-2"><a href="#cb45-2"></a>pd.DataFrame.from_dict(results, orient<span class="op">=</span><span class="st">"index"</span>, columns<span class="op">=</span>(<span class="st">"PSNR"</span>, <span class="st">"PSNR no learning"</span>)).sort_values(<span class="st">'PSNR'</span>, ascending<span class="op">=</span><span class="va">False</span>).<span class="bu">round</span>(<span class="dv">3</span>).transpose()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
