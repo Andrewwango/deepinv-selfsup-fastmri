@@ -1,6 +1,12 @@
-project:
-  output-dir: docs
-
 format:
   html:
     toc: true
+  revealjs:
+    toc: true
+    slide-level: 3
+    smaller: true
+    scrollable: true
+    echo: true
+    output: true
+    auto-stretch: false
+    slide-number: true
