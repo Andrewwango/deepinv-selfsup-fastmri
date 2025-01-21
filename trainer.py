@@ -304,7 +304,6 @@ class Trainer:
             logs = {"Eval " + str(key): val for key, val in logs.items()}
 
         if self.wandb_vis:
-            print(f"Logging step {step}, train {train}, commit {commit}")
             wandb.log(logs, step=step, commit=commit)
 
     def check_clip_grad(self):

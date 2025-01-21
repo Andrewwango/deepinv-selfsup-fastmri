@@ -71,7 +71,8 @@ dataset_path = dinv.datasets.generate_dataset(
 # Load saved datasets
 train_dataset = dinv.datasets.HDF5Dataset(dataset_path, split="train", load_physics_generator_params=True)
 test_dataset = dinv.datasets.HDF5Dataset(dataset_path, split="test", load_physics_generator_params=True)
-
+train_dataset=torch.utils.data.Subset(train_dataset, range(10))
+test_dataset=torch.utils.data.Subset(test_dataset, range(7))
 train_dataloader, test_dataloader = torch.utils.data.DataLoader(train_dataset, shuffle=True), torch.utils.data.DataLoader(test_dataset)
 
 # %%
