@@ -75,10 +75,11 @@ test_dataset = dinv.datasets.HDF5Dataset(dataset_path, split="test", load_physic
 train_dataloader, test_dataloader = torch.utils.data.DataLoader(train_dataset, shuffle=True), torch.utils.data.DataLoader(test_dataset)
 
 # %%
+from trainer import Trainer
 def train(loss: dinv.loss.Loss, epochs: int = 0):
     _model = model()
     
-    trainer = dinv.Trainer(
+    trainer = Trainer(
         model = _model,
         physics = physics,
         optimizer = torch.optim.Adam(_model.parameters(), lr=1e-3),
