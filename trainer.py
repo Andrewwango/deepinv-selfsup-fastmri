@@ -303,6 +303,7 @@ class Trainer:
             logs = {"Eval " + str(key): val for key, val in logs.items()}
 
         if self.wandb_vis:
+            print(f"Logging step {step}, train {train}, commit {commit}")
             wandb.log(logs, step=step, commit=commit)
 
     def check_clip_grad(self):
@@ -803,9 +804,6 @@ class Trainer:
         self.setup_train()
 
         for epoch in range(self.epoch_start, self.epochs):
-            perform_eval = self.eval_dataloader and (
-                epoch % self.eval_interval == 0 or epoch + 1 == self.epochs
-            )
             self.reset_metrics()
 
             ## Training
@@ -831,14 +829,14 @@ class Trainer:
             ):
                 progress_bar.set_description(f"Train epoch {epoch + 1}/{self.epochs}")
                 last_batch = i == batches - 1
+                train_ite = (epoch * batches) + i
                 self.step(
-                    epoch,
-                    progress_bar,
-                    train_ite=(epoch * batches) + i,
-                    train=True,
-                    last_batch=last_batch,
+                    epoch, progress_bar, train_ite=train_ite, train=True, last_batch=last_batch,
                 )
 
+                perform_eval = self.eval_dataloader and (
+                    epoch % self.eval_interval == 0 or epoch + 1 == self.epochs
+                )
                 if perform_eval and (last_batch or self.log_train_batch):
                     ## Evaluation
                     self.current_eval_iterators = [
@@ -866,7 +864,7 @@ class Trainer:
                         self.step(
                             epoch,
                             eval_progress_bar,
-                            train_ite=(epoch * eval_batches) + i,
+                            train_ite=train_ite,
                             train=False,
                             last_batch=(j == eval_batches - 1),
                         )
