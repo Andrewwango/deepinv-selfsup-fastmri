@@ -95,6 +95,7 @@ def train(loss: dinv.loss.Loss, epochs: int = 0):
         save_path = f"/home/s2558406/RDS/models/deepinv-selfsup-fastmri/{args.loss}",
         plot_images = False,
         wandb_vis = True,
+        log_train_batch=True,
     )
 
     trainer.train()
