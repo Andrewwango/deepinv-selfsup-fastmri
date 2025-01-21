@@ -284,7 +284,7 @@ class Trainer:
                 self.epoch_start = checkpoint["epoch"]
 
     def log_metrics_wandb(
-        self, logs: dict, step: int, train: bool = True, commit: bool = True
+        self, logs: dict, step: int, train: bool = True, commit: bool = None
     ):
         r"""
         Log the metrics to wandb.
@@ -295,6 +295,7 @@ class Trainer:
         :param int step: Current step to log. If ``Trainer.log_train_batch=True``, this is the batch iteration, if ``False`` (default), this is the epoch.
         :param bool train: If ``True``, the model is trained, otherwise it is evaluated.
         :param bool commit: commit the wandb log. Set to ``False`` if you will also log to this ``step`` later.
+            Defaults to ``None`` to match ``wandb.log`` default.
         """
         if step is None:
             raise ValueError("wandb logging step must be specified.")
