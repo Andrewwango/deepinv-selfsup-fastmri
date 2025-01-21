@@ -71,16 +71,14 @@ dataset_path = dinv.datasets.generate_dataset(
 # Load saved datasets
 train_dataset = dinv.datasets.HDF5Dataset(dataset_path, split="train", load_physics_generator_params=True)
 test_dataset = dinv.datasets.HDF5Dataset(dataset_path, split="test", load_physics_generator_params=True)
-train_dataset=torch.utils.data.Subset(train_dataset, range(10))
-test_dataset=torch.utils.data.Subset(test_dataset, range(7))
+
 train_dataloader, test_dataloader = torch.utils.data.DataLoader(train_dataset, shuffle=True), torch.utils.data.DataLoader(test_dataset)
 
 # %%
-from trainer import Trainer
 def train(loss: dinv.loss.Loss, epochs: int = 0):
     _model = model()
     
-    trainer = Trainer(
+    trainer = dinv.Trainer(
         model = _model,
         physics = physics,
         optimizer = torch.optim.Adam(_model.parameters(), lr=1e-3),
@@ -96,7 +94,6 @@ def train(loss: dinv.loss.Loss, epochs: int = 0):
         save_path = f"/home/s2558406/RDS/models/deepinv-selfsup-fastmri/{args.loss}",
         plot_images = False,
         wandb_vis = True,
-        log_train_batch=True,
     )
 
     trainer.train()
@@ -112,8 +109,6 @@ parser.add_argument("--loss", type=str, default="ei")
 parser.add_argument("--epochs", type=int, default=1)
 args = parser.parse_args()
 match args.loss:
-    case "temp":
-        loss = dinv.loss.SupLoss()
     case "mc":
         loss = dinv.loss.MCLoss()
     case "sup":
