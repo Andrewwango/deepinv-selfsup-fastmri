@@ -8,6 +8,8 @@ device = dinv.utils.get_freer_gpu() if torch.cuda.is_available() else "cpu"
 rng = torch.Generator(device=device).manual_seed(0)
 results = {}
 
+file_name = "fastmri_knee_singlecoil.pt"
+
 # %%
 # Define MRI physics with random masks
 physics_generator = dinv.physics.generator.GaussianMaskGenerator(
@@ -17,30 +19,14 @@ physics = dinv.physics.MRI(img_size=(128, 128), device=device)
 
 # %%
 # Define unrolled network
-
-
-denoiser = dinv.models.DnCNN(
-            in_channels=2,  # real + imaginary parts
-            out_channels=2,
-            pretrained=None,
-            depth=15,
-        )
-
-denoiser = dinv.models.UNet(
-            in_channels=2,
-            out_channels=2,
-            residual=True, #ResUNet
-            batch_norm=True,
-            scales=3,
-        )
-
+denoiser = dinv.models.UNet(2, 2, scales=3)
 model = lambda: dinv.utils.demo.demo_mri_model(denoiser=denoiser, num_iter=3, device=device).to(device)
 
 # %%
 # Define FastMRI datasets
 train_dataset = dinv.datasets.SimpleFastMRISliceDataset(
     "data",
-    file_name="fastmri_knee_singlecoil.pt",
+    file_name=file_name,
     transform=Resize(128),
     train=True,
     train_percent=0.8,
@@ -103,7 +89,6 @@ def train(loss: dinv.loss.Loss, epochs: int = 0):
 
 # %%
 from argparse import ArgumentParser
-import json
 parser = ArgumentParser()
 parser.add_argument("--loss", type=str, default="ei")
 parser.add_argument("--epochs", type=int, default=1)
@@ -146,9 +131,21 @@ match args.loss:
         )
     case "noisier2noise-ssdu":
         loss = ...
+    case "ei-modified":
+        from ei_modified import ModifiedEILoss
+        loss = [
+            dinv.loss.MCLoss(),
+            ModifiedEILoss(transform=dinv.transform.Rotate())
+        ]
+    case "diffeo-ei-modified":
+        from ei_modified import ModifiedEILoss
+        loss = [
+            dinv.loss.MCLoss(),
+            ModifiedEILoss(transform=dinv.transform.CPABDiffeomorphism(device=device))
+        ]
 
 # Set epochs > 0 to train the model
-import wandb
+import wandb, json
 with wandb.init(project="deepinv-selfsup-fastmri-experiments", config={"loss": args.loss}):
     trainer = train(loss, epochs=args.epochs)
 results = trainer.test(test_dataloader)
