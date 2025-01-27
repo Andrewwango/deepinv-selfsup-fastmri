@@ -114,10 +114,9 @@ match args.loss:
             dinv.loss.MOILoss(physics_generator=physics_generator)
         ]
     case "mo-ei":
-        from moi import MOEILoss
         loss = [
             dinv.loss.MCLoss(),
-            MOEILoss(transform=dinv.transform.CPABDiffeomorphism(device=device), physics_generator=physics_generator)
+            dinv.loss.MOEILoss(transform=dinv.transform.CPABDiffeomorphism(device=device), physics_generator=physics_generator)
         ]
     case "ssdu":
         loss = dinv.loss.SplittingLoss(
@@ -131,18 +130,6 @@ match args.loss:
         )
     case "noisier2noise-ssdu":
         loss = ...
-    case "ei-modified":
-        from ei_modified import ModifiedEILoss
-        loss = [
-            dinv.loss.MCLoss(),
-            ModifiedEILoss(transform=dinv.transform.Rotate())
-        ]
-    case "diffeo-ei-modified":
-        from ei_modified import ModifiedEILoss
-        loss = [
-            dinv.loss.MCLoss(),
-            ModifiedEILoss(transform=dinv.transform.CPABDiffeomorphism(device=device))
-        ]
 
 # Set epochs > 0 to train the model
 import wandb, json

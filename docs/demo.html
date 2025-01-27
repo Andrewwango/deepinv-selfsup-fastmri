@@ -187,15 +187,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 <div id="tabset-1-3" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-3-tab">
-<p>Define FastMRI small train and test datasets resized for speed, then simulate random k-space measurements using the physics, then load the generated measurements.</p>
-<div class="cell">
+<p>Define FastMRI small train and test datasets resized for speed, then simulate random k-space measurements using the physics, then load the generated measurements. We keep the test set at maximum 50 images for speed.</p>
+<div class="cell" data-execution_count="5">
 <div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> torchvision.transforms <span class="im">import</span> Resize</span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>train_dataset <span class="op">=</span> dinv.datasets.SimpleFastMRISliceDataset(<span class="st">"data"</span>, file_name<span class="op">=</span>file_name, transform<span class="op">=</span>Resize(<span class="dv">128</span>), train<span class="op">=</span><span class="va">True</span>, train_percent<span class="op">=</span><span class="fl">0.8</span>, download<span class="op">=</span><span class="va">True</span>)</span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>test_dataset <span class="op">=</span> dinv.datasets.SimpleFastMRISliceDataset(<span class="st">"data"</span>, file_name<span class="op">=</span>file_name, transform<span class="op">=</span>Resize(<span class="dv">128</span>), train<span class="op">=</span><span class="va">False</span>, train_percent<span class="op">=</span><span class="fl">0.8</span>,)</span>
 <span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>path <span class="op">=</span> dinv.datasets.generate_dataset(train_dataset<span class="op">=</span>train_dataset, test_dataset<span class="op">=</span>test_dataset, physics<span class="op">=</span>physics, physics_generator<span class="op">=</span>physics_generator, save_physics_generator_params<span class="op">=</span><span class="va">True</span>, overwrite_existing<span class="op">=</span><span class="va">False</span>, device<span class="op">=</span>device, save_dir<span class="op">=</span><span class="st">"data"</span>, batch_size<span class="op">=</span><span class="dv">1</span>)</span>
 <span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>train_dataset, test_dataset <span class="op">=</span> dinv.datasets.HDF5Dataset(dataset_path, split<span class="op">=</span><span class="st">"train"</span>, load_physics_generator_params<span class="op">=</span><span class="va">True</span>), dinv.datasets.HDF5Dataset(dataset_path, split<span class="op">=</span><span class="st">"test"</span>, load_physics_generator_params<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>train_dataset, test_dataset <span class="op">=</span> dinv.datasets.HDF5Dataset(path, split<span class="op">=</span><span class="st">"train"</span>, load_physics_generator_params<span class="op">=</span><span class="va">True</span>), dinv.datasets.HDF5Dataset(path, split<span class="op">=</span><span class="st">"test"</span>, load_physics_generator_params<span class="op">=</span><span class="va">True</span>)</span>
 <span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>train_dataloader, test_dataloader <span class="op">=</span> torch.utils.data.DataLoader(train_dataset, shuffle<span class="op">=</span><span class="va">True</span>), torch.utils.data.DataLoader(torch.utils.data.Subset(test_dataset, <span class="bu">range</span>(<span class="bu">min</span>(<span class="bu">len</span>(test_dataset), <span class="dv">50</span>))))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="cell" data-execution_count="6">
@@ -242,7 +242,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="a.-equivariant-imaging-ei" class="level3">
 <h3 class="anchored" data-anchor-id="a.-equivariant-imaging-ei">1a. Equivariant imaging (EI)</h3>
 <div class="tabset-margin-container"></div><div class="panel-tabset">
-<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-2-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-1" role="tab" aria-controls="tabset-2-1" aria-selected="true" href="">Summary</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-2" role="tab" aria-controls="tabset-2-2" aria-selected="false" href="">Code</a></li></ul>
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-2-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-1" role="tab" aria-controls="tabset-2-1" aria-selected="true" href="">Summary</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-2" role="tab" aria-controls="tabset-2-2" aria-selected="false" href="">Results</a></li></ul>
 <div class="tab-content">
 <div id="tabset-2-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-2-1-tab">
 <p>The EI self-supervised loss [1] assumes that the set of signals is invariant to a group of transformations in order to learn from incomplete measurement data alone:</p>
@@ -268,17 +268,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 <div class="cell" data-execution_count="10">
 <div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Load pretrained model for 50 epochs, test on test dataset, and save sample reconstruction</span></span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>trainer.ckpt_pretrained <span class="op">=</span> <span class="st">"models/pretrained/ei.pth.tar"</span></span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>trainer.load_model()</span>
-<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>results[<span class="st">"ei"</span>] <span class="op">=</span> trainer.test(test_dataloader)</span>
-<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>physics.update_parameters(<span class="op">**</span>params)</span>
-<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>results[<span class="st">"ei"</span>][<span class="st">"sample"</span>] <span class="op">=</span> trainer.model(y, physics)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>trainer.load_model(<span class="st">"models/pretrained/ei.pth.tar"</span>)</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>results[<span class="st">"ei"</span>] <span class="op">=</span> trainer.test(test_dataloader)</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>physics.update_parameters(<span class="op">**</span>params)</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>results[<span class="st">"ei"</span>][<span class="st">"sample"</span>] <span class="op">=</span> trainer.model(y, physics)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
-<pre><code>c:\Users\s2558406\Documents\Repos\deepinv-selfsup-fastmri\venv\lib\site-packages\deepinv\training\trainer.py:273: FutureWarning: You are using `torch.load` with `weights_only=False` (the current default value), which uses the default pickle module implicitly. It is possible to construct malicious pickle data which will execute arbitrary code during unpickling (See https://github.com/pytorch/pytorch/blob/main/SECURITY.md#untrusted-models for more details). In a future release, the default value for `weights_only` will be flipped to `True`. This limits the functions that could be executed during unpickling. Arbitrary objects will no longer be allowed to be loaded via this mode unless they are explicitly allowlisted by the user via `torch.serialization.add_safe_globals`. We recommend you start setting `weights_only=True` for any use case where you don't have full control of the loaded file. Please open an issue on GitHub for any issues related to this experimental feature.
-  checkpoint = torch.load(self.ckpt_pretrained, map_location=self.device)
-Test:  98%|███████████████████████████████████████████████████████████████████████▌ | 49/50 [00:09&lt;00:00,  5.20it/s, PSNR=30.6, PSNR no learning=26.9]Test: 100%|█████████████████████████████████████████████████████████████████████████| 50/50 [00:09&lt;00:00,  5.45it/s, PSNR=30.6, PSNR no learning=26.9]</code></pre>
+<pre><code>Test:  98%|███████████████████████████████████████████████████████████████████████▌ | 49/50 [00:09&lt;00:00,  5.69it/s, PSNR=30.6, PSNR no learning=26.9]Test: 100%|█████████████████████████████████████████████████████████████████████████| 50/50 [00:09&lt;00:00,  5.24it/s, PSNR=30.6, PSNR no learning=26.9]</code></pre>
 </div>
 <div class="cell-output cell-output-display">
 <p><img src="demo_files/figure-html/cell-11-output-2.png" class="img-fluid"></p>
@@ -296,7 +293,7 @@ PSNR: 30.643 +- 2.992</code></pre>
 <section id="b.-diffeomorphic-equivariant-imaging" class="level3">
 <h3 class="anchored" data-anchor-id="b.-diffeomorphic-equivariant-imaging">1b. Diffeomorphic-equivariant imaging</h3>
 <div class="tabset-margin-container"></div><div class="panel-tabset">
-<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-3-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-3-1" role="tab" aria-controls="tabset-3-1" aria-selected="true" href="">Summary</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-3-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-3-2" role="tab" aria-controls="tabset-3-2" aria-selected="false" href="">Code</a></li></ul>
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-3-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-3-1" role="tab" aria-controls="tabset-3-1" aria-selected="true" href="">Summary</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-3-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-3-2" role="tab" aria-controls="tabset-3-2" aria-selected="false" href="">Results</a></li></ul>
 <div class="tab-content">
 <div id="tabset-3-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-3-1-tab">
 <p>EI was extended beyond the Euclidean transformation group to the non-linear diffeomorphic group in [3] for MRI problems:</p>
@@ -320,13 +317,12 @@ PSNR: 30.643 +- 2.992</code></pre>
 </div>
 <div class="cell" data-execution_count="13">
 <div class="sourceCode cell-code" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Load pretrained model for 50 epochs, test on test dataset, and save sample reconstruction</span></span>
-<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>trainer.ckpt_pretrained <span class="op">=</span> <span class="st">"models/pretrained/diffeo-ei.pth.tar"</span></span>
-<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>trainer.load_model()</span>
-<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>results[<span class="st">"diffeo-ei"</span>] <span class="op">=</span> trainer.test(test_dataloader)</span>
-<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>physics.update_parameters(<span class="op">**</span>params)</span>
-<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>results[<span class="st">"diffeo-ei"</span>][<span class="st">"sample"</span>] <span class="op">=</span> trainer.model(y, physics)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>trainer.load_model(<span class="st">"models/pretrained/diffeo-ei.pth.tar"</span>)</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>results[<span class="st">"diffeo-ei"</span>] <span class="op">=</span> trainer.test(test_dataloader)</span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>physics.update_parameters(<span class="op">**</span>params)</span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>results[<span class="st">"diffeo-ei"</span>][<span class="st">"sample"</span>] <span class="op">=</span> trainer.model(y, physics)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
 <pre><code>Test:  98%|███████████████████████████████████████████████████████████████████████▌ | 49/50 [00:11&lt;00:00,  3.87it/s, PSNR=31.4, PSNR no learning=26.9]Test: 100%|█████████████████████████████████████████████████████████████████████████| 50/50 [00:11&lt;00:00,  4.22it/s, PSNR=31.4, PSNR no learning=26.9]</code></pre>
 </div>
@@ -349,7 +345,7 @@ PSNR: 31.388 +- 2.496</code></pre>
 <section id="a.-multi-operator-imaging-moi" class="level3">
 <h3 class="anchored" data-anchor-id="a.-multi-operator-imaging-moi">2a. Multi-operator imaging (MOI)</h3>
 <div class="tabset-margin-container"></div><div class="panel-tabset">
-<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-4-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-4-1" role="tab" aria-controls="tabset-4-1" aria-selected="true" href="">Summary</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-4-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-4-2" role="tab" aria-controls="tabset-4-2" aria-selected="false" href="">Code</a></li></ul>
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-4-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-4-1" role="tab" aria-controls="tabset-4-1" aria-selected="true" href="">Summary</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-4-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-4-2" role="tab" aria-controls="tabset-4-2" aria-selected="false" href="">Results</a></li></ul>
 <div class="tab-content">
 <div id="tabset-4-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-4-1-tab">
 <p>The MOI self-supervised loss [4] can be used to learn when signals are observed via multiple (possibly incomplete) forward operators <span class="math inline">\(\{A_g\}_{g=1}^{G}\)</span>, i.e.&nbsp;<span class="math inline">\(y_i = A_{g_i}x_i\)</span> where <span class="math inline">\(g_i\in \{1,\dots,G\}\)</span>. The loss is constructed as follows:</p>
@@ -374,13 +370,12 @@ PSNR: 31.388 +- 2.496</code></pre>
 </div>
 <div class="cell" data-execution_count="16">
 <div class="sourceCode cell-code" id="cb23"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Load pretrained model for 50 epochs, test on test dataset, and save sample reconstruction</span></span>
-<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>trainer.ckpt_pretrained <span class="op">=</span> <span class="st">"models/pretrained/moi.pth.tar"</span></span>
-<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>trainer.load_model()</span>
-<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>results[<span class="st">"moi"</span>] <span class="op">=</span> trainer.test(test_dataloader)</span>
-<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>physics.update_parameters(<span class="op">**</span>params)</span>
-<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a>results[<span class="st">"moi"</span>][<span class="st">"sample"</span>] <span class="op">=</span> trainer.model(y, physics)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>trainer.load_model(<span class="st">"models/pretrained/moi.pth.tar"</span>)</span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>results[<span class="st">"moi"</span>] <span class="op">=</span> trainer.test(test_dataloader)</span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>physics.update_parameters(<span class="op">**</span>params)</span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>results[<span class="st">"moi"</span>][<span class="st">"sample"</span>] <span class="op">=</span> trainer.model(y, physics)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
 <pre><code>Test:  98%|███████████████████████████████████████████████████████████████████████▌ | 49/50 [00:10&lt;00:00,  4.76it/s, PSNR=31.3, PSNR no learning=26.9]Test: 100%|█████████████████████████████████████████████████████████████████████████| 50/50 [00:10&lt;00:00,  4.55it/s, PSNR=31.3, PSNR no learning=26.9]</code></pre>
 </div>
@@ -400,7 +395,7 @@ PSNR: 31.260 +- 2.339</code></pre>
 <section id="b.-multi-operator-equivariant-imaging-mo-ei" class="level3">
 <h3 class="anchored" data-anchor-id="b.-multi-operator-equivariant-imaging-mo-ei">2b. Multi-operator equivariant imaging (MO-EI)</h3>
 <div class="tabset-margin-container"></div><div class="panel-tabset">
-<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-5-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-5-1" role="tab" aria-controls="tabset-5-1" aria-selected="true" href="">Summary</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-5-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-5-2" role="tab" aria-controls="tabset-5-2" aria-selected="false" href="">Code</a></li></ul>
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-5-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-5-1" role="tab" aria-controls="tabset-5-1" aria-selected="true" href="">Summary</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-5-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-5-2" role="tab" aria-controls="tabset-5-2" aria-selected="false" href="">Results</a></li></ul>
 <div class="tab-content">
 <div id="tabset-5-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-5-1-tab">
 <p>One can combine the multi-operator and equivariant imaging losses to leverage an even greater set of virtual operators (using notation from above):</p>
@@ -410,11 +405,10 @@ PSNR: 31.260 +- 2.339</code></pre>
 </div>
 <div id="tabset-5-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-5-2-tab">
 <div class="cell" data-execution_count="17">
-<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> moi <span class="im">import</span> MOEILoss</span>
-<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>loss <span class="op">=</span> [</span>
-<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>    dinv.loss.MCLoss(),</span>
-<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>    MOEILoss(transform<span class="op">=</span>dinv.transform.CPABDiffeomorphism(device<span class="op">=</span>device), physics_generator<span class="op">=</span>physics_generator)</span>
-<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>loss <span class="op">=</span> [</span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>    dinv.loss.MCLoss(),</span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>    dinv.loss.MOEILoss(transform<span class="op">=</span>dinv.transform.CPABDiffeomorphism(device<span class="op">=</span>device), physics_generator<span class="op">=</span>physics_generator)</span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="cell" data-execution_count="18">
 <div class="sourceCode cell-code" id="cb27"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Set epochs &gt; 0 to train the model</span></span>
@@ -425,13 +419,12 @@ PSNR: 31.260 +- 2.339</code></pre>
 </div>
 <div class="cell" data-execution_count="19">
 <div class="sourceCode cell-code" id="cb29"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Load pretrained model for 50 epochs, test on test dataset, and save sample reconstruction</span></span>
-<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>trainer.ckpt_pretrained <span class="op">=</span> <span class="st">"models/pretrained/mo-ei.pth.tar"</span></span>
-<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>trainer.load_model()</span>
-<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>results[<span class="st">"mo-ei"</span>] <span class="op">=</span> trainer.test(test_dataloader)</span>
-<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a>physics.update_parameters(<span class="op">**</span>params)</span>
-<span id="cb29-8"><a href="#cb29-8" aria-hidden="true" tabindex="-1"></a>results[<span class="st">"mo-ei"</span>][<span class="st">"sample"</span>] <span class="op">=</span> trainer.model(y, physics)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>trainer.load_model(<span class="st">"models/pretrained/mo-ei.pth.tar"</span>)</span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>results[<span class="st">"mo-ei"</span>] <span class="op">=</span> trainer.test(test_dataloader)</span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a>physics.update_parameters(<span class="op">**</span>params)</span>
+<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a>results[<span class="st">"mo-ei"</span>][<span class="st">"sample"</span>] <span class="op">=</span> trainer.model(y, physics)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
 <pre><code>Test:  98%|███████████████████████████████████████████████████████████████████████▌ | 49/50 [00:11&lt;00:00,  4.62it/s, PSNR=31.6, PSNR no learning=26.9]Test: 100%|█████████████████████████████████████████████████████████████████████████| 50/50 [00:11&lt;00:00,  4.19it/s, PSNR=31.6, PSNR no learning=26.9]</code></pre>
 </div>
@@ -454,7 +447,7 @@ PSNR: 31.601 +- 2.326</code></pre>
 <section id="a.-self-supervised-data-undersampling-ssdu" class="level3">
 <h3 class="anchored" data-anchor-id="a.-self-supervised-data-undersampling-ssdu">3a. Self-supervised data undersampling (SSDU)</h3>
 <div class="tabset-margin-container"></div><div class="panel-tabset">
-<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-6-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-6-1" role="tab" aria-controls="tabset-6-1" aria-selected="true" href="">Summary</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-6-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-6-2" role="tab" aria-controls="tabset-6-2" aria-selected="false" href="">Code</a></li></ul>
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-6-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-6-1" role="tab" aria-controls="tabset-6-1" aria-selected="true" href="">Summary</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-6-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-6-2" role="tab" aria-controls="tabset-6-2" aria-selected="false" href="">Results</a></li></ul>
 <div class="tab-content">
 <div id="tabset-6-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-6-1-tab">
 <p>The SSDU measurement splitting loss [5] splits the measurement <span class="math inline">\(y\in\mathbb{R}^m\)</span> and forward operator <span class="math inline">\(A\)</span> into two smaller pairs <span class="math inline">\((y_1\in\mathbb{R}^{m_1},A_1)\)</span> and <span class="math inline">\((y_1\in\mathbb{R}^{m_1},A_1)\)</span> to compute the self-supervised loss:</p>
@@ -479,13 +472,12 @@ PSNR: 31.601 +- 2.326</code></pre>
 </div>
 <div class="cell" data-execution_count="22">
 <div class="sourceCode cell-code" id="cb35"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Load pretrained model for 50 epochs, test on test dataset, and save sample reconstruction</span></span>
-<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>trainer.ckpt_pretrained <span class="op">=</span> <span class="st">"models/pretrained/ssdu.pth.tar"</span></span>
-<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>trainer.load_model()</span>
-<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a>results[<span class="st">"ssdu"</span>] <span class="op">=</span> trainer.test(test_dataloader)</span>
-<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb35-7"><a href="#cb35-7" aria-hidden="true" tabindex="-1"></a>physics.update_parameters(<span class="op">**</span>params)</span>
-<span id="cb35-8"><a href="#cb35-8" aria-hidden="true" tabindex="-1"></a>results[<span class="st">"ssdu"</span>][<span class="st">"sample"</span>] <span class="op">=</span> trainer.model(y, physics)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>trainer.load_model(<span class="st">"models/pretrained/ssdu.pth.tar"</span>)</span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>results[<span class="st">"ssdu"</span>] <span class="op">=</span> trainer.test(test_dataloader)</span>
+<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a>physics.update_parameters(<span class="op">**</span>params)</span>
+<span id="cb35-7"><a href="#cb35-7" aria-hidden="true" tabindex="-1"></a>results[<span class="st">"ssdu"</span>][<span class="st">"sample"</span>] <span class="op">=</span> trainer.model(y, physics)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
 <pre><code>Test:  98%|███████████████████████████████████████████████████████████████████████▌ | 49/50 [00:10&lt;00:00,  5.05it/s, PSNR=26.8, PSNR no learning=26.9]Test: 100%|█████████████████████████████████████████████████████████████████████████| 50/50 [00:10&lt;00:00,  4.90it/s, PSNR=26.8, PSNR no learning=26.9]</code></pre>
 </div>
@@ -505,7 +497,7 @@ PSNR: 26.796 +- 2.191</code></pre>
 <section id="b.-noise2inverse" class="level3">
 <h3 class="anchored" data-anchor-id="b.-noise2inverse">3b. Noise2Inverse</h3>
 <div class="tabset-margin-container"></div><div class="panel-tabset">
-<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-7-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-7-1" role="tab" aria-controls="tabset-7-1" aria-selected="true" href="">Summary</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-7-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-7-2" role="tab" aria-controls="tabset-7-2" aria-selected="false" href="">Code</a></li></ul>
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-7-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-7-1" role="tab" aria-controls="tabset-7-1" aria-selected="true" href="">Summary</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-7-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-7-2" role="tab" aria-controls="tabset-7-2" aria-selected="false" href="">Results</a></li></ul>
 <div class="tab-content">
 <div id="tabset-7-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-7-1-tab">
 <p>The Noise2Inverse framework [8] extends SSDU [5] during inference by averaging the model over multiple realizations of the random splitting, i.e.</p>
@@ -526,13 +518,12 @@ PSNR: 26.796 +- 2.191</code></pre>
 </div>
 <div class="cell" data-execution_count="25">
 <div class="sourceCode cell-code" id="cb41"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Load pretrained SSDU model for 50 epochs, test on test dataset, and save sample reconstruction</span></span>
-<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a>trainer.ckpt_pretrained <span class="op">=</span> <span class="st">"models/pretrained/ssdu.pth.tar"</span></span>
-<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a>trainer.load_model()</span>
-<span id="cb41-4"><a href="#cb41-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb41-5"><a href="#cb41-5" aria-hidden="true" tabindex="-1"></a>results[<span class="st">"noise2inverse"</span>] <span class="op">=</span> trainer.test(test_dataloader)</span>
-<span id="cb41-6"><a href="#cb41-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb41-7"><a href="#cb41-7" aria-hidden="true" tabindex="-1"></a>physics.update_parameters(<span class="op">**</span>params)</span>
-<span id="cb41-8"><a href="#cb41-8" aria-hidden="true" tabindex="-1"></a>results[<span class="st">"noise2inverse"</span>][<span class="st">"sample"</span>] <span class="op">=</span> trainer.model(y, physics)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a>trainer.load_model(<span class="st">"models/pretrained/ssdu.pth.tar"</span>)</span>
+<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb41-4"><a href="#cb41-4" aria-hidden="true" tabindex="-1"></a>results[<span class="st">"noise2inverse"</span>] <span class="op">=</span> trainer.test(test_dataloader)</span>
+<span id="cb41-5"><a href="#cb41-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb41-6"><a href="#cb41-6" aria-hidden="true" tabindex="-1"></a>physics.update_parameters(<span class="op">**</span>params)</span>
+<span id="cb41-7"><a href="#cb41-7" aria-hidden="true" tabindex="-1"></a>results[<span class="st">"noise2inverse"</span>][<span class="st">"sample"</span>] <span class="op">=</span> trainer.model(y, physics)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
 <pre><code>Test:  98%|███████████████████████████████████████████████████████████████████████▌ | 49/50 [03:16&lt;00:03,  3.89s/it, PSNR=26.3, PSNR no learning=26.9]Test: 100%|█████████████████████████████████████████████████████████████████████████| 50/50 [03:16&lt;00:00,  3.94s/it, PSNR=26.3, PSNR no learning=26.9]</code></pre>
 </div>
@@ -552,7 +543,7 @@ PSNR: 26.282 +- 2.030</code></pre>
 <section id="c.-noisier2noise-ssdu" class="level3">
 <h3 class="anchored" data-anchor-id="c.-noisier2noise-ssdu">3c. Noisier2Noise-SSDU</h3>
 <div class="tabset-margin-container"></div><div class="panel-tabset">
-<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-8-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-8-1" role="tab" aria-controls="tabset-8-1" aria-selected="true" href="">Summary</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-8-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-8-2" role="tab" aria-controls="tabset-8-2" aria-selected="false" href="">Code</a></li></ul>
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-8-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-8-1" role="tab" aria-controls="tabset-8-1" aria-selected="true" href="">Summary</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-8-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-8-2" role="tab" aria-controls="tabset-8-2" aria-selected="false" href="">Results</a></li></ul>
 <div class="tab-content">
 <div id="tabset-8-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-8-1-tab">
 <p>The Noisier2Noise-SSDU [9] loss extends SSDU [5] by…</p>
@@ -568,13 +559,12 @@ PSNR: 26.282 +- 2.030</code></pre>
 </div>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb46"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Load pretrained model for 50 epochs, test on test dataset, and save sample reconstruction</span></span>
-<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a>trainer.ckpt_pretrained <span class="op">=</span> <span class="st">"models/pretrained/noisier2noise-ssdu.pth.tar"</span></span>
-<span id="cb46-3"><a href="#cb46-3" aria-hidden="true" tabindex="-1"></a>trainer.load_model()</span>
-<span id="cb46-4"><a href="#cb46-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb46-5"><a href="#cb46-5" aria-hidden="true" tabindex="-1"></a>results[<span class="st">"noisier2noise-ssdu"</span>] <span class="op">=</span> trainer.test(test_dataloader)</span>
-<span id="cb46-6"><a href="#cb46-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb46-7"><a href="#cb46-7" aria-hidden="true" tabindex="-1"></a>physics.update_parameters(<span class="op">**</span>params)</span>
-<span id="cb46-8"><a href="#cb46-8" aria-hidden="true" tabindex="-1"></a>results[<span class="st">"noisier2noise-ssdu"</span>][<span class="st">"sample"</span>] <span class="op">=</span> trainer.model(y, physics)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a>trainer.load_model(<span class="st">"models/pretrained/noisier2noise-ssdu.pth.tar"</span>)</span>
+<span id="cb46-3"><a href="#cb46-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb46-4"><a href="#cb46-4" aria-hidden="true" tabindex="-1"></a>results[<span class="st">"noisier2noise-ssdu"</span>] <span class="op">=</span> trainer.test(test_dataloader)</span>
+<span id="cb46-5"><a href="#cb46-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb46-6"><a href="#cb46-6" aria-hidden="true" tabindex="-1"></a>physics.update_parameters(<span class="op">**</span>params)</span>
+<span id="cb46-7"><a href="#cb46-7" aria-hidden="true" tabindex="-1"></a>results[<span class="st">"noisier2noise-ssdu"</span>][<span class="st">"sample"</span>] <span class="op">=</span> trainer.model(y, physics)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </div>
 </div>
@@ -584,7 +574,7 @@ PSNR: 26.282 +- 2.030</code></pre>
 <section id="baselines" class="level2">
 <h2 class="anchored" data-anchor-id="baselines">4. Baselines</h2>
 <div class="tabset-margin-container"></div><div class="panel-tabset">
-<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-9-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-9-1" role="tab" aria-controls="tabset-9-1" aria-selected="true" href="">Summary</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-9-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-9-2" role="tab" aria-controls="tabset-9-2" aria-selected="false" href="">Code</a></li></ul>
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-9-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-9-1" role="tab" aria-controls="tabset-9-1" aria-selected="true" href="">Summary</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-9-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-9-2" role="tab" aria-controls="tabset-9-2" aria-selected="false" href="">Results</a></li></ul>
 <div class="tab-content">
 <div id="tabset-9-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-9-1-tab">
 <p>We also provide an upper-limit experiment using oracle supervised learning…</p>
@@ -595,11 +585,10 @@ PSNR: 26.282 +- 2.030</code></pre>
 <div id="tabset-9-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-9-2-tab">
 <div class="cell" data-execution_count="26">
 <div class="sourceCode cell-code" id="cb47"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a>trainer <span class="op">=</span> train(dinv.loss.SupLoss(), epochs<span class="op">=</span><span class="dv">0</span>)</span>
-<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a>trainer.ckpt_pretrained <span class="op">=</span> <span class="st">"models/pretrained/sup.pth.tar"</span></span>
-<span id="cb47-3"><a href="#cb47-3" aria-hidden="true" tabindex="-1"></a>trainer.load_model()</span>
-<span id="cb47-4"><a href="#cb47-4" aria-hidden="true" tabindex="-1"></a>results[<span class="st">"sup"</span>] <span class="op">=</span> trainer.test(test_dataloader)</span>
-<span id="cb47-5"><a href="#cb47-5" aria-hidden="true" tabindex="-1"></a>physics.update_parameters(<span class="op">**</span>params)</span>
-<span id="cb47-6"><a href="#cb47-6" aria-hidden="true" tabindex="-1"></a>results[<span class="st">"sup"</span>][<span class="st">"sample"</span>] <span class="op">=</span> trainer.model(y, physics)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a>trainer.load_model(<span class="st">"models/pretrained/sup.pth.tar"</span>)</span>
+<span id="cb47-3"><a href="#cb47-3" aria-hidden="true" tabindex="-1"></a>results[<span class="st">"sup"</span>] <span class="op">=</span> trainer.test(test_dataloader)</span>
+<span id="cb47-4"><a href="#cb47-4" aria-hidden="true" tabindex="-1"></a>physics.update_parameters(<span class="op">**</span>params)</span>
+<span id="cb47-5"><a href="#cb47-5" aria-hidden="true" tabindex="-1"></a>results[<span class="st">"sup"</span>][<span class="st">"sample"</span>] <span class="op">=</span> trainer.model(y, physics)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>The model has 2070091 trainable parameters
 Test results:
@@ -615,11 +604,10 @@ PSNR: 31.779 +- 2.595</code></pre>
 </div>
 <div class="cell" data-execution_count="27">
 <div class="sourceCode cell-code" id="cb50"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a>trainer <span class="op">=</span> train(dinv.loss.MCLoss(), epochs<span class="op">=</span><span class="dv">0</span>)</span>
-<span id="cb50-2"><a href="#cb50-2" aria-hidden="true" tabindex="-1"></a>trainer.ckpt_pretrained <span class="op">=</span> <span class="st">"models/pretrained/mc.pth.tar"</span></span>
-<span id="cb50-3"><a href="#cb50-3" aria-hidden="true" tabindex="-1"></a>trainer.load_model()</span>
-<span id="cb50-4"><a href="#cb50-4" aria-hidden="true" tabindex="-1"></a>results[<span class="st">"mc"</span>] <span class="op">=</span> trainer.test(test_dataloader)</span>
-<span id="cb50-5"><a href="#cb50-5" aria-hidden="true" tabindex="-1"></a>physics.update_parameters(<span class="op">**</span>params)</span>
-<span id="cb50-6"><a href="#cb50-6" aria-hidden="true" tabindex="-1"></a>results[<span class="st">"mc"</span>][<span class="st">"sample"</span>] <span class="op">=</span> trainer.model(y, physics)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb50-2"><a href="#cb50-2" aria-hidden="true" tabindex="-1"></a>trainer.load_model(<span class="st">"models/pretrained/mc.pth.tar"</span>)</span>
+<span id="cb50-3"><a href="#cb50-3" aria-hidden="true" tabindex="-1"></a>results[<span class="st">"mc"</span>] <span class="op">=</span> trainer.test(test_dataloader)</span>
+<span id="cb50-4"><a href="#cb50-4" aria-hidden="true" tabindex="-1"></a>physics.update_parameters(<span class="op">**</span>params)</span>
+<span id="cb50-5"><a href="#cb50-5" aria-hidden="true" tabindex="-1"></a>results[<span class="st">"mc"</span>][<span class="st">"sample"</span>] <span class="op">=</span> trainer.model(y, physics)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>The model has 2070091 trainable parameters
 Test results:

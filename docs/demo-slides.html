@@ -480,15 +480,15 @@
 </div>
 </div>
 <div id="tabset-1-3">
-<p>Define FastMRI small train and test datasets resized for speed, then simulate random k-space measurements using the physics, then load the generated measurements.</p>
-<div class="cell">
+<p>Define FastMRI small train and test datasets resized for speed, then simulate random k-space measurements using the physics, then load the generated measurements. We keep the test set at maximum 50 images for speed.</p>
+<div class="cell" data-execution_count="5">
 <div class="sourceCode cell-code" id="cb5"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1"></a><span class="im">from</span> torchvision.transforms <span class="im">import</span> Resize</span>
 <span id="cb5-2"><a href="#cb5-2"></a>train_dataset <span class="op">=</span> dinv.datasets.SimpleFastMRISliceDataset(<span class="st">"data"</span>, file_name<span class="op">=</span>file_name, transform<span class="op">=</span>Resize(<span class="dv">128</span>), train<span class="op">=</span><span class="va">True</span>, train_percent<span class="op">=</span><span class="fl">0.8</span>, download<span class="op">=</span><span class="va">True</span>)</span>
 <span id="cb5-3"><a href="#cb5-3"></a>test_dataset <span class="op">=</span> dinv.datasets.SimpleFastMRISliceDataset(<span class="st">"data"</span>, file_name<span class="op">=</span>file_name, transform<span class="op">=</span>Resize(<span class="dv">128</span>), train<span class="op">=</span><span class="va">False</span>, train_percent<span class="op">=</span><span class="fl">0.8</span>,)</span>
 <span id="cb5-4"><a href="#cb5-4"></a></span>
 <span id="cb5-5"><a href="#cb5-5"></a>path <span class="op">=</span> dinv.datasets.generate_dataset(train_dataset<span class="op">=</span>train_dataset, test_dataset<span class="op">=</span>test_dataset, physics<span class="op">=</span>physics, physics_generator<span class="op">=</span>physics_generator, save_physics_generator_params<span class="op">=</span><span class="va">True</span>, overwrite_existing<span class="op">=</span><span class="va">False</span>, device<span class="op">=</span>device, save_dir<span class="op">=</span><span class="st">"data"</span>, batch_size<span class="op">=</span><span class="dv">1</span>)</span>
 <span id="cb5-6"><a href="#cb5-6"></a></span>
-<span id="cb5-7"><a href="#cb5-7"></a>train_dataset, test_dataset <span class="op">=</span> dinv.datasets.HDF5Dataset(dataset_path, split<span class="op">=</span><span class="st">"train"</span>, load_physics_generator_params<span class="op">=</span><span class="va">True</span>), dinv.datasets.HDF5Dataset(dataset_path, split<span class="op">=</span><span class="st">"test"</span>, load_physics_generator_params<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb5-7"><a href="#cb5-7"></a>train_dataset, test_dataset <span class="op">=</span> dinv.datasets.HDF5Dataset(path, split<span class="op">=</span><span class="st">"train"</span>, load_physics_generator_params<span class="op">=</span><span class="va">True</span>), dinv.datasets.HDF5Dataset(path, split<span class="op">=</span><span class="st">"test"</span>, load_physics_generator_params<span class="op">=</span><span class="va">True</span>)</span>
 <span id="cb5-8"><a href="#cb5-8"></a>train_dataloader, test_dataloader <span class="op">=</span> torch.utils.data.DataLoader(train_dataset, shuffle<span class="op">=</span><span class="va">True</span>), torch.utils.data.DataLoader(torch.utils.data.Subset(test_dataset, <span class="bu">range</span>(<span class="bu">min</span>(<span class="bu">len</span>(test_dataset), <span class="dv">50</span>))))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="cell" data-execution_count="6">
@@ -539,7 +539,7 @@
 <section id="a.-equivariant-imaging-ei" class="slide level3">
 <h3>1a. Equivariant imaging (EI)</h3>
 <div class="panel-tabset">
-<ul id="tabset-2" class="panel-tabset-tabby"><li><a data-tabby-default="" href="#tabset-2-1">Summary</a></li><li><a href="#tabset-2-2">Code</a></li></ul>
+<ul id="tabset-2" class="panel-tabset-tabby"><li><a data-tabby-default="" href="#tabset-2-1">Summary</a></li><li><a href="#tabset-2-2">Results</a></li></ul>
 <div class="tab-content">
 <div id="tabset-2-1">
 <p>The EI self-supervised loss [1] assumes that the set of signals is invariant to a group of transformations in order to learn from incomplete measurement data alone:</p>
@@ -565,13 +565,12 @@
 </div>
 <div class="cell" data-execution_count="10">
 <div class="sourceCode cell-code" id="cb11"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1"></a><span class="co"># Load pretrained model for 50 epochs, test on test dataset, and save sample reconstruction</span></span>
-<span id="cb11-2"><a href="#cb11-2"></a>trainer.ckpt_pretrained <span class="op">=</span> <span class="st">"models/pretrained/ei.pth.tar"</span></span>
-<span id="cb11-3"><a href="#cb11-3"></a>trainer.load_model()</span>
-<span id="cb11-4"><a href="#cb11-4"></a></span>
-<span id="cb11-5"><a href="#cb11-5"></a>results[<span class="st">"ei"</span>] <span class="op">=</span> trainer.test(test_dataloader)</span>
-<span id="cb11-6"><a href="#cb11-6"></a></span>
-<span id="cb11-7"><a href="#cb11-7"></a>physics.update_parameters(<span class="op">**</span>params)</span>
-<span id="cb11-8"><a href="#cb11-8"></a>results[<span class="st">"ei"</span>][<span class="st">"sample"</span>] <span class="op">=</span> trainer.model(y, physics)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb11-2"><a href="#cb11-2"></a>trainer.load_model(<span class="st">"models/pretrained/ei.pth.tar"</span>)</span>
+<span id="cb11-3"><a href="#cb11-3"></a></span>
+<span id="cb11-4"><a href="#cb11-4"></a>results[<span class="st">"ei"</span>] <span class="op">=</span> trainer.test(test_dataloader)</span>
+<span id="cb11-5"><a href="#cb11-5"></a></span>
+<span id="cb11-6"><a href="#cb11-6"></a>physics.update_parameters(<span class="op">**</span>params)</span>
+<span id="cb11-7"><a href="#cb11-7"></a>results[<span class="st">"ei"</span>][<span class="st">"sample"</span>] <span class="op">=</span> trainer.model(y, physics)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display">
 <p><img data-src="demo_files/figure-revealjs/cell-11-output-1.png"></p>
 </div>
@@ -588,7 +587,7 @@ PSNR: 30.643 +- 2.992</code></pre>
 <section id="b.-diffeomorphic-equivariant-imaging" class="slide level3">
 <h3>1b. Diffeomorphic-equivariant imaging</h3>
 <div class="panel-tabset">
-<ul id="tabset-3" class="panel-tabset-tabby"><li><a data-tabby-default="" href="#tabset-3-1">Summary</a></li><li><a href="#tabset-3-2">Code</a></li></ul>
+<ul id="tabset-3" class="panel-tabset-tabby"><li><a data-tabby-default="" href="#tabset-3-1">Summary</a></li><li><a href="#tabset-3-2">Results</a></li></ul>
 <div class="tab-content">
 <div id="tabset-3-1">
 <p>EI was extended beyond the Euclidean transformation group to the non-linear diffeomorphic group in [3] for MRI problems:</p>
@@ -612,13 +611,12 @@ PSNR: 30.643 +- 2.992</code></pre>
 </div>
 <div class="cell" data-execution_count="13">
 <div class="sourceCode cell-code" id="cb16"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1"></a><span class="co"># Load pretrained model for 50 epochs, test on test dataset, and save sample reconstruction</span></span>
-<span id="cb16-2"><a href="#cb16-2"></a>trainer.ckpt_pretrained <span class="op">=</span> <span class="st">"models/pretrained/diffeo-ei.pth.tar"</span></span>
-<span id="cb16-3"><a href="#cb16-3"></a>trainer.load_model()</span>
-<span id="cb16-4"><a href="#cb16-4"></a></span>
-<span id="cb16-5"><a href="#cb16-5"></a>results[<span class="st">"diffeo-ei"</span>] <span class="op">=</span> trainer.test(test_dataloader)</span>
-<span id="cb16-6"><a href="#cb16-6"></a></span>
-<span id="cb16-7"><a href="#cb16-7"></a>physics.update_parameters(<span class="op">**</span>params)</span>
-<span id="cb16-8"><a href="#cb16-8"></a>results[<span class="st">"diffeo-ei"</span>][<span class="st">"sample"</span>] <span class="op">=</span> trainer.model(y, physics)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb16-2"><a href="#cb16-2"></a>trainer.load_model(<span class="st">"models/pretrained/diffeo-ei.pth.tar"</span>)</span>
+<span id="cb16-3"><a href="#cb16-3"></a></span>
+<span id="cb16-4"><a href="#cb16-4"></a>results[<span class="st">"diffeo-ei"</span>] <span class="op">=</span> trainer.test(test_dataloader)</span>
+<span id="cb16-5"><a href="#cb16-5"></a></span>
+<span id="cb16-6"><a href="#cb16-6"></a>physics.update_parameters(<span class="op">**</span>params)</span>
+<span id="cb16-7"><a href="#cb16-7"></a>results[<span class="st">"diffeo-ei"</span>][<span class="st">"sample"</span>] <span class="op">=</span> trainer.model(y, physics)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display">
 <p><img data-src="demo_files/figure-revealjs/cell-14-output-1.png"></p>
 </div>
@@ -640,7 +638,7 @@ PSNR: 31.388 +- 2.496</code></pre>
 <section id="a.-multi-operator-imaging-moi" class="slide level3">
 <h3>2a. Multi-operator imaging (MOI)</h3>
 <div class="panel-tabset">
-<ul id="tabset-4" class="panel-tabset-tabby"><li><a data-tabby-default="" href="#tabset-4-1">Summary</a></li><li><a href="#tabset-4-2">Code</a></li></ul>
+<ul id="tabset-4" class="panel-tabset-tabby"><li><a data-tabby-default="" href="#tabset-4-1">Summary</a></li><li><a href="#tabset-4-2">Results</a></li></ul>
 <div class="tab-content">
 <div id="tabset-4-1">
 <p>The MOI self-supervised loss [4] can be used to learn when signals are observed via multiple (possibly incomplete) forward operators <span class="math inline">\(\{A_g\}_{g=1}^{G}\)</span>, i.e.&nbsp;<span class="math inline">\(y_i = A_{g_i}x_i\)</span> where <span class="math inline">\(g_i\in \{1,\dots,G\}\)</span>. The loss is constructed as follows:</p>
@@ -665,13 +663,12 @@ PSNR: 31.388 +- 2.496</code></pre>
 </div>
 <div class="cell" data-execution_count="16">
 <div class="sourceCode cell-code" id="cb21"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1"></a><span class="co"># Load pretrained model for 50 epochs, test on test dataset, and save sample reconstruction</span></span>
-<span id="cb21-2"><a href="#cb21-2"></a>trainer.ckpt_pretrained <span class="op">=</span> <span class="st">"models/pretrained/moi.pth.tar"</span></span>
-<span id="cb21-3"><a href="#cb21-3"></a>trainer.load_model()</span>
-<span id="cb21-4"><a href="#cb21-4"></a></span>
-<span id="cb21-5"><a href="#cb21-5"></a>results[<span class="st">"moi"</span>] <span class="op">=</span> trainer.test(test_dataloader)</span>
-<span id="cb21-6"><a href="#cb21-6"></a></span>
-<span id="cb21-7"><a href="#cb21-7"></a>physics.update_parameters(<span class="op">**</span>params)</span>
-<span id="cb21-8"><a href="#cb21-8"></a>results[<span class="st">"moi"</span>][<span class="st">"sample"</span>] <span class="op">=</span> trainer.model(y, physics)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb21-2"><a href="#cb21-2"></a>trainer.load_model(<span class="st">"models/pretrained/moi.pth.tar"</span>)</span>
+<span id="cb21-3"><a href="#cb21-3"></a></span>
+<span id="cb21-4"><a href="#cb21-4"></a>results[<span class="st">"moi"</span>] <span class="op">=</span> trainer.test(test_dataloader)</span>
+<span id="cb21-5"><a href="#cb21-5"></a></span>
+<span id="cb21-6"><a href="#cb21-6"></a>physics.update_parameters(<span class="op">**</span>params)</span>
+<span id="cb21-7"><a href="#cb21-7"></a>results[<span class="st">"moi"</span>][<span class="st">"sample"</span>] <span class="op">=</span> trainer.model(y, physics)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display">
 <p><img data-src="demo_files/figure-revealjs/cell-17-output-1.png"></p>
 </div>
@@ -688,7 +685,7 @@ PSNR: 31.260 +- 2.339</code></pre>
 <section id="b.-multi-operator-equivariant-imaging-mo-ei" class="slide level3">
 <h3>2b. Multi-operator equivariant imaging (MO-EI)</h3>
 <div class="panel-tabset">
-<ul id="tabset-5" class="panel-tabset-tabby"><li><a data-tabby-default="" href="#tabset-5-1">Summary</a></li><li><a href="#tabset-5-2">Code</a></li></ul>
+<ul id="tabset-5" class="panel-tabset-tabby"><li><a data-tabby-default="" href="#tabset-5-1">Summary</a></li><li><a href="#tabset-5-2">Results</a></li></ul>
 <div class="tab-content">
 <div id="tabset-5-1">
 <p>One can combine the multi-operator and equivariant imaging losses to leverage an even greater set of virtual operators (using notation from above):</p>
@@ -698,11 +695,10 @@ PSNR: 31.260 +- 2.339</code></pre>
 </div>
 <div id="tabset-5-2">
 <div class="cell" data-execution_count="17">
-<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1"></a><span class="im">from</span> moi <span class="im">import</span> MOEILoss</span>
-<span id="cb23-2"><a href="#cb23-2"></a>loss <span class="op">=</span> [</span>
-<span id="cb23-3"><a href="#cb23-3"></a>    dinv.loss.MCLoss(),</span>
-<span id="cb23-4"><a href="#cb23-4"></a>    MOEILoss(transform<span class="op">=</span>dinv.transform.CPABDiffeomorphism(device<span class="op">=</span>device), physics_generator<span class="op">=</span>physics_generator)</span>
-<span id="cb23-5"><a href="#cb23-5"></a>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1"></a>loss <span class="op">=</span> [</span>
+<span id="cb23-2"><a href="#cb23-2"></a>    dinv.loss.MCLoss(),</span>
+<span id="cb23-3"><a href="#cb23-3"></a>    dinv.loss.MOEILoss(transform<span class="op">=</span>dinv.transform.CPABDiffeomorphism(device<span class="op">=</span>device), physics_generator<span class="op">=</span>physics_generator)</span>
+<span id="cb23-4"><a href="#cb23-4"></a>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="cell" data-execution_count="18">
 <div class="sourceCode cell-code" id="cb24"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb24-1"><a href="#cb24-1"></a><span class="co"># Set epochs &gt; 0 to train the model</span></span>
@@ -713,13 +709,12 @@ PSNR: 31.260 +- 2.339</code></pre>
 </div>
 <div class="cell" data-execution_count="19">
 <div class="sourceCode cell-code" id="cb26"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb26-1"><a href="#cb26-1"></a><span class="co"># Load pretrained model for 50 epochs, test on test dataset, and save sample reconstruction</span></span>
-<span id="cb26-2"><a href="#cb26-2"></a>trainer.ckpt_pretrained <span class="op">=</span> <span class="st">"models/pretrained/mo-ei.pth.tar"</span></span>
-<span id="cb26-3"><a href="#cb26-3"></a>trainer.load_model()</span>
-<span id="cb26-4"><a href="#cb26-4"></a></span>
-<span id="cb26-5"><a href="#cb26-5"></a>results[<span class="st">"mo-ei"</span>] <span class="op">=</span> trainer.test(test_dataloader)</span>
-<span id="cb26-6"><a href="#cb26-6"></a></span>
-<span id="cb26-7"><a href="#cb26-7"></a>physics.update_parameters(<span class="op">**</span>params)</span>
-<span id="cb26-8"><a href="#cb26-8"></a>results[<span class="st">"mo-ei"</span>][<span class="st">"sample"</span>] <span class="op">=</span> trainer.model(y, physics)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb26-2"><a href="#cb26-2"></a>trainer.load_model(<span class="st">"models/pretrained/mo-ei.pth.tar"</span>)</span>
+<span id="cb26-3"><a href="#cb26-3"></a></span>
+<span id="cb26-4"><a href="#cb26-4"></a>results[<span class="st">"mo-ei"</span>] <span class="op">=</span> trainer.test(test_dataloader)</span>
+<span id="cb26-5"><a href="#cb26-5"></a></span>
+<span id="cb26-6"><a href="#cb26-6"></a>physics.update_parameters(<span class="op">**</span>params)</span>
+<span id="cb26-7"><a href="#cb26-7"></a>results[<span class="st">"mo-ei"</span>][<span class="st">"sample"</span>] <span class="op">=</span> trainer.model(y, physics)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display">
 <p><img data-src="demo_files/figure-revealjs/cell-20-output-1.png"></p>
 </div>
@@ -741,7 +736,7 @@ PSNR: 31.601 +- 2.326</code></pre>
 <section id="a.-self-supervised-data-undersampling-ssdu" class="slide level3">
 <h3>3a. Self-supervised data undersampling (SSDU)</h3>
 <div class="panel-tabset">
-<ul id="tabset-6" class="panel-tabset-tabby"><li><a data-tabby-default="" href="#tabset-6-1">Summary</a></li><li><a href="#tabset-6-2">Code</a></li></ul>
+<ul id="tabset-6" class="panel-tabset-tabby"><li><a data-tabby-default="" href="#tabset-6-1">Summary</a></li><li><a href="#tabset-6-2">Results</a></li></ul>
 <div class="tab-content">
 <div id="tabset-6-1">
 <p>The SSDU measurement splitting loss [5] splits the measurement <span class="math inline">\(y\in\mathbb{R}^m\)</span> and forward operator <span class="math inline">\(A\)</span> into two smaller pairs <span class="math inline">\((y_1\in\mathbb{R}^{m_1},A_1)\)</span> and <span class="math inline">\((y_1\in\mathbb{R}^{m_1},A_1)\)</span> to compute the self-supervised loss:</p>
@@ -766,13 +761,12 @@ PSNR: 31.601 +- 2.326</code></pre>
 </div>
 <div class="cell" data-execution_count="22">
 <div class="sourceCode cell-code" id="cb31"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb31-1"><a href="#cb31-1"></a><span class="co"># Load pretrained model for 50 epochs, test on test dataset, and save sample reconstruction</span></span>
-<span id="cb31-2"><a href="#cb31-2"></a>trainer.ckpt_pretrained <span class="op">=</span> <span class="st">"models/pretrained/ssdu.pth.tar"</span></span>
-<span id="cb31-3"><a href="#cb31-3"></a>trainer.load_model()</span>
-<span id="cb31-4"><a href="#cb31-4"></a></span>
-<span id="cb31-5"><a href="#cb31-5"></a>results[<span class="st">"ssdu"</span>] <span class="op">=</span> trainer.test(test_dataloader)</span>
-<span id="cb31-6"><a href="#cb31-6"></a></span>
-<span id="cb31-7"><a href="#cb31-7"></a>physics.update_parameters(<span class="op">**</span>params)</span>
-<span id="cb31-8"><a href="#cb31-8"></a>results[<span class="st">"ssdu"</span>][<span class="st">"sample"</span>] <span class="op">=</span> trainer.model(y, physics)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb31-2"><a href="#cb31-2"></a>trainer.load_model(<span class="st">"models/pretrained/ssdu.pth.tar"</span>)</span>
+<span id="cb31-3"><a href="#cb31-3"></a></span>
+<span id="cb31-4"><a href="#cb31-4"></a>results[<span class="st">"ssdu"</span>] <span class="op">=</span> trainer.test(test_dataloader)</span>
+<span id="cb31-5"><a href="#cb31-5"></a></span>
+<span id="cb31-6"><a href="#cb31-6"></a>physics.update_parameters(<span class="op">**</span>params)</span>
+<span id="cb31-7"><a href="#cb31-7"></a>results[<span class="st">"ssdu"</span>][<span class="st">"sample"</span>] <span class="op">=</span> trainer.model(y, physics)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display">
 <p><img data-src="demo_files/figure-revealjs/cell-23-output-1.png"></p>
 </div>
@@ -789,7 +783,7 @@ PSNR: 26.796 +- 2.191</code></pre>
 <section id="b.-noise2inverse" class="slide level3">
 <h3>3b. Noise2Inverse</h3>
 <div class="panel-tabset">
-<ul id="tabset-7" class="panel-tabset-tabby"><li><a data-tabby-default="" href="#tabset-7-1">Summary</a></li><li><a href="#tabset-7-2">Code</a></li></ul>
+<ul id="tabset-7" class="panel-tabset-tabby"><li><a data-tabby-default="" href="#tabset-7-1">Summary</a></li><li><a href="#tabset-7-2">Results</a></li></ul>
 <div class="tab-content">
 <div id="tabset-7-1">
 <p>The Noise2Inverse framework [8] extends SSDU [5] during inference by averaging the model over multiple realizations of the random splitting, i.e.</p>
@@ -810,13 +804,12 @@ PSNR: 26.796 +- 2.191</code></pre>
 </div>
 <div class="cell" data-execution_count="25">
 <div class="sourceCode cell-code" id="cb36"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb36-1"><a href="#cb36-1"></a><span class="co"># Load pretrained SSDU model for 50 epochs, test on test dataset, and save sample reconstruction</span></span>
-<span id="cb36-2"><a href="#cb36-2"></a>trainer.ckpt_pretrained <span class="op">=</span> <span class="st">"models/pretrained/ssdu.pth.tar"</span></span>
-<span id="cb36-3"><a href="#cb36-3"></a>trainer.load_model()</span>
-<span id="cb36-4"><a href="#cb36-4"></a></span>
-<span id="cb36-5"><a href="#cb36-5"></a>results[<span class="st">"noise2inverse"</span>] <span class="op">=</span> trainer.test(test_dataloader)</span>
-<span id="cb36-6"><a href="#cb36-6"></a></span>
-<span id="cb36-7"><a href="#cb36-7"></a>physics.update_parameters(<span class="op">**</span>params)</span>
-<span id="cb36-8"><a href="#cb36-8"></a>results[<span class="st">"noise2inverse"</span>][<span class="st">"sample"</span>] <span class="op">=</span> trainer.model(y, physics)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb36-2"><a href="#cb36-2"></a>trainer.load_model(<span class="st">"models/pretrained/ssdu.pth.tar"</span>)</span>
+<span id="cb36-3"><a href="#cb36-3"></a></span>
+<span id="cb36-4"><a href="#cb36-4"></a>results[<span class="st">"noise2inverse"</span>] <span class="op">=</span> trainer.test(test_dataloader)</span>
+<span id="cb36-5"><a href="#cb36-5"></a></span>
+<span id="cb36-6"><a href="#cb36-6"></a>physics.update_parameters(<span class="op">**</span>params)</span>
+<span id="cb36-7"><a href="#cb36-7"></a>results[<span class="st">"noise2inverse"</span>][<span class="st">"sample"</span>] <span class="op">=</span> trainer.model(y, physics)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display">
 <p><img data-src="demo_files/figure-revealjs/cell-26-output-1.png"></p>
 </div>
@@ -833,7 +826,7 @@ PSNR: 26.282 +- 2.030</code></pre>
 <section id="c.-noisier2noise-ssdu" class="slide level3">
 <h3>3c. Noisier2Noise-SSDU</h3>
 <div class="panel-tabset">
-<ul id="tabset-8" class="panel-tabset-tabby"><li><a data-tabby-default="" href="#tabset-8-1">Summary</a></li><li><a href="#tabset-8-2">Code</a></li></ul>
+<ul id="tabset-8" class="panel-tabset-tabby"><li><a data-tabby-default="" href="#tabset-8-1">Summary</a></li><li><a href="#tabset-8-2">Results</a></li></ul>
 <div class="tab-content">
 <div id="tabset-8-1">
 <p>The Noisier2Noise-SSDU [9] loss extends SSDU [5] by…</p>
@@ -849,13 +842,12 @@ PSNR: 26.282 +- 2.030</code></pre>
 </div>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb40"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb40-1"><a href="#cb40-1"></a><span class="co"># Load pretrained model for 50 epochs, test on test dataset, and save sample reconstruction</span></span>
-<span id="cb40-2"><a href="#cb40-2"></a>trainer.ckpt_pretrained <span class="op">=</span> <span class="st">"models/pretrained/noisier2noise-ssdu.pth.tar"</span></span>
-<span id="cb40-3"><a href="#cb40-3"></a>trainer.load_model()</span>
-<span id="cb40-4"><a href="#cb40-4"></a></span>
-<span id="cb40-5"><a href="#cb40-5"></a>results[<span class="st">"noisier2noise-ssdu"</span>] <span class="op">=</span> trainer.test(test_dataloader)</span>
-<span id="cb40-6"><a href="#cb40-6"></a></span>
-<span id="cb40-7"><a href="#cb40-7"></a>physics.update_parameters(<span class="op">**</span>params)</span>
-<span id="cb40-8"><a href="#cb40-8"></a>results[<span class="st">"noisier2noise-ssdu"</span>][<span class="st">"sample"</span>] <span class="op">=</span> trainer.model(y, physics)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb40-2"><a href="#cb40-2"></a>trainer.load_model(<span class="st">"models/pretrained/noisier2noise-ssdu.pth.tar"</span>)</span>
+<span id="cb40-3"><a href="#cb40-3"></a></span>
+<span id="cb40-4"><a href="#cb40-4"></a>results[<span class="st">"noisier2noise-ssdu"</span>] <span class="op">=</span> trainer.test(test_dataloader)</span>
+<span id="cb40-5"><a href="#cb40-5"></a></span>
+<span id="cb40-6"><a href="#cb40-6"></a>physics.update_parameters(<span class="op">**</span>params)</span>
+<span id="cb40-7"><a href="#cb40-7"></a>results[<span class="st">"noisier2noise-ssdu"</span>][<span class="st">"sample"</span>] <span class="op">=</span> trainer.model(y, physics)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </div>
 </div>
@@ -864,7 +856,7 @@ PSNR: 26.282 +- 2.030</code></pre>
 <section id="baselines" class="title-slide slide level2 center">
 <h2>4. Baselines</h2>
 <div class="panel-tabset">
-<ul id="tabset-9" class="panel-tabset-tabby"><li><a data-tabby-default="" href="#tabset-9-1">Summary</a></li><li><a href="#tabset-9-2">Code</a></li></ul>
+<ul id="tabset-9" class="panel-tabset-tabby"><li><a data-tabby-default="" href="#tabset-9-1">Summary</a></li><li><a href="#tabset-9-2">Results</a></li></ul>
 <div class="tab-content">
 <div id="tabset-9-1">
 <p>We also provide an upper-limit experiment using oracle supervised learning…</p>
@@ -875,11 +867,10 @@ PSNR: 26.282 +- 2.030</code></pre>
 <div id="tabset-9-2">
 <div class="cell" data-execution_count="26">
 <div class="sourceCode cell-code" id="cb41"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb41-1"><a href="#cb41-1"></a>trainer <span class="op">=</span> train(dinv.loss.SupLoss(), epochs<span class="op">=</span><span class="dv">0</span>)</span>
-<span id="cb41-2"><a href="#cb41-2"></a>trainer.ckpt_pretrained <span class="op">=</span> <span class="st">"models/pretrained/sup.pth.tar"</span></span>
-<span id="cb41-3"><a href="#cb41-3"></a>trainer.load_model()</span>
-<span id="cb41-4"><a href="#cb41-4"></a>results[<span class="st">"sup"</span>] <span class="op">=</span> trainer.test(test_dataloader)</span>
-<span id="cb41-5"><a href="#cb41-5"></a>physics.update_parameters(<span class="op">**</span>params)</span>
-<span id="cb41-6"><a href="#cb41-6"></a>results[<span class="st">"sup"</span>][<span class="st">"sample"</span>] <span class="op">=</span> trainer.model(y, physics)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb41-2"><a href="#cb41-2"></a>trainer.load_model(<span class="st">"models/pretrained/sup.pth.tar"</span>)</span>
+<span id="cb41-3"><a href="#cb41-3"></a>results[<span class="st">"sup"</span>] <span class="op">=</span> trainer.test(test_dataloader)</span>
+<span id="cb41-4"><a href="#cb41-4"></a>physics.update_parameters(<span class="op">**</span>params)</span>
+<span id="cb41-5"><a href="#cb41-5"></a>results[<span class="st">"sup"</span>][<span class="st">"sample"</span>] <span class="op">=</span> trainer.model(y, physics)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>The model has 2070091 trainable parameters
 Test results:
@@ -892,11 +883,10 @@ PSNR: 31.779 +- 2.595</code></pre>
 </div>
 <div class="cell" data-execution_count="27">
 <div class="sourceCode cell-code" id="cb43"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb43-1"><a href="#cb43-1"></a>trainer <span class="op">=</span> train(dinv.loss.MCLoss(), epochs<span class="op">=</span><span class="dv">0</span>)</span>
-<span id="cb43-2"><a href="#cb43-2"></a>trainer.ckpt_pretrained <span class="op">=</span> <span class="st">"models/pretrained/mc.pth.tar"</span></span>
-<span id="cb43-3"><a href="#cb43-3"></a>trainer.load_model()</span>
-<span id="cb43-4"><a href="#cb43-4"></a>results[<span class="st">"mc"</span>] <span class="op">=</span> trainer.test(test_dataloader)</span>
-<span id="cb43-5"><a href="#cb43-5"></a>physics.update_parameters(<span class="op">**</span>params)</span>
-<span id="cb43-6"><a href="#cb43-6"></a>results[<span class="st">"mc"</span>][<span class="st">"sample"</span>] <span class="op">=</span> trainer.model(y, physics)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb43-2"><a href="#cb43-2"></a>trainer.load_model(<span class="st">"models/pretrained/mc.pth.tar"</span>)</span>
+<span id="cb43-3"><a href="#cb43-3"></a>results[<span class="st">"mc"</span>] <span class="op">=</span> trainer.test(test_dataloader)</span>
+<span id="cb43-4"><a href="#cb43-4"></a>physics.update_parameters(<span class="op">**</span>params)</span>
+<span id="cb43-5"><a href="#cb43-5"></a>results[<span class="st">"mc"</span>][<span class="st">"sample"</span>] <span class="op">=</span> trainer.model(y, physics)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>The model has 2070091 trainable parameters
 Test results:
