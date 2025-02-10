@@ -164,7 +164,7 @@ for _ in range(5):
 
 results["sample"] = torch.cat(samples).detach().cpu().numpy()
 
-with open(f"{model_dir}/{run_id}/results.json", "w") as f:
+with open(f"{model_dir}/paper/{run_id}/results.json", "w") as f:
     json.dump(results, f)
 
 # python train_paper.py --loss "sup" --epochs 0
