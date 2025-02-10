@@ -10,6 +10,7 @@ rng_cpu = torch.Generator(device="cpu").manual_seed(0)
 results = {}
 
 file_name = "fastmri_knee_singlecoil.pt"
+model_dir = "/home/s2558406/RDS/models/deepinv-selfsup-fastmri"
 
 from argparse import ArgumentParser
 parser = ArgumentParser()
@@ -61,7 +62,7 @@ dataset_path = dinv.datasets.generate_dataset(
     save_physics_generator_params=True,
     overwrite_existing=False,
     device=device,
-    save_dir="data",
+    save_dir=model_dir.replace("models", "data"),
     batch_size=1,
     dataset_filename="dinv_dataset_paper" + ("_noisy" if args.physics == "noisy" else "") + ("_multicoil" if args.physics == "multicoil" else "")
 )
@@ -70,7 +71,7 @@ dataset_path = dinv.datasets.generate_dataset(
 train_dataset = dinv.datasets.HDF5Dataset(dataset_path, split="train", load_physics_generator_params=True)
 test_dataset = dinv.datasets.HDF5Dataset(dataset_path, split="test", load_physics_generator_params=True)
 
-train_dataloader, test_dataloader = torch.utils.data.DataLoader(train_dataset, shuffle=True, generator=rng_cpu), torch.utils.data.DataLoader(test_dataset)
+train_dataloader, test_dataloader = torch.utils.data.DataLoader(torch.utils.data.Subset(train_dataset, [0]), shuffle=True, generator=rng_cpu), torch.utils.data.DataLoader(test_dataset)
 
 # %%
 def train(loss: dinv.loss.Loss, epochs: int = 0):
@@ -97,7 +98,6 @@ def train(loss: dinv.loss.Loss, epochs: int = 0):
     trainer.train()
     trainer.plot_images = True
     trainer.wandb_vis = False
-    trainer.save_folder_im = f"/home/s2558406/RDS/models/deepinv-selfsup-fastmri/{args.loss}"
     return trainer
 
 # %%
@@ -148,8 +148,10 @@ match args.loss:
 import wandb, json
 with wandb.init(project="deepinv-selfsup-fastmri-experiments", config={"loss": args.loss}):
     trainer = train(loss, epochs=args.epochs)
+    run_id = wandb.run.id
+    trainer.save_folder_im = f"{model_dir}/paper/{run_id}"
 
-results = trainer.test(test_dataloader, f"/home/s2558406/RDS/models/deepinv-selfsup-fastmri/{args.loss}")
+results = trainer.test(test_dataloader, f"{model_dir}/paper/{run_id}")
 results["train"] = trainer.test(train_dataloader, save_path=None)
 
 samples = []
@@ -162,7 +164,7 @@ for _ in range(5):
 
 results["sample"] = torch.cat([samples])
 
-with open(f"/home/s2558406/RDS/models/deepinv-selfsup-fastmri/{args.loss}/results.json", "w") as f:
+with open(f"{model_dir}/{run_id}/results.json", "w") as f:
     json.dump(results, f)
 
 # python train_paper.py --loss "sup" --epochs 0
