@@ -17,6 +17,7 @@ parser = ArgumentParser()
 parser.add_argument("--loss", type=str, default="ei")
 parser.add_argument("--epochs", type=int, default=1)
 parser.add_argument("--physics", type=str, default="mri", choices=("mri", "noisy", "multicoil"))
+parser.add_argument("--save_gt", action="store_true")
 args = parser.parse_args()
 
 # %%
@@ -38,20 +39,14 @@ model = lambda: dinv.utils.demo.demo_mri_model(denoiser=denoiser, num_iter=3, de
 
 # %%
 # Define FastMRI datasets
-train_dataset = dinv.datasets.SimpleFastMRISliceDataset(
+dataset = dinv.datasets.SimpleFastMRISliceDataset(
     "data",
     file_name=file_name,
     train=True,
-    train_percent=0.8,
+    train_percent=1.,
     download=True,
 )
-
-test_dataset = dinv.datasets.SimpleFastMRISliceDataset(
-    "data",
-    file_name="fastmri_knee_singlecoil.pt",
-    train=False,
-    train_percent=0.8,
-)
+train_dataset, test_dataset = torch.utils.data.random_split(dataset, (0.8, 0.2), generator=rng_cpu)
 
 # Simulate and save random measurements
 dataset_path = dinv.datasets.generate_dataset(
@@ -154,18 +149,26 @@ with wandb.init(project="deepinv-selfsup-fastmri-experiments", config={"loss": a
 results = trainer.test(test_dataloader, f"{model_dir}/paper/{run_id}")
 results["train"] = trainer.test(train_dataloader, save_path=None)
 
-samples = []
+sample_xhat, sample_x, sample_y, sample_xinit = [], [], [], []
 iterator = iter(test_dataloader)
 for _ in range(5):
     x, y, params = next(iterator)
     params = {k: v.to(device) for (k, v) in params.items()}
     physics.update_parameters(**params)
-    samples += [trainer.model(y.to(device), physics)]
+    sample_xhat += [trainer.model(y.to(device), physics)]
+    sample_x += [x]
+    sample_y += [y]
+    sample_xinit += [physics.A_adjoint(y, **params)]
 
 with open(f"{model_dir}/paper/{run_id}/results.json", "w") as f:
     json.dump(results, f)
 
 from numpy import save
-save(f"{model_dir}/paper/{run_id}/samples.npy", torch.cat(samples).detach().cpu().numpy())
+save(f"{model_dir}/paper/{run_id}/samples.npy", torch.cat(sample_xhat).detach().cpu().numpy())
+
+if args.save_gt:
+    save(f"{model_dir}/paper/{run_id}/samples.npy", torch.cat(sample_x).detach().cpu().numpy())
+    save(f"{model_dir}/paper/{run_id}/samples.npy", torch.cat(sample_y).detach().cpu().numpy())
+    save(f"{model_dir}/paper/{run_id}/samples.npy", torch.cat(sample_xinit).detach().cpu().numpy())
 
 # python train_paper.py --loss "sup" --epochs 0
