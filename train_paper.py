@@ -158,7 +158,7 @@ for _ in range(5):
     sample_xhat += [trainer.model(y.to(device), physics)]
     sample_x += [x]
     sample_y += [y]
-    sample_xinit += [physics.A_adjoint(y, **params)]
+    sample_xinit += [physics.A_adjoint(y.to(device), **params)]
 
 with open(f"{model_dir}/paper/{run_id}/results.json", "w") as f:
     json.dump(results, f)
