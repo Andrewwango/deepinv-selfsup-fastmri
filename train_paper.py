@@ -156,8 +156,9 @@ samples = []
 iterator = iter(test_dataloader)
 for _ in range(5):
     x, y, params = next(iterator)
+    params = {k: v.to(device) for (k, v) in params.items()}
     physics.update_parameters(**params)
-    samples += [trainer.model(y, physics).detach().cpu().numpy()]
+    samples += [trainer.model(y.to(device), physics).detach().cpu().numpy()]
 
 results["sample"] = torch.cat([samples])
 
