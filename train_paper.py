@@ -18,6 +18,8 @@ parser.add_argument("--loss", type=str, default="ei")
 parser.add_argument("--epochs", type=int, default=1)
 parser.add_argument("--physics", type=str, default="mri", choices=("mri", "noisy", "multicoil"))
 parser.add_argument("--save_gt", action="store_true")
+parser.add_argument("--save_model", action="store_true")
+parser.add_argument("--ckpt", type=str, default=None)
 args = parser.parse_args()
 
 # %%
@@ -89,6 +91,7 @@ def train(loss: dinv.loss.Loss, epochs: int = 0):
         save_path = None,
         plot_images = False,
         wandb_vis = True,
+        ckpt_pretrained=None if args.ckpt is None else f"{model_dir}/paper/{args.ckpt}"
     )
 
     trainer.train()
@@ -155,6 +158,10 @@ with wandb.init(project="deepinv-selfsup-fastmri-experiments", config={"loss": a
 results = trainer.test(test_dataloader, f"{model_dir}/paper/{run_id}")
 results["train"] = trainer.test(train_dataloader, save_path=None)
 
+if args.save_model:
+    trainer.save_path = f"{model_dir}/paper/{run_id}"
+    trainer.save_model(trainer.epochs - 1)
+
 sample_xhat, sample_x, sample_y, sample_xinit = [], [], [], []
 iterator = iter(test_dataloader)
 for _ in range(5):
@@ -184,3 +191,5 @@ if args.save_gt:
 savez(f"{model_dir}/paper/{run_id}/samples.npz", **samples_to_save)
 
 # python train_paper.py --loss "sup" --epochs 150 --save_gt
+# python train_paper.py --loss "ssdu" --epochs 150 --save_model
+# python train_paper.py --loss "noise2inverse" --epochs 0 --ckpt "/ckpt_149.pth.tar"
