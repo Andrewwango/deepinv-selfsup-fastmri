@@ -147,8 +147,8 @@ match args.loss:
 # Set epochs > 0 to train the model
 import wandb, json
 with wandb.init(project="deepinv-selfsup-fastmri-experiments", config={"loss": args.loss}):
-    trainer = train(loss, epochs=args.epochs)
     run_id = wandb.run.id
+    trainer = train(loss, epochs=args.epochs)
     trainer.save_folder_im = f"{model_dir}/paper/{run_id}"
 
 results = trainer.test(test_dataloader, f"{model_dir}/paper/{run_id}")
