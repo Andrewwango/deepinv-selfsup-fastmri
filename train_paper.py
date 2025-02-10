@@ -166,6 +166,6 @@ with open(f"{model_dir}/paper/{run_id}/results.json", "w") as f:
     json.dump(results, f)
 
 from numpy import save
-save(torch.cat(samples).detach().cpu().numpy(), f"{model_dir}/paper/{run_id}/samples.npy")
+save(f"{model_dir}/paper/{run_id}/samples.npy", torch.cat(samples).detach().cpu().numpy())
 
 # python train_paper.py --loss "sup" --epochs 0
