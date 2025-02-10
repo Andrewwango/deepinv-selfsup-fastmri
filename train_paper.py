@@ -39,22 +39,14 @@ model = lambda: dinv.utils.demo.demo_mri_model(denoiser=denoiser, num_iter=3, de
 
 # %%
 # Define FastMRI datasets
-train_dataset = dinv.datasets.SimpleFastMRISliceDataset(
+dataset = dinv.datasets.SimpleFastMRISliceDataset(
     "data",
     file_name=file_name,
     train=True,
-    train_percent=0.8,
+    train_percent=1.,
     download=True,
 )
-
-test_dataset = dinv.datasets.SimpleFastMRISliceDataset(
-    "data",
-    file_name=file_name,
-    train=False,
-    train_percent=0.8,
-)
-
-#train_dataset, test_dataset = torch.utils.data.random_split(dataset, (0.8, 0.2), generator=rng_cpu)
+train_dataset, test_dataset = torch.utils.data.random_split(dataset, (0.8, 0.2), generator=rng_cpu)
 
 # Simulate and save random measurements
 dataset_path = dinv.datasets.generate_dataset(
@@ -67,14 +59,14 @@ dataset_path = dinv.datasets.generate_dataset(
     device=device,
     save_dir=model_dir.replace("models", "data"),
     batch_size=1,
-    dataset_filename="dinv_dataset_papertemp" + ("_noisy" if args.physics == "noisy" else "") + ("_multicoil" if args.physics == "multicoil" else "")
+    dataset_filename="dinv_dataset_paper" + ("_noisy" if args.physics == "noisy" else "") + ("_multicoil" if args.physics == "multicoil" else "")
 )
 
 # Load saved datasets
 train_dataset = dinv.datasets.HDF5Dataset(dataset_path, split="train", load_physics_generator_params=True)
 test_dataset = dinv.datasets.HDF5Dataset(dataset_path, split="test", load_physics_generator_params=True)
 
-train_dataloader, test_dataloader = torch.utils.data.DataLoader(torch.utils.data.Subset(train_dataset, [0]), shuffle=True, generator=rng_cpu), torch.utils.data.DataLoader(test_dataset)
+train_dataloader, test_dataloader = torch.utils.data.DataLoader(train_dataset, shuffle=True, generator=rng_cpu), torch.utils.data.DataLoader(test_dataset)
 
 # %%
 def train(loss: dinv.loss.Loss, epochs: int = 0):
