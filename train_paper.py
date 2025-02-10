@@ -6,6 +6,7 @@ from torchvision.transforms import Resize
 
 device = dinv.utils.get_freer_gpu() if torch.cuda.is_available() else "cpu"
 rng = torch.Generator(device=device).manual_seed(0)
+rng_cpu = torch.Generator(device="cpu").manual_seed(0)
 results = {}
 
 file_name = "fastmri_knee_singlecoil.pt"
@@ -69,7 +70,7 @@ dataset_path = dinv.datasets.generate_dataset(
 train_dataset = dinv.datasets.HDF5Dataset(dataset_path, split="train", load_physics_generator_params=True)
 test_dataset = dinv.datasets.HDF5Dataset(dataset_path, split="test", load_physics_generator_params=True)
 
-train_dataloader, test_dataloader = torch.utils.data.DataLoader(train_dataset, shuffle=True, generator=rng), torch.utils.data.DataLoader(test_dataset)
+train_dataloader, test_dataloader = torch.utils.data.DataLoader(train_dataset, shuffle=True, generator=rng_cpu), torch.utils.data.DataLoader(test_dataset)
 
 # %%
 def train(loss: dinv.loss.Loss, epochs: int = 0):
