@@ -71,7 +71,8 @@ train_dataloader, test_dataloader = torch.utils.data.DataLoader(train_dataset, s
 # %%
 def train(loss: dinv.loss.Loss, epochs: int = 0):
     _model = model()
-    
+    optimizer = torch.optim.Adam(_model.parameters(), lr=1e-3)
+    scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, [50])
     trainer = dinv.Trainer(
         model = _model,
         physics = physics,
@@ -80,7 +81,7 @@ def train(loss: dinv.loss.Loss, epochs: int = 0):
         eval_dataloader = test_dataloader,
         epochs = epochs,
         losses = loss,
-        scheduler = None,
+        scheduler = scheduler,
         metrics = dinv.metric.PSNR(complex_abs=True),
         ckp_interval = 10,
         device = device,
