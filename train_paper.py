@@ -84,7 +84,7 @@ def train(loss: dinv.loss.Loss, epochs: int = 0):
         epochs = epochs,
         losses = loss,
         scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, [50]) if args.scheduler else None,
-        metrics = dinv.metric.PSNR(complex_abs=True),
+        metrics = [dinv.metric.PSNR(complex_abs=True), dinv.metric.SSIM(complex_abs=True)],
         ckp_interval = 10,
         device = device,
         eval_interval = 1,
