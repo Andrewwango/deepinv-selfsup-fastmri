@@ -35,7 +35,7 @@ train_dataset = dinv.datasets.SimpleFastMRISliceDataset(
 
 test_dataset = dinv.datasets.SimpleFastMRISliceDataset(
     "data",
-    file_name="fastmri_knee_singlecoil.pt",
+    file_name=file_name,
     transform=Resize(128),
     train=False,
     train_percent=0.8,

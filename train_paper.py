@@ -39,14 +39,22 @@ model = lambda: dinv.utils.demo.demo_mri_model(denoiser=denoiser, num_iter=3, de
 
 # %%
 # Define FastMRI datasets
-dataset = dinv.datasets.SimpleFastMRISliceDataset(
+train_dataset = dinv.datasets.SimpleFastMRISliceDataset(
     "data",
     file_name=file_name,
     train=True,
-    train_percent=1.,
+    train_percent=0.8,
     download=True,
 )
-train_dataset, test_dataset = torch.utils.data.random_split(dataset, (0.8, 0.2), generator=rng_cpu)
+
+test_dataset = dinv.datasets.SimpleFastMRISliceDataset(
+    "data",
+    file_name=file_name,
+    train=False,
+    train_percent=0.8,
+)
+
+#train_dataset, test_dataset = torch.utils.data.random_split(dataset, (0.8, 0.2), generator=rng_cpu)
 
 # Simulate and save random measurements
 dataset_path = dinv.datasets.generate_dataset(
@@ -59,7 +67,7 @@ dataset_path = dinv.datasets.generate_dataset(
     device=device,
     save_dir=model_dir.replace("models", "data"),
     batch_size=1,
-    dataset_filename="dinv_dataset_paper" + ("_noisy" if args.physics == "noisy" else "") + ("_multicoil" if args.physics == "multicoil" else "")
+    dataset_filename="dinv_dataset_papertemp" + ("_noisy" if args.physics == "noisy" else "") + ("_multicoil" if args.physics == "multicoil" else "")
 )
 
 # Load saved datasets
@@ -163,12 +171,18 @@ for _ in range(5):
 with open(f"{model_dir}/paper/{run_id}/results.json", "w") as f:
     json.dump(results, f)
 
-from numpy import save
-save(f"{model_dir}/paper/{run_id}/samples.npy", torch.cat(sample_xhat).detach().cpu().numpy())
+from numpy import savez
+samples_to_save = {
+    "x_hat": torch.cat(sample_xhat).detach().cpu().numpy()
+}
 
 if args.save_gt:
-    save(f"{model_dir}/paper/{run_id}/samples.npy", torch.cat(sample_x).detach().cpu().numpy())
-    save(f"{model_dir}/paper/{run_id}/samples.npy", torch.cat(sample_y).detach().cpu().numpy())
-    save(f"{model_dir}/paper/{run_id}/samples.npy", torch.cat(sample_xinit).detach().cpu().numpy())
+    samples_to_save |= {
+        "x": torch.cat(sample_x).detach().cpu().numpy(),
+        "y": torch.cat(sample_y).detach().cpu().numpy(),
+        "x_init": torch.cat(sample_xinit).detach().cpu().numpy()
+    }
+
+savez(f"{model_dir}/paper/{run_id}/samples.npz", **samples_to_save)
 
 # python train_paper.py --loss "sup" --epochs 0
