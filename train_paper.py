@@ -19,6 +19,7 @@ parser.add_argument("--epochs", type=int, default=1)
 parser.add_argument("--physics", type=str, default="mri", choices=("mri", "noisy", "multicoil"))
 parser.add_argument("--save_gt", action="store_true")
 parser.add_argument("--save_model", action="store_true")
+parser.add_argument("--scheduler", action="store_true")
 parser.add_argument("--ckpt", type=str, default=None)
 args = parser.parse_args()
 
@@ -74,7 +75,6 @@ train_dataloader, test_dataloader = torch.utils.data.DataLoader(train_dataset, s
 def train(loss: dinv.loss.Loss, epochs: int = 0):
     _model = model()
     optimizer = torch.optim.Adam(_model.parameters(), lr=1e-3)
-    scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, [50])
     trainer = dinv.Trainer(
         model = _model,
         physics = physics,
@@ -83,7 +83,7 @@ def train(loss: dinv.loss.Loss, epochs: int = 0):
         eval_dataloader = test_dataloader,
         epochs = epochs,
         losses = loss,
-        scheduler = scheduler,
+        scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, [50]) if args.scheduler else None,
         metrics = dinv.metric.PSNR(complex_abs=True),
         ckp_interval = 10,
         device = device,
@@ -190,6 +190,6 @@ if args.save_gt:
 
 savez(f"{model_dir}/paper/{run_id}/samples.npz", **samples_to_save)
 
-# python train_paper.py --loss "sup" --epochs 150 --save_gt
+# python train_paper.py --loss "sup" --epochs 150 --scheduler --save_gt
 # python train_paper.py --loss "ssdu" --epochs 150 --save_model
 # python train_paper.py --loss "noise2inverse" --epochs 0 --ckpt "/ckpt_149.pth.tar"
