@@ -10,16 +10,28 @@ results = {}
 
 file_name = "fastmri_knee_singlecoil.pt"
 
+from argparse import ArgumentParser
+parser = ArgumentParser()
+parser.add_argument("--loss", type=str, default="ei")
+parser.add_argument("--epochs", type=int, default=1)
+parser.add_argument("--physics", type=str, default="mri", choices=("mri", "noisy", "multicoil"))
+args = parser.parse_args()
+
 # %%
 # Define MRI physics with random masks
 physics_generator = dinv.physics.generator.GaussianMaskGenerator(
-    img_size=(128, 128), acceleration=4, rng=rng, device=device
+    img_size=(320, 320), acceleration=8, rng=rng, device=device
 )
-physics = dinv.physics.MRI(img_size=(128, 128), device=device)
+physics = dinv.physics.MRI(img_size=(320, 320), device=device)
+
+if args.physics == "noisy":
+    physics.noise_model = dinv.physics.GaussianNoise(0.1, rng=rng)
+elif args.physics == "multicoil":
+    physics = dinv.physics.MultiCoilMRI(img_size=(320, 320), coil_maps=8, device=device)
 
 # %%
 # Define unrolled network
-denoiser = dinv.models.UNet(2, 2, scales=3)
+denoiser = dinv.models.UNet(2, 2, scales=4, batch_norm=False)
 model = lambda: dinv.utils.demo.demo_mri_model(denoiser=denoiser, num_iter=3, device=device).to(device)
 
 # %%
@@ -27,7 +39,6 @@ model = lambda: dinv.utils.demo.demo_mri_model(denoiser=denoiser, num_iter=3, de
 train_dataset = dinv.datasets.SimpleFastMRISliceDataset(
     "data",
     file_name=file_name,
-    transform=Resize(128),
     train=True,
     train_percent=0.8,
     download=True,
@@ -36,7 +47,6 @@ train_dataset = dinv.datasets.SimpleFastMRISliceDataset(
 test_dataset = dinv.datasets.SimpleFastMRISliceDataset(
     "data",
     file_name="fastmri_knee_singlecoil.pt",
-    transform=Resize(128),
     train=False,
     train_percent=0.8,
 )
@@ -52,6 +62,7 @@ dataset_path = dinv.datasets.generate_dataset(
     device=device,
     save_dir="data",
     batch_size=1,
+    dataset_filename="dinv_dataset_paper" + ("_noisy" if args.physics == "noisy" else "") + ("_multicoil" if args.physics == "multicoil" else "")
 )
 
 # Load saved datasets
@@ -77,7 +88,7 @@ def train(loss: dinv.loss.Loss, epochs: int = 0):
         ckp_interval = 10,
         device = device,
         eval_interval = 1,
-        save_path = f"/home/s2558406/RDS/models/deepinv-selfsup-fastmri/{args.loss}",
+        save_path = None,
         plot_images = False,
         wandb_vis = True,
     )
@@ -85,14 +96,10 @@ def train(loss: dinv.loss.Loss, epochs: int = 0):
     trainer.train()
     trainer.plot_images = True
     trainer.wandb_vis = False
+    trainer.save_folder_im = f"/home/s2558406/RDS/models/deepinv-selfsup-fastmri/{args.loss}"
     return trainer
 
 # %%
-from argparse import ArgumentParser
-parser = ArgumentParser()
-parser.add_argument("--loss", type=str, default="ei")
-parser.add_argument("--epochs", type=int, default=1)
-args = parser.parse_args()
 match args.loss:
     case "mc":
         loss = dinv.loss.MCLoss()
@@ -130,12 +137,30 @@ match args.loss:
         )
     case "noisier2noise-ssdu":
         loss = ...
+    case "ei-sure":
+        loss = [
+            dinv.loss.SureGaussianLoss(sigma=0.),
+            dinv.loss.MOEILoss(transform=dinv.transform.CPABDiffeomorphism(device=device), physics_generator=physics_generator)
+        ]
 
 # Set epochs > 0 to train the model
 import wandb, json
 with wandb.init(project="deepinv-selfsup-fastmri-experiments", config={"loss": args.loss}):
     trainer = train(loss, epochs=args.epochs)
-results = trainer.test(test_dataloader)
+
+results = trainer.test(test_dataloader, f"/home/s2558406/RDS/models/deepinv-selfsup-fastmri/{args.loss}")
+results["train"] = trainer.test(train_dataloader, save_path=None)
+
+samples = []
+iterator = iter(test_dataloader)
+for _ in range(5):
+    x, y, params = next(iterator)
+    physics.update_parameters(**params)
+    samples += [trainer.model(y, physics).detach().cpu().numpy()]
+
+results["sample"] = torch.cat([samples])
 
 with open(f"/home/s2558406/RDS/models/deepinv-selfsup-fastmri/{args.loss}/results.json", "w") as f:
     json.dump(results, f)
+
+# python train_paper.py --loss "sup" --epochs 0
