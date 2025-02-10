@@ -117,7 +117,12 @@ match args.loss:
             dinv.loss.MCLoss(),
             dinv.loss.MOILoss(physics_generator=physics_generator)
         ]
-    case "mo-ei":
+    case "rotate-mo-ei":
+        loss = [
+            dinv.loss.MCLoss(),
+            dinv.loss.MOEILoss(transform=dinv.transform.Rotate(), physics_generator=physics_generator)
+        ]
+    case "diffeo-mo-ei":
         loss = [
             dinv.loss.MCLoss(),
             dinv.loss.MOEILoss(transform=dinv.transform.CPABDiffeomorphism(device=device), physics_generator=physics_generator)
@@ -178,4 +183,4 @@ if args.save_gt:
 
 savez(f"{model_dir}/paper/{run_id}/samples.npz", **samples_to_save)
 
-# python train_paper.py --loss "sup" --epochs 0
+# python train_paper.py --loss "sup" --epochs 150 --save_gt
