@@ -162,9 +162,10 @@ for _ in range(5):
     physics.update_parameters(**params)
     samples += [trainer.model(y.to(device), physics)]
 
-results["sample"] = torch.cat(samples).detach().cpu().numpy()
-
 with open(f"{model_dir}/paper/{run_id}/results.json", "w") as f:
     json.dump(results, f)
+
+from numpy import save
+save(torch.cat(samples).detach().cpu().numpy(), f"{model_dir}/paper/{run_id}/samples.npy")
 
 # python train_paper.py --loss "sup" --epochs 0
