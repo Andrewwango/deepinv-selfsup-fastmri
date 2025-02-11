@@ -85,7 +85,7 @@ def train(loss: dinv.loss.Loss, epochs: int = 0):
         eval_dataloader = test_dataloader,
         epochs = epochs,
         losses = loss,
-        scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, [50]) if args.scheduler else None,
+        scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, [20]) if args.scheduler else None,
         metrics = [dinv.metric.PSNR(complex_abs=True), dinv.metric.SSIM(complex_abs=True)],
         ckp_interval = 10,
         device = device,
@@ -196,14 +196,14 @@ if args.save_model:
 
 sample_xhat, sample_x, sample_y, sample_xinit = [], [], [], []
 iterator = iter(test_dataloader)
+trainer.model.to("cpu")
 for _ in range(5):
     x, y, params = next(iterator)
-    params = {k: v.to(device) for (k, v) in params.items()}
     physics.update_parameters(**params)
-    sample_xhat += [trainer.model(y.to(device), physics)]
+    sample_xhat += [trainer.model(y, physics)]
     sample_x += [x]
     sample_y += [y]
-    sample_xinit += [physics.A_adjoint(y.to(device), **params)]
+    sample_xinit += [physics.A_adjoint(y, **params)]
 
 from numpy import savez
 samples_to_save = {
@@ -219,6 +219,6 @@ if args.save_gt:
 
 savez(f"{model_dir}/paper/{run_id}/samples.npz", **samples_to_save)
 
-# python train_paper.py --loss "sup" --epochs 150 --save_model --scheduler --save_gt
+# python train_paper.py --loss "sup" --epochs 150 --save_model --scheduler --save_gt --acc 6
 # python train_paper.py --loss "ssdu" --epochs 150 --save_model
 # python train_paper.py --loss "noise2inverse" --epochs 0 --ckpt "i65an1aa/ckpt_149.pth.tar"
