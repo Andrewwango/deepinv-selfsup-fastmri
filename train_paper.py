@@ -156,7 +156,9 @@ with wandb.init(project="deepinv-selfsup-fastmri-experiments", config={"loss": a
     trainer.save_folder_im = f"{model_dir}/paper/{run_id}"
 
 results = trainer.test(test_dataloader, f"{model_dir}/paper/{run_id}")
-results["train"] = trainer.test(train_dataloader, save_path=None)
+
+with open(f"{model_dir}/paper/{run_id}/results.json", "w") as f:
+    json.dump(results, f)
 
 if args.save_model:
     trainer.save_path = f"{model_dir}/paper/{run_id}"
@@ -172,9 +174,6 @@ for _ in range(5):
     sample_x += [x]
     sample_y += [y]
     sample_xinit += [physics.A_adjoint(y.to(device), **params)]
-
-with open(f"{model_dir}/paper/{run_id}/results.json", "w") as f:
-    json.dump(results, f)
 
 from numpy import savez
 samples_to_save = {
