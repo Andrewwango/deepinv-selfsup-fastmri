@@ -138,7 +138,7 @@ match args.loss:
     case "noise2inverse":
         loss = dinv.loss.SplittingLoss(
             mask_generator=dinv.physics.generator.GaussianSplittingMaskGenerator((2, 128, 128), split_ratio=0.6, device=device, rng=rng),
-            eval_split_input=True, eval_n_samples=5
+            eval_split_input=True, eval_n_samples=10
         )
     case "noisier2noise-ssdu":
         loss = ...
@@ -192,4 +192,4 @@ savez(f"{model_dir}/paper/{run_id}/samples.npz", **samples_to_save)
 
 # python train_paper.py --loss "sup" --epochs 150 --scheduler --save_gt
 # python train_paper.py --loss "ssdu" --epochs 150 --save_model
-# python train_paper.py --loss "noise2inverse" --epochs 0 --ckpt "/ckpt_149.pth.tar"
+# python train_paper.py --loss "noise2inverse" --epochs 0 --ckpt "i65an1aa/ckpt_149.pth.tar"
