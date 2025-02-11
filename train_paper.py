@@ -103,6 +103,7 @@ def train(loss: dinv.loss.Loss, epochs: int = 0):
 rotate = dinv.transform.Rotate()
 diffeo = dinv.transform.CPABDiffeomorphism(device=device)
 diffeo_rotate = rotate | diffeo
+diffeo_rotate2 = rotate * diffeo
 match args.loss:
     case "mc":
         loss = dinv.loss.MCLoss()
@@ -137,6 +138,11 @@ match args.loss:
         loss = [
             dinv.loss.MCLoss(),
             dinv.loss.MOEILoss(transform=diffeo_rotate, physics_generator=physics_generator)
+        ]
+    case "diffeo*rotate-mo-ei":
+        loss = [
+            dinv.loss.MCLoss(),
+            dinv.loss.MOEILoss(transform=diffeo_rotate2, physics_generator=physics_generator)
         ]
     case "ssdu":
         loss = dinv.loss.SplittingLoss(
