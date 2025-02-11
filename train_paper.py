@@ -15,6 +15,7 @@ model_dir = "/home/s2558406/RDS/models/deepinv-selfsup-fastmri"
 from argparse import ArgumentParser
 parser = ArgumentParser()
 parser.add_argument("--loss", type=str, default="ei")
+parser.add_argument("--x_metric", type=str, default="mse", choices=("mse", "ssim-mse"))
 parser.add_argument("--epochs", type=int, default=1)
 parser.add_argument("--physics", type=str, default="mri", choices=("mri", "noisy", "multicoil"))
 parser.add_argument("--save_gt", action="store_true")
@@ -100,49 +101,63 @@ def train(loss: dinv.loss.Loss, epochs: int = 0):
     return trainer
 
 # %%
+class SumMetric(dinv.metric.Metric):
+    def __init__(self, *metrics: dinv.metric.Metric):
+        super().__init__()
+        self.metrics = metrics
+    def forward(self, x_net = None, x = None, *args, **kwargs):
+        return sum([m.forward(x_net, x, *args, **kwargs) for m in self.metrics])
+
+match args.x_metric:
+    case "mse":
+        xm = torch.nn.MSELoss()
+    case "ssim-mse":
+        xm = SumMetric(dinv.metric.SSIM(train_loss=True, complex_abs=True, reduction="mean"), torch.nn.MSELoss())
+
 rotate = dinv.transform.Rotate()
 diffeo = dinv.transform.CPABDiffeomorphism(device=device)
 diffeo_rotate = rotate | diffeo
 diffeo_rotate2 = rotate * diffeo
+
 match args.loss:
     case "mc":
         loss = dinv.loss.MCLoss()
     case "sup":
-        loss = dinv.loss.SupLoss()
+        loss = dinv.loss.SupLoss(metric=xm)
     case "ei":
         loss = [
             dinv.loss.MCLoss(),
-            dinv.loss.EILoss(transform=rotate)
+            dinv.loss.EILoss(transform=rotate, metric=xm)
         ]
     case "diffeo-ei":
         loss = [
             dinv.loss.MCLoss(),
-            dinv.loss.EILoss(transform=diffeo)
+            dinv.loss.EILoss(transform=diffeo, metric=xm)
         ]
     case "moi":
         loss = [
             dinv.loss.MCLoss(),
-            dinv.loss.MOILoss(physics_generator=physics_generator)
+            dinv.loss.MOILoss(physics_generator=physics_generator, metric=xm)
         ]
     case "rotate-mo-ei":
         loss = [
             dinv.loss.MCLoss(),
-            dinv.loss.MOEILoss(transform=rotate, physics_generator=physics_generator)
+            dinv.loss.MOEILoss(transform=rotate, physics_generator=physics_generator, metric=xm)
         ]
     case "diffeo-mo-ei":
         loss = [
             dinv.loss.MCLoss(),
-            dinv.loss.MOEILoss(transform=diffeo, physics_generator=physics_generator)
+            dinv.loss.MOEILoss(transform=diffeo, physics_generator=physics_generator, metric=xm)
         ]
     case "diffeo-rotate-mo-ei":
         loss = [
             dinv.loss.MCLoss(),
-            dinv.loss.MOEILoss(transform=diffeo_rotate, physics_generator=physics_generator)
+            dinv.loss.MOEILoss(transform=diffeo_rotate, physics_generator=physics_generator, metric=xm)
         ]
     case "diffeo*rotate-mo-ei":
         loss = [
             dinv.loss.MCLoss(),
-            dinv.loss.MOEILoss(transform=diffeo_rotate2, physics_generator=physics_generator)
+            dinv.loss.MOEILoss(transform=diffeo_rotate2, physics_generator=physics_generator, metric=xm)
         ]
     case "ssdu":
         loss = dinv.loss.SplittingLoss(
@@ -159,7 +174,7 @@ match args.loss:
     case "ei-sure":
         loss = [
             dinv.loss.SureGaussianLoss(sigma=0.),
-            dinv.loss.MOEILoss(transform=dinv.transform.CPABDiffeomorphism(device=device), physics_generator=physics_generator)
+            dinv.loss.MOEILoss(transform=dinv.transform.CPABDiffeomorphism(device=device), physics_generator=physics_generator, metric=xm)
         ]
 
 # Set epochs > 0 to train the model
@@ -205,4 +220,5 @@ savez(f"{model_dir}/paper/{run_id}/samples.npz", **samples_to_save)
 
 # python train_paper.py --loss "sup" --epochs 150 --scheduler --save_gt
 # python train_paper.py --loss "ssdu" --epochs 150 --save_model
+# python train_paper.py --loss "diffeo-mo-ei" --x_metric "ssim-mse" --epochs 150 --save_model
 # python train_paper.py --loss "noise2inverse" --epochs 0 --ckpt "i65an1aa/ckpt_149.pth.tar"
