@@ -100,6 +100,9 @@ def train(loss: dinv.loss.Loss, epochs: int = 0):
     return trainer
 
 # %%
+rotate = dinv.transform.Rotate()
+diffeo = dinv.transform.CPABDiffeomorphism(device=device)
+diffeo_rotate = rotate | diffeo
 match args.loss:
     case "mc":
         loss = dinv.loss.MCLoss()
@@ -108,12 +111,12 @@ match args.loss:
     case "ei":
         loss = [
             dinv.loss.MCLoss(),
-            dinv.loss.EILoss(transform=dinv.transform.Rotate())
+            dinv.loss.EILoss(transform=rotate)
         ]
     case "diffeo-ei":
         loss = [
             dinv.loss.MCLoss(),
-            dinv.loss.EILoss(transform=dinv.transform.CPABDiffeomorphism(device=device))
+            dinv.loss.EILoss(transform=diffeo)
         ]
     case "moi":
         loss = [
@@ -123,12 +126,17 @@ match args.loss:
     case "rotate-mo-ei":
         loss = [
             dinv.loss.MCLoss(),
-            dinv.loss.MOEILoss(transform=dinv.transform.Rotate(), physics_generator=physics_generator)
+            dinv.loss.MOEILoss(transform=rotate, physics_generator=physics_generator)
         ]
     case "diffeo-mo-ei":
         loss = [
             dinv.loss.MCLoss(),
-            dinv.loss.MOEILoss(transform=dinv.transform.CPABDiffeomorphism(device=device), physics_generator=physics_generator)
+            dinv.loss.MOEILoss(transform=diffeo, physics_generator=physics_generator)
+        ]
+    case "diffeo-rotate-mo-ei":
+        loss = [
+            dinv.loss.MCLoss(),
+            dinv.loss.MOEILoss(transform=diffeo_rotate, physics_generator=physics_generator)
         ]
     case "ssdu":
         loss = dinv.loss.SplittingLoss(
@@ -138,7 +146,7 @@ match args.loss:
     case "noise2inverse":
         loss = dinv.loss.SplittingLoss(
             mask_generator=dinv.physics.generator.GaussianSplittingMaskGenerator((2, 128, 128), split_ratio=0.6, device=device, rng=rng),
-            eval_split_input=True, eval_n_samples=10
+            eval_split_input=True, eval_n_samples=50
         )
     case "noisier2noise-ssdu":
         loss = ...
