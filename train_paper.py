@@ -202,6 +202,7 @@ if args.save_model:
 sample_xhat, sample_x, sample_y, sample_xinit = [], [], [], []
 iterator = iter(test_dataloader)
 trainer.model = trainer.model.to("cpu")
+physics.device = "cpu"
 physics = physics.to("cpu")
 for _ in range(5):
     x, y, params = next(iterator)
