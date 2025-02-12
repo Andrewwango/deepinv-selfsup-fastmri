@@ -48,7 +48,7 @@ match args.data:
     case "knee":
         file_name = "fastmri_knee_singlecoil.pt"
     case "brain":
-        file_name = "fastmri_brain_singlecoil"
+        file_name = "fastmri_brain_singlecoil.pt"
 dataset = dinv.datasets.SimpleFastMRISliceDataset(
     model_dir.replace("models", "data"),
     file_name=file_name,
@@ -228,3 +228,4 @@ savez(f"{model_dir}/paper/{run_id}/samples.npz", **samples_to_save)
 # python train_paper.py --loss "sup" --epochs 150 --save_model --scheduler --save_gt --acc 6
 # python train_paper.py --loss "ssdu" --epochs 150 --save_model --acc 6
 # python train_paper.py --loss "noise2inverse" --epochs 0 --ckpt "i65an1aa/ckpt_149.pth.tar"
+# python train_paper.py --loss "sup" --epochs 150 --save_model --scheduler --save_gt --data "brain" --acc 6
