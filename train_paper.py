@@ -196,7 +196,8 @@ if args.save_model:
 
 sample_xhat, sample_x, sample_y, sample_xinit = [], [], [], []
 iterator = iter(test_dataloader)
-trainer.model.to("cpu")
+trainer.model = trainer.model.to("cpu")
+physics = physics.to("cpu")
 for _ in range(5):
     x, y, params = next(iterator)
     physics.update_parameters(**params)
@@ -220,5 +221,5 @@ if args.save_gt:
 savez(f"{model_dir}/paper/{run_id}/samples.npz", **samples_to_save)
 
 # python train_paper.py --loss "sup" --epochs 150 --save_model --scheduler --save_gt --acc 6
-# python train_paper.py --loss "ssdu" --epochs 150 --save_model
+# python train_paper.py --loss "ssdu" --epochs 150 --save_model --acc 6
 # python train_paper.py --loss "noise2inverse" --epochs 0 --ckpt "i65an1aa/ckpt_149.pth.tar"
