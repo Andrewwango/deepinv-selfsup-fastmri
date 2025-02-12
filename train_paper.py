@@ -3,6 +3,7 @@
 import deepinv as dinv
 import torch
 from torchvision.transforms import Resize
+from .loss_scheduler import RandomLossScheduler
 
 device = dinv.utils.get_freer_gpu() if torch.cuda.is_available() else "cpu"
 rng = torch.Generator(device=device).manual_seed(0)
@@ -165,6 +166,16 @@ match args.loss:
             dinv.loss.MCLoss(),
             dinv.loss.MOEILoss(transform=diffeo_rotate2, physics_generator=physics_generator, metric=xm)
         ]
+    case "sup-diffeo-mo-ei":
+        loss = RandomLossScheduler(
+            dinv.loss.SupLoss(),
+            [
+                dinv.loss.MCLoss(),
+                dinv.loss.MOEILoss(transform=diffeo, physics_generator=physics_generator, metric=xm)
+            ],
+            generator=None,
+            weightings=[3, 1]
+        )
     case "ssdu":
         loss = dinv.loss.SplittingLoss(
             mask_generator=dinv.physics.generator.GaussianSplittingMaskGenerator((2, 128, 128), split_ratio=0.6, device=device, rng=rng),
