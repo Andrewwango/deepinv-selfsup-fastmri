@@ -9,7 +9,6 @@ rng = torch.Generator(device=device).manual_seed(0)
 rng_cpu = torch.Generator(device="cpu").manual_seed(0)
 results = {}
 
-file_name = "fastmri_knee_singlecoil.pt"
 model_dir = "/home/s2558406/RDS/models/deepinv-selfsup-fastmri"
 
 from argparse import ArgumentParser
@@ -23,6 +22,7 @@ parser.add_argument("--save_model", action="store_true")
 parser.add_argument("--scheduler", action="store_true")
 parser.add_argument("--ckpt", type=str, default=None)
 parser.add_argument("--acc", type=int, default=8)
+parser.add_argument("--data", type=str, default="knee", choices=("knee", "brain"))
 args = parser.parse_args()
 
 # %%
@@ -44,8 +44,13 @@ model = lambda: dinv.utils.demo.demo_mri_model(denoiser=denoiser, num_iter=3, de
 
 # %%
 # Define FastMRI datasets
+match args.data:
+    case "knee":
+        file_name = "fastmri_knee_singlecoil.pt"
+    case "brain":
+        file_name = "fastmri_brain_singlecoil"
 dataset = dinv.datasets.SimpleFastMRISliceDataset(
-    "data",
+    model_dir.replace("models", "data"),
     file_name=file_name,
     train=True,
     train_percent=1.,
@@ -64,7 +69,7 @@ dataset_path = dinv.datasets.generate_dataset(
     device=device,
     save_dir=model_dir.replace("models", "data"),
     batch_size=1,
-    dataset_filename="dinv_dataset_paper" + (f"_{args.acc}" if args.acc != 8 else "") + ("_noisy" if args.physics == "noisy" else "") + ("_multicoil" if args.physics == "multicoil" else "")
+    dataset_filename="dinv_dataset_paper" + (f"_{args.data}" if args.data != "knee" else "") + (f"_{args.acc}" if args.acc != 8 else "") + ("_noisy" if args.physics == "noisy" else "") + ("_multicoil" if args.physics == "multicoil" else "")
 )
 
 # Load saved datasets
