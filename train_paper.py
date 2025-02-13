@@ -91,7 +91,7 @@ def train(loss: dinv.loss.Loss, epochs: int = 0):
         eval_dataloader = test_dataloader,
         epochs = epochs,
         losses = loss,
-        scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, [20]) if args.scheduler else None,
+        scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, [args.schedule]) if args.schedule is not None else None,
         metrics = [dinv.metric.PSNR(complex_abs=True), dinv.metric.SSIM(complex_abs=True)],
         ckp_interval = 10,
         device = device,
