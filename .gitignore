@@ -5,6 +5,7 @@ wandb/*
 wandb/wandb/*
 !wandb/wandb/.temp
 models/old/*
+models/paper/*
 *.h5
 *.pt
 *.tif

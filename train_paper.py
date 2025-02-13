@@ -178,12 +178,12 @@ match args.loss:
         )
     case "ssdu":
         loss = dinv.loss.SplittingLoss(
-            mask_generator=dinv.physics.generator.GaussianSplittingMaskGenerator((2, 128, 128), split_ratio=0.6, device=device, rng=rng),
+            mask_generator=dinv.physics.generator.GaussianSplittingMaskGenerator((2, 320, 320), split_ratio=0.6, device=device, rng=rng),
             eval_split_input=False
         )
     case "noise2inverse":
         loss = dinv.loss.SplittingLoss(
-            mask_generator=dinv.physics.generator.GaussianSplittingMaskGenerator((2, 128, 128), split_ratio=0.6, device=device, rng=rng),
+            mask_generator=dinv.physics.generator.GaussianSplittingMaskGenerator((2, 320, 320), split_ratio=0.6, device=device, rng=rng),
             eval_split_input=True, eval_n_samples=5
         )
     case "noisier2noise-ssdu":
@@ -200,6 +200,10 @@ with wandb.init(project="deepinv-selfsup-fastmri-experiments", config={"loss": a
     run_id = wandb.run.id
     trainer = train(loss, epochs=args.epochs)
     trainer.save_folder_im = f"{model_dir}/paper/{run_id}"
+
+if isinstance(loss, dinv.loss.SplittingLoss):
+    assert isinstance(trainer.model, dinv.loss.SplittingLoss.SplittingModel)
+    assert isinstance(trainer.model.mask_generator, dinv.physics.generator.GaussianSplittingMaskGenerator)
 
 results = trainer.test(test_dataloader, f"{model_dir}/paper/{run_id}")
 
