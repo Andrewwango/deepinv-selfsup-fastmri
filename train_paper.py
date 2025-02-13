@@ -24,6 +24,7 @@ parser.add_argument("--schedule", type=int, default=None)
 parser.add_argument("--ckpt", type=str, default=None)
 parser.add_argument("--acc", type=int, default=8)
 parser.add_argument("--data", type=str, default="knee", choices=("knee", "brain"))
+parser.add_argument("-lr", type=float, default=1e-3)
 args = parser.parse_args()
 
 # %%
@@ -82,11 +83,11 @@ train_dataloader, test_dataloader = torch.utils.data.DataLoader(train_dataset, s
 # %%
 def train(loss: dinv.loss.Loss, epochs: int = 0):
     _model = model()
-    optimizer = torch.optim.Adam(_model.parameters(), lr=1e-3)
+    optimizer = torch.optim.Adam(_model.parameters(), lr=args.lr)
     trainer = dinv.Trainer(
         model = _model,
         physics = physics,
-        optimizer = torch.optim.Adam(_model.parameters(), lr=1e-3),
+        optimizer = optimizer,
         train_dataloader = train_dataloader,
         eval_dataloader = test_dataloader,
         epochs = epochs,
