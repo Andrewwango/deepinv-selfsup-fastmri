@@ -20,7 +20,7 @@ parser.add_argument("--epochs", type=int, default=1)
 parser.add_argument("--physics", type=str, default="mri", choices=("mri", "noisy", "multicoil"))
 parser.add_argument("--save_gt", action="store_true")
 parser.add_argument("--save_model", action="store_true")
-parser.add_argument("--scheduler", action="store_true")
+parser.add_argument("--schedule", type=int, default=None)
 parser.add_argument("--ckpt", type=str, default=None)
 parser.add_argument("--acc", type=int, default=8)
 parser.add_argument("--data", type=str, default="knee", choices=("knee", "brain"))
@@ -237,7 +237,7 @@ if args.save_gt:
 
 savez(f"{model_dir}/paper/{run_id}/samples.npz", **samples_to_save)
 
-# python train_paper.py --loss "sup" --epochs 150 --save_model --scheduler --save_gt --acc 6
+# python train_paper.py --loss "sup" --epochs 150 --save_model --schedule 20 --save_gt --acc 6
 # python train_paper.py --loss "ssdu" --epochs 150 --save_model --acc 6
 # python train_paper.py --loss "noise2inverse" --epochs 0 --ckpt "i65an1aa/ckpt_149.pth.tar"
-# python train_paper.py --loss "sup" --epochs 150 --save_model --scheduler --save_gt --data "brain" --acc 6
+# python train_paper.py --loss "sup" --epochs 150 --save_model --schedule 20 --save_gt --data "brain" --acc 6
