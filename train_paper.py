@@ -8,6 +8,8 @@ from loss_scheduler import RandomLossScheduler
 device = dinv.utils.get_freer_gpu() if torch.cuda.is_available() else "cpu"
 rng = torch.Generator(device=device).manual_seed(0)
 rng_cpu = torch.Generator(device="cpu").manual_seed(0)
+torch.manual_seed(0)
+torch.cuda.manual_seed(0)
 results = {}
 
 model_dir = "/home/s2558406/RDS/models/deepinv-selfsup-fastmri"
@@ -24,7 +26,7 @@ parser.add_argument("--schedule", type=int, default=None)
 parser.add_argument("--ckpt", type=str, default=None)
 parser.add_argument("--acc", type=int, default=8)
 parser.add_argument("--data", type=str, default="knee", choices=("knee", "brain"))
-parser.add_argument("-lr", type=float, default=1e-3)
+parser.add_argument("-lr", type=float, default=None)
 args = parser.parse_args()
 
 # %%
@@ -83,7 +85,7 @@ train_dataloader, test_dataloader = torch.utils.data.DataLoader(train_dataset, s
 # %%
 def train(loss: dinv.loss.Loss, epochs: int = 0):
     _model = model()
-    optimizer = torch.optim.Adam(_model.parameters(), lr=args.lr)
+    optimizer = torch.optim.Adam(_model.parameters(), lr=args.lr if args.lr is not None else 1e-3)
     trainer = dinv.Trainer(
         model = _model,
         physics = physics,
@@ -102,6 +104,10 @@ def train(loss: dinv.loss.Loss, epochs: int = 0):
         wandb_vis = True,
         ckpt_pretrained=None if args.ckpt is None else f"{model_dir}/paper/{args.ckpt}"
     )
+    if args.ckpt is not None and args.lr is not None:
+        for param in trainer.optimizer.param_groups:
+            param["lr"] = args.lr
+        print(trainer.optimizer.param_groups[0]["lr"])
 
     trainer.train()
     trainer.plot_images = True
