@@ -25,7 +25,7 @@ parser.add_argument("--physics", type=str, default="mri", choices=("mri", "noisy
 parser.add_argument("--no_save", action="store_true")
 parser.add_argument("--save_gt", action="store_true")
 parser.add_argument("--save_model", action="store_true")
-parser.add_argument("--schedule", type=int, default=None)
+parser.add_argument("--schedule", type=int, default=None, nargs="+")
 parser.add_argument("--ckpt", type=str, default=None)
 parser.add_argument("--acc", type=int, default=6)
 parser.add_argument("--data", type=str, default="knee", choices=("knee", "brain"))
@@ -90,12 +90,12 @@ train_dataloader, test_dataloader = torch.utils.data.DataLoader(train_dataset, s
 def train(loss: dinv.loss.Loss, epochs: int = 0, discrim: torch.nn.Module=None, loss_d: dinv.loss.adversarial.DiscriminatorLoss = None):
     _model = model()
     optimizer = torch.optim.Adam(_model.parameters(), lr=args.lr if args.lr is not None else 1e-3)
-    scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, [args.schedule]) if args.schedule is not None else None
+    scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, args.schedule) if args.schedule is not None else None
 
     if discrim is not None:
         print("ADVERSARIAL TRAINING")
         optimizer = dinv.training.AdversarialOptimizer(optimizer, torch.optim.Adam(discrim.parameters(), args.lr if args.lr is not None else 1e-3))
-        scheduler = dinv.training.adversarial.AdversarialScheduler(scheduler, torch.optim.lr_scheduler.MultiStepLR(optimizer, [args.schedule]) if args.schedule is not None else None)
+        scheduler = dinv.training.adversarial.AdversarialScheduler(scheduler, torch.optim.lr_scheduler.MultiStepLR(optimizer, args.schedule) if args.schedule is not None else None)
         _trainer = dinv.training.AdversarialTrainer
     else:
         if args.mc_warm_start:
