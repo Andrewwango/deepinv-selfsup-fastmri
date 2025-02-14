@@ -18,10 +18,10 @@ class TempTrainer(Trainer):
                     self.model.model.load_state_dict(checkpoint["state_dict"])
                 else:
                     raise e
-            if "optimizer" in checkpoint and self.optimizer is not None:
-                self.optimizer.load_state_dict(checkpoint["optimizer"])
-            if "wandb_id" in checkpoint and self.wandb_vis:
-                self.wandb_setup["id"] = checkpoint["wandb_id"]
-                self.wandb_setup["resume"] = "allow"
-            if "epoch" in checkpoint:
-                self.epoch_start = checkpoint["epoch"]
+            #if "optimizer" in checkpoint and self.optimizer is not None:
+            #    self.optimizer.load_state_dict(checkpoint["optimizer"])
+            #if "wandb_id" in checkpoint and self.wandb_vis:
+            #    self.wandb_setup["id"] = checkpoint["wandb_id"]
+            #    self.wandb_setup["resume"] = "allow"
+            #if "epoch" in checkpoint:
+            #    self.epoch_start = checkpoint["epoch"]

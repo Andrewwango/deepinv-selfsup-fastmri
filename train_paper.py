@@ -30,6 +30,7 @@ parser.add_argument("--ckpt", type=str, default=None)
 parser.add_argument("--acc", type=int, default=6)
 parser.add_argument("--data", type=str, default="knee", choices=("knee", "brain"))
 parser.add_argument("-lr", type=float, default=None)
+parser.add_argument("--mc_warm_start", action="store_true")
 args = parser.parse_args()
 
 # %%
@@ -97,8 +98,10 @@ def train(loss: dinv.loss.Loss, epochs: int = 0, discrim: torch.nn.Module=None, 
         scheduler = dinv.training.adversarial.AdversarialScheduler(scheduler, torch.optim.lr_scheduler.MultiStepLR(optimizer, [args.schedule]) if args.schedule is not None else None)
         _trainer = dinv.training.AdversarialTrainer
     else:
-        
-        _trainer = TempTrainer
+        if args.mc_warm_start:
+            _trainer = TempTrainer
+        else:
+            _trainer = dinv.Trainer
 
     trainer = _trainer(
         model = _model,
