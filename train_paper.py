@@ -5,6 +5,7 @@ import torch
 from torchvision.transforms import Resize
 from loss_scheduler import RandomLossScheduler
 from multi_operator_adversarial_consistency import MultiOperatorUnsupAdversarialDiscriminatorLoss, MultiOperatorUnsupAdversarialGeneratorLoss, SkipConvDiscriminator
+from trainer_temp import TempTrainer
 
 device = dinv.utils.get_freer_gpu() if torch.cuda.is_available() else "cpu"
 rng = torch.Generator(device=device).manual_seed(0)
@@ -97,7 +98,7 @@ def train(loss: dinv.loss.Loss, epochs: int = 0, discrim: torch.nn.Module=None, 
         _trainer = dinv.training.AdversarialTrainer
     else:
         
-        _trainer = dinv.Trainer
+        _trainer = TempTrainer
 
     trainer = _trainer(
         model = _model,
