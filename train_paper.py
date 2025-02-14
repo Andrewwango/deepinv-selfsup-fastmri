@@ -212,6 +212,7 @@ with wandb.init(project="deepinv-selfsup-fastmri-experiments", config={"loss": a
 if isinstance(loss, dinv.loss.SplittingLoss):
     assert isinstance(trainer.model, dinv.loss.SplittingLoss.SplittingModel)
     assert isinstance(trainer.model.mask_generator, dinv.physics.generator.GaussianSplittingMaskGenerator)
+    print("Success")
 
 results = trainer.test(test_dataloader, f"{model_dir}/paper/{run_id}")
 
