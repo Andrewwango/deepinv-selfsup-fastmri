@@ -225,7 +225,7 @@ match args.loss:
     case "noise2inverse":
         loss = dinv.loss.SplittingLoss(
             mask_generator=dinv.physics.generator.GaussianSplittingMaskGenerator((2, 320, 320), split_ratio=0.6, device=device, rng=rng),
-            eval_split_input=True, eval_n_samples=20
+            eval_split_input=True, eval_n_samples=200
         )
     case "noisier2noise-ssdu":
         loss = ...
@@ -254,6 +254,8 @@ with wandb.init(project="deepinv-selfsup-fastmri-experiments", config={"loss": a
 if isinstance(loss, dinv.loss.SplittingLoss):
     assert isinstance(trainer.model, dinv.loss.SplittingLoss.SplittingModel)
     assert isinstance(trainer.model.mask_generator, dinv.physics.generator.GaussianSplittingMaskGenerator)
+    if args.loss == "noise2inverse":
+        assert trainer.model.eval_split_input == True
     print("Success")
 
 results = trainer.test(test_dataloader, f"{model_dir}/paper/{run_id}")
