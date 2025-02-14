@@ -20,6 +20,7 @@ parser.add_argument("--loss", type=str, default="ei")
 parser.add_argument("--x_metric", type=str, default="mse", choices=("mse", "ssim-mse"))
 parser.add_argument("--epochs", type=int, default=0)
 parser.add_argument("--physics", type=str, default="mri", choices=("mri", "noisy", "multicoil"))
+parser.add_argument("--no_save", action="store_true")
 parser.add_argument("--save_gt", action="store_true")
 parser.add_argument("--save_model", action="store_true")
 parser.add_argument("--schedule", type=int, default=None)
@@ -221,32 +222,33 @@ if args.save_model:
     trainer.save_path = f"{model_dir}/paper/{run_id}"
     trainer.save_model(trainer.epochs - 1)
 
-sample_xhat, sample_x, sample_y, sample_xinit = [], [], [], []
-iterator = iter(test_dataloader)
-trainer.model = trainer.model.to("cpu")
-physics.device = "cpu"
-physics = physics.to("cpu")
-for _ in range(5):
-    x, y, params = next(iterator)
-    physics.update_parameters(**params)
-    sample_xhat += [trainer.model(y, physics)]
-    sample_x += [x]
-    sample_y += [y]
-    sample_xinit += [physics.A_adjoint(y, **params)]
+if not args.no_save:
+    sample_xhat, sample_x, sample_y, sample_xinit = [], [], [], []
+    iterator = iter(test_dataloader)
+    trainer.model = trainer.model.to("cpu")
+    physics.device = "cpu"
+    physics = physics.to("cpu")
+    for _ in range(5):
+        x, y, params = next(iterator)
+        physics.update_parameters(**params)
+        sample_xhat += [trainer.model(y, physics)]
+        sample_x += [x]
+        sample_y += [y]
+        sample_xinit += [physics.A_adjoint(y, **params)]
 
-from numpy import savez
-samples_to_save = {
-    "x_hat": torch.cat(sample_xhat).detach().cpu().numpy()
-}
-
-if args.save_gt:
-    samples_to_save |= {
-        "x": torch.cat(sample_x).detach().cpu().numpy(),
-        "y": torch.cat(sample_y).detach().cpu().numpy(),
-        "x_init": torch.cat(sample_xinit).detach().cpu().numpy()
+    from numpy import savez
+    samples_to_save = {
+        "x_hat": torch.cat(sample_xhat).detach().cpu().numpy()
     }
 
-savez(f"{model_dir}/paper/{run_id}/samples.npz", **samples_to_save)
+    if args.save_gt:
+        samples_to_save |= {
+            "x": torch.cat(sample_x).detach().cpu().numpy(),
+            "y": torch.cat(sample_y).detach().cpu().numpy(),
+            "x_init": torch.cat(sample_xinit).detach().cpu().numpy()
+        }
+
+    savez(f"{model_dir}/paper/{run_id}/samples.npz", **samples_to_save)
 
 # python train_paper.py --loss "sup" --epochs 150 --save_model --schedule 20 --save_gt --acc 6
 # python train_paper.py --loss "ssdu" --epochs 150 --save_model --acc 6
