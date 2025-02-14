@@ -59,8 +59,19 @@ class MultiOperatorUnsupAdversarialDiscriminatorLoss(MultiOperatorMixin, UnsupAd
 
         return self.adversarial_loss(x_tilde, x_hat, D)
 
-class ColeDiscriminator(nn.Module):
-    def __init__(self, h=320, d_dim=128, d_blocks=4, in_channels=2):
+from typing import Tuple
+from math import prod
+class SkipConvDiscriminator(nn.Module):
+    """Simple residual convolution discriminator architecture.
+
+    Consists of convolutional blocks with skip connections with a final dense layer followed by sigmoid.
+
+    :param tuple img_size: tuple of ints of input image size
+    :param int d_dim: hidden dimension
+    :param int d_blocks: number of conv blocks
+    :param int in_channels: number of input channels
+    """
+    def __init__(self, img_size: Tuple[int, int] = (320, 320), d_dim: int = 128, d_blocks: int = 4, in_channels: int = 2):
         super().__init__()
         def conv_block(c_in, c_out):
             return nn.Sequential(
@@ -76,14 +87,14 @@ class ColeDiscriminator(nn.Module):
             self.blocks.append(conv_block(d_dim, d_dim))
         
         self.flatten = nn.Flatten()
-        self.final = nn.Linear(d_dim * h * h, 1)
+        self.final = nn.Linear(d_dim * prod(img_size), 1)
         self.sigmoid = nn.Sigmoid()
 
-    def forward(self, x):
+    def forward(self, x: Tensor) -> Tensor:
         x = self.initial_conv(x)
         
         for i in range(0, len(self.blocks), 2):
             x = self.blocks[i](x)
             x += self.blocks[i+1](x)
 
-        return self.sigmoid(self.final(self.flatten(x)))
+        return self.sigmoid(self.final(self.flatten(x))).squeeze()

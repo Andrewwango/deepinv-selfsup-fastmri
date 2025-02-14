@@ -4,7 +4,7 @@ import deepinv as dinv
 import torch
 from torchvision.transforms import Resize
 from loss_scheduler import RandomLossScheduler
-from multi_operator_adversarial_consistency import MultiOperatorUnsupAdversarialDiscriminatorLoss, MultiOperatorUnsupAdversarialGeneratorLoss, ColeDiscriminator
+from multi_operator_adversarial_consistency import MultiOperatorUnsupAdversarialDiscriminatorLoss, MultiOperatorUnsupAdversarialGeneratorLoss, SkipConvDiscriminator
 
 device = dinv.utils.get_freer_gpu() if torch.cuda.is_available() else "cpu"
 rng = torch.Generator(device=device).manual_seed(0)
@@ -85,33 +85,43 @@ test_dataset = dinv.datasets.HDF5Dataset(dataset_path, split="test", load_physic
 train_dataloader, test_dataloader = torch.utils.data.DataLoader(train_dataset, shuffle=True, generator=rng_cpu, batch_size=4), torch.utils.data.DataLoader(test_dataset, batch_size=4)
 
 # %%
-def train(loss: dinv.loss.Loss, epochs: int = 0, trainer=None):
+def train(loss: dinv.loss.Loss, epochs: int = 0, discrim: torch.nn.Module=None, loss_d: dinv.loss.adversarial.DiscriminatorLoss = None):
     _model = model()
-    if isinstance(trainer, dinv.training.AdversarialTrainer):
+    optimizer = torch.optim.Adam(_model.parameters(), lr=args.lr if args.lr is not None else 1e-3)
+    scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, [args.schedule]) if args.schedule is not None else None
+
+    if discrim is not None:
         print("ADVERSARIAL TRAINING")
-        optimizer = ...
-    elif trainer is not None:
-        raise ValueError()
+        optimizer = dinv.training.AdversarialOptimizer(optimizer, torch.optim.Adam(discrim.parameters(), args.lr if args.lr is not None else 1e-3))
+        scheduler = dinv.training.adversarial.AdversarialScheduler(scheduler, torch.optim.lr_scheduler.MultiStepLR(optimizer, [args.schedule]) if args.schedule is not None else None)
+        _trainer = dinv.training.AdversarialTrainer
     else:
-        optimizer = torch.optim.Adam(_model.parameters(), lr=args.lr if args.lr is not None else 1e-3)
-        trainer = dinv.Trainer(
-            model = _model,
-            physics = physics,
-            optimizer = optimizer,
-            train_dataloader = train_dataloader,
-            eval_dataloader = test_dataloader,
-            epochs = epochs,
-            losses = loss,
-            scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, [args.schedule]) if args.schedule is not None else None,
-            metrics = [dinv.metric.PSNR(complex_abs=True), dinv.metric.SSIM(complex_abs=True)],
-            ckp_interval = 10,
-            device = device,
-            eval_interval = 1,
-            save_path = None,
-            plot_images = False,
-            wandb_vis = True,
-            ckpt_pretrained=None if args.ckpt is None else f"{model_dir}/paper/{args.ckpt}"
-        )
+        
+        _trainer = dinv.Trainer
+
+    trainer = _trainer(
+        model = _model,
+        physics = physics,
+        optimizer = optimizer,
+        train_dataloader = train_dataloader,
+        eval_dataloader = test_dataloader,
+        epochs = epochs,
+        losses = loss,
+        scheduler = scheduler,
+        metrics = [dinv.metric.PSNR(complex_abs=True), dinv.metric.SSIM(complex_abs=True)],
+        ckp_interval = 10,
+        device = device,
+        eval_interval = 1,
+        save_path = None,
+        plot_images = False,
+        wandb_vis = True,
+        ckpt_pretrained=None if args.ckpt is None else f"{model_dir}/paper/{args.ckpt}"
+    )
+
+    if discrim is not None:
+        trainer.D = discrim
+        trainer.losses_d = loss_d
+        trainer.step_ratio_D = 1 #sync G and D
 
     if args.ckpt is not None and args.lr is not None:
         for param in trainer.optimizer.param_groups:
@@ -137,7 +147,8 @@ match args.x_metric:
     case "ssim-mse":
         xm = SumMetric(dinv.metric.SSIM(train_loss=True, complex_abs=True, reduction="mean"), torch.nn.MSELoss())
 
-trainer = None
+loss_d = None
+discrim = None
 
 rotate = dinv.transform.Rotate()
 diffeo = dinv.transform.CPABDiffeomorphism(device=device)
@@ -220,23 +231,20 @@ match args.loss:
             dinv.loss.MOEILoss(transform=dinv.transform.CPABDiffeomorphism(device=device), physics_generator=physics_generator, metric=xm)
         ]
     case "cole":
-        discrim = ColeDiscriminator(320).to(device)
+        discrim = SkipConvDiscriminator((320, 320)).to(device)
         
         dataloader_factory = lambda: torch.utils.data.DataLoader(train_dataset, batch_size=4, shuffle=True, generator=torch.Generator("cpu").manual_seed(42))
         physics_generator_factory = lambda: dinv.physics.generator.GaussianMaskGenerator(img_size=(320, 320), acceleration=args.acc, rng=torch.Generator(device).manual_seed(42), device=device)
         
         loss = MultiOperatorUnsupAdversarialGeneratorLoss(D=discrim, device=device, dataloader_factory=dataloader_factory, physics_generator_factory=physics_generator_factory)
         loss_d=MultiOperatorUnsupAdversarialDiscriminatorLoss(D=discrim, device=device, dataloader_factory=dataloader_factory, physics_generator_factory=physics_generator_factory)
-        #ensure that adversarial trainer only does one discrim step/iter
-        trainer = dinv.training.AdversarialTrainer(
-            ...
-        )
+
 
 # Set epochs > 0 to train the model
 import wandb, json
 with wandb.init(project="deepinv-selfsup-fastmri-experiments", config={"loss": args.loss}):
     run_id = wandb.run.id
-    trainer = train(loss, epochs=args.epochs, trainer=trainer)
+    trainer = train(loss, epochs=args.epochs, loss_d=loss_d, discrim=discrim)
     trainer.save_folder_im = f"{model_dir}/paper/{run_id}"
 
 if isinstance(loss, dinv.loss.SplittingLoss):
