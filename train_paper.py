@@ -31,6 +31,7 @@ parser.add_argument("--mc_warm_start", action="store_true")
 parser.add_argument("--global_seed", type=int, default=0)
 parser.add_argument("--model", type=str, default="modl", choices=("modl", "varnet"))
 parser.add_argument("--unroll", type=int, default=3)
+parser.add_argument("-b", type=int, default=4)
 args = parser.parse_args()
 
 torch.manual_seed(args.global_seed)
@@ -93,7 +94,7 @@ dataset_path = dinv.datasets.generate_dataset(
 train_dataset = dinv.datasets.HDF5Dataset(dataset_path, split="train", load_physics_generator_params=True)
 test_dataset = dinv.datasets.HDF5Dataset(dataset_path, split="test", load_physics_generator_params=True)
 
-train_dataloader, test_dataloader = torch.utils.data.DataLoader(train_dataset, shuffle=True, generator=rng_cpu, batch_size=4), torch.utils.data.DataLoader(test_dataset, batch_size=4)
+train_dataloader, test_dataloader = torch.utils.data.DataLoader(train_dataset, shuffle=True, generator=rng_cpu, batch_size=args.b), torch.utils.data.DataLoader(test_dataset, batch_size=args.b)
 
 # %%
 def train(loss: dinv.loss.Loss, epochs: int = 0, discrim: torch.nn.Module=None, loss_d: dinv.loss.adversarial.DiscriminatorLoss = None):
@@ -246,7 +247,7 @@ match args.loss:
     case "cole":
         discrim = SkipConvDiscriminator((320, 320)).to(device)
         
-        dataloader_factory = lambda: torch.utils.data.DataLoader(train_dataset, batch_size=4, shuffle=True, generator=torch.Generator("cpu").manual_seed(42))
+        dataloader_factory = lambda: torch.utils.data.DataLoader(train_dataset, batch_size=args.b, shuffle=True, generator=torch.Generator("cpu").manual_seed(42))
         physics_generator_factory = lambda: dinv.physics.generator.GaussianMaskGenerator(img_size=(320, 320), acceleration=args.acc, rng=torch.Generator(device).manual_seed(42), device=device)
         
         loss = MultiOperatorUnsupAdversarialGeneratorLoss(D=discrim, device=device, dataloader_factory=dataloader_factory, physics_generator_factory=physics_generator_factory)
