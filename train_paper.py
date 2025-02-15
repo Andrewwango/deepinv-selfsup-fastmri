@@ -8,10 +8,7 @@ from multi_operator_adversarial_consistency import MultiOperatorUnsupAdversarial
 from trainer_temp import TempTrainer
 
 device = dinv.utils.get_freer_gpu() if torch.cuda.is_available() else "cpu"
-rng = torch.Generator(device=device).manual_seed(0)
-rng_cpu = torch.Generator(device="cpu").manual_seed(0)
-torch.manual_seed(0)
-torch.cuda.manual_seed(0)
+
 results = {}
 
 model_dir = "/home/s2558406/RDS/models/deepinv-selfsup-fastmri"
@@ -31,7 +28,13 @@ parser.add_argument("--acc", type=int, default=6)
 parser.add_argument("--data", type=str, default="knee", choices=("knee", "brain"))
 parser.add_argument("-lr", type=float, default=None)
 parser.add_argument("--mc_warm_start", action="store_true")
+parser.add_argument("--global_seed", type=int, default=0)
 args = parser.parse_args()
+
+torch.manual_seed(args.global_seed)
+torch.cuda.manual_seed(args.global_seed)
+rng = torch.Generator(device=device).manual_seed(0)
+rng_cpu = torch.Generator(device="cpu").manual_seed(0)
 
 # %%
 # Define MRI physics with random masks
