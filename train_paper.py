@@ -29,6 +29,8 @@ parser.add_argument("--data", type=str, default="knee", choices=("knee", "brain"
 parser.add_argument("-lr", type=float, default=None)
 parser.add_argument("--mc_warm_start", action="store_true")
 parser.add_argument("--global_seed", type=int, default=0)
+parser.add_argument("--model", type=str, default="modl", choices=("modl", "varnet"))
+parser.add_argument("--unroll", type=int, default=3)
 args = parser.parse_args()
 
 torch.manual_seed(args.global_seed)
@@ -51,7 +53,11 @@ elif args.physics == "multicoil":
 # %%
 # Define unrolled network
 denoiser = dinv.models.UNet(2, 2, scales=4, batch_norm=False)
-model = lambda: dinv.utils.demo.demo_mri_model(denoiser=denoiser, num_iter=3, device=device).to(device)
+match args.model:
+    case "modl":
+        model = lambda: dinv.utils.demo.demo_mri_model(denoiser=denoiser, num_iter=args.unroll, device=device).to(device)
+    case "varnet":
+        model = lambda: dinv.models.VarNet(denoiser, num_cascades=args.unroll)
 
 # %%
 # Define FastMRI datasets
