@@ -31,6 +31,7 @@ parser.add_argument("--mc_warm_start", action="store_true")
 parser.add_argument("--global_seed", type=int, default=0)
 parser.add_argument("--model", type=str, default="modl", choices=("modl", "varnet"))
 parser.add_argument("--unroll", type=int, default=3)
+parser.add_argument("--norm_metrics", action="store_true")
 parser.add_argument("-b", type=int, default=4)
 args = parser.parse_args()
 
@@ -115,7 +116,10 @@ def train(loss: dinv.loss.Loss, epochs: int = 0, discrim: torch.nn.Module=None, 
 
     class PSNR2(dinv.metric.PSNR):
         def __init__(self, **kwargs):
-            super().__init__(norm_inputs="min_max", **kwargs)
+            super().__init__(norm_inputs="min_max", complex_abs=True, **kwargs)
+    class SSIM2(dinv.metric.SSIM):
+        def __init__(self, **kwargs):
+            super().__init__(norm_inputs="min_max", complex_abs=True, **kwargs)        
 
     trainer = _trainer(
         model = _model,
@@ -126,7 +130,7 @@ def train(loss: dinv.loss.Loss, epochs: int = 0, discrim: torch.nn.Module=None, 
         epochs = epochs,
         losses = loss,
         scheduler = scheduler,
-        metrics = [dinv.metric.PSNR(complex_abs=True), dinv.metric.SSIM(complex_abs=True), PSNR2(complex_abs=True)],
+        metrics = [dinv.metric.PSNR(complex_abs=True), dinv.metric.SSIM(complex_abs=True)] + [PSNR2(), SSIM2()] if args.norm_metrics else [],
         ckp_interval = 10,
         device = device,
         eval_interval = 1,
