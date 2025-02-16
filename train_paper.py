@@ -119,7 +119,13 @@ def train(loss: dinv.loss.Loss, epochs: int = 0, discrim: torch.nn.Module=None, 
             super().__init__(norm_inputs="min_max", complex_abs=True, **kwargs)
     class SSIM2(dinv.metric.SSIM):
         def __init__(self, **kwargs):
-            super().__init__(norm_inputs="min_max", complex_abs=True, **kwargs)        
+            super().__init__(norm_inputs="min_max", complex_abs=True, **kwargs)
+    class PSNR3(dinv.metric.PSNR):
+        def metric(self, x_net, x, *args, **kwargs):
+            return super().metric((x_net - x_net.mean()) / x_net.std() * x.std() + x.mean(), x, *args, **kwargs)
+    class SSIM3(dinv.metric.SSIM):
+        def metric(self, x_net, x, *args, **kwargs):
+            return super().metric((x_net - x_net.mean()) / x_net.std() * x.std() + x.mean(), x, *args, **kwargs)           
 
     trainer = _trainer(
         model = _model,
@@ -130,7 +136,7 @@ def train(loss: dinv.loss.Loss, epochs: int = 0, discrim: torch.nn.Module=None, 
         epochs = epochs,
         losses = loss,
         scheduler = scheduler,
-        metrics = [dinv.metric.PSNR(complex_abs=True), dinv.metric.SSIM(complex_abs=True)] + [PSNR2(), SSIM2()] if args.norm_metrics else [],
+        metrics = [dinv.metric.PSNR(complex_abs=True), dinv.metric.SSIM(complex_abs=True)] + [PSNR2(), SSIM2(), PSNR3(complex_abs=True), SSIM3(complex_abs=True)] if args.norm_metrics else [],
         ckp_interval = 10,
         device = device,
         eval_interval = 1,
