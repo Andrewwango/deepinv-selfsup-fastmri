@@ -235,7 +235,7 @@ match args.loss:
     case "noise2inverse":
         loss = dinv.loss.SplittingLoss(
             mask_generator=dinv.physics.generator.GaussianSplittingMaskGenerator((2, 320, 320), split_ratio=0.6, device=device, rng=rng),
-            eval_split_input=True, eval_n_samples=200
+            eval_split_input=True, eval_n_samples=20
         )
     case "noisier2noise-ssdu":
         loss = ...
