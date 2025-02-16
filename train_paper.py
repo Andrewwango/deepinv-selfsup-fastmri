@@ -113,6 +113,10 @@ def train(loss: dinv.loss.Loss, epochs: int = 0, discrim: torch.nn.Module=None, 
         else:
             _trainer = dinv.Trainer
 
+    class PSNR2(dinv.metric.PSNR):
+        def __init__(self, **kwargs):
+            super().__init__(norm_inputs="min_max", **kwargs)
+
     trainer = _trainer(
         model = _model,
         physics = physics,
@@ -122,7 +126,7 @@ def train(loss: dinv.loss.Loss, epochs: int = 0, discrim: torch.nn.Module=None, 
         epochs = epochs,
         losses = loss,
         scheduler = scheduler,
-        metrics = [dinv.metric.PSNR(complex_abs=True), dinv.metric.SSIM(complex_abs=True)],
+        metrics = [dinv.metric.PSNR(complex_abs=True), dinv.metric.SSIM(complex_abs=True), PSNR2(complex_abs=True)],
         ckp_interval = 10,
         device = device,
         eval_interval = 1,
