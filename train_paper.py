@@ -159,6 +159,7 @@ def train(loss: dinv.loss.Loss, epochs: int = 0, discrim: torch.nn.Module=None, 
     trainer.train()
     trainer.plot_images = True
     trainer.wandb_vis = False
+    trainer.ckpt_pretrained = None
     return trainer
 
 # %%
@@ -282,14 +283,13 @@ if isinstance(loss, dinv.loss.SplittingLoss):
         assert trainer.model.eval_split_input == True
     print("Success")
 
-results = trainer.test(test_dataloader, f"{model_dir}/paper/{run_id}")
-
-with open(f"{model_dir}/paper/{run_id}/results.json", "w") as f:
-    json.dump(results, f)
-
 if args.save_model:
     trainer.save_path = f"{model_dir}/paper/{run_id}"
     trainer.save_model(trainer.epochs - 1)
+
+results = trainer.test(test_dataloader, f"{model_dir}/paper/{run_id}")
+with open(f"{model_dir}/paper/{run_id}/results.json", "w") as f:
+    json.dump(results, f)
 
 if not args.no_save:
     sample_xhat, sample_x, sample_y, sample_xinit = [], [], [], []
