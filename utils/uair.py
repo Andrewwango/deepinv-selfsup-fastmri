@@ -49,7 +49,7 @@ class UAIRGeneratorLoss(MultiOperatorMixin, GeneratorLoss):
         device="cpu",
         **kwargs
     ):
-        super().__init__(weight_adv=weight_adv, device=device)
+        super().__init__(weight_adv=weight_adv, device=device, **kwargs)
         self.name = "UAIRGenerator"
         self.metric = metric
         self.weight_mc = weight_mc
