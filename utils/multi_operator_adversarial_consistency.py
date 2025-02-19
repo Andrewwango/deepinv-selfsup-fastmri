@@ -33,6 +33,9 @@ class MultiOperatorMixin:
     
     def next_data(self):
         return next(self.iterator)[1]
+    
+    def physics_like(self, y):
+        return MRI(img_size=y.shape, device=y.device)
 
 class MultiOperatorUnsupAdversarialGeneratorLoss(MultiOperatorMixin, UnsupAdversarialGeneratorLoss):
     def forward(self, y: Tensor, x_net: Tensor, physics: Physics, D: nn.Module = None, **kwargs):
@@ -43,7 +46,7 @@ class MultiOperatorUnsupAdversarialGeneratorLoss(MultiOperatorMixin, UnsupAdvers
         assert y_tilde.shape == y_hat.shape
         assert not torch.all(physics.mask == physics_new.mask)
         
-        physics_full = MRI(img_size=y_hat.shape, device=y_hat.device)
+        physics_full = self.physics_like(y_hat)
         x_tilde = physics_full.A_adjoint(y_tilde)
         x_hat   = physics_full.A_adjoint(y_hat)
 
@@ -58,8 +61,9 @@ class MultiOperatorUnsupAdversarialDiscriminatorLoss(MultiOperatorMixin, UnsupAd
         assert y_tilde.shape == y_hat.shape
         assert not torch.all(physics.mask == physics_new.mask)
         
-        x_tilde = physics.A_adjoint(y_tilde)
-        x_hat   = physics.A_adjoint(y_hat)
+        physics_full = self.physics_like(y_hat)
+        x_tilde = physics_full.A_adjoint(y_tilde)
+        x_hat   = physics_full.A_adjoint(y_hat)
 
         return self.adversarial_loss(x_tilde, x_hat, D)
 
