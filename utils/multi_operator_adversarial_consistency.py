@@ -18,14 +18,15 @@ class MultiOperatorMixin:
     def __init__(
         self,
         physics_generator_factory: Callable[..., PhysicsGenerator],
-        dataloader_factory: Callable[..., DataLoader],
+        dataloader_factory: Callable[..., DataLoader] = None,
         **kwargs
     ):
         super().__init__(**kwargs)
         self.physics_generator = physics_generator_factory()
-        self.dataloader = dataloader_factory()
-        self.prev_epoch = -1
-        self.reset_iter(epoch=0)
+        if dataloader_factory is not None:
+            self.dataloader = dataloader_factory()
+            self.prev_epoch = -1
+            self.reset_iter(epoch=0)
 
     def next_physics(self, physics: Physics, batch_size=1):
         physics_cur = deepcopy(physics)

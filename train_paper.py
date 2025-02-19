@@ -254,7 +254,8 @@ match args.loss:
         loss_d=dinv.loss.adversarial.SupAdversarialDiscriminatorLoss(device=device)
     case "uair":
         discrim = SkipConvDiscriminator((320, 320)).to(device)
-        loss = UAIRGeneratorLoss(device=device)
+        physics_generator_factory = lambda: dinv.physics.generator.GaussianMaskGenerator(img_size=(320, 320), acceleration=args.acc, rng=torch.Generator(device).manual_seed(42), device=device)
+        loss = UAIRGeneratorLoss(device=device, physics_generator_factory=physics_generator_factory)
         loss_d=dinv.loss.adversarial.UnsupAdversarialDiscriminatorLoss(device=device)
     case "vortex":
         from deepinv.transform import Rotate, Shift, Scale, Reflect
