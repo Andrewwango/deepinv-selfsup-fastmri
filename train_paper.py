@@ -254,7 +254,7 @@ match args.loss:
         loss_d=dinv.loss.adversarial.SupAdversarialDiscriminatorLoss(device=device)
     case "uair":
         discrim = SkipConvDiscriminator((320, 320)).to(device)
-        loss = dinv.loss.adversarial.UAIRGeneratorLoss(device=device)
+        loss = UAIRGeneratorLoss(device=device)
         loss_d=dinv.loss.adversarial.UnsupAdversarialDiscriminatorLoss(device=device)
     case "vortex":
         from deepinv.transform import Rotate, Shift, Scale, Reflect
