@@ -13,6 +13,8 @@ models/paper/*
 *.pkl
 *.gif
 *.tar.gz
+temp*
+old/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

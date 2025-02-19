@@ -2,6 +2,7 @@
 # %%
 import deepinv as dinv
 import torch
+from utils import *
 
 device = dinv.utils.get_freer_gpu() if torch.cuda.is_available() else "cpu"
 
@@ -101,23 +102,10 @@ def train(loss: dinv.loss.Loss, epochs: int = 0, discrim: torch.nn.Module=None, 
     if discrim is not None:
         print("ADVERSARIAL TRAINING")
         optimizer = dinv.training.AdversarialOptimizer(optimizer, torch.optim.Adam(discrim.parameters(), args.lr if args.lr is not None else 1e-3))
-        scheduler = dinv.training.adversarial.AdversarialScheduler(scheduler, torch.optim.lr_scheduler.MultiStepLR(optimizer, args.schedule) if args.schedule is not None else None)
+        scheduler = dinv.training.adversarial.AdversarialScheduler(scheduler, torch.optim.lr_scheduler.MultiStepLR(optimizer, args.schedule)) if args.schedule is not None else None
         _trainer = dinv.training.AdversarialTrainer
     else:
-        _trainer = dinv.Trainer
-
-    class PSNR2(dinv.metric.PSNR):
-        def __init__(self, **kwargs):
-            super().__init__(norm_inputs="min_max", complex_abs=True, **kwargs)
-    class SSIM2(dinv.metric.SSIM):
-        def __init__(self, **kwargs):
-            super().__init__(norm_inputs="min_max", complex_abs=True, **kwargs)
-    class PSNR3(dinv.metric.PSNR):
-        def metric(self, x_net, x, *args, **kwargs):
-            return super().metric((x_net - x_net.mean()) / x_net.std() * x.std() + x.mean(), x, *args, **kwargs)
-    class SSIM3(dinv.metric.SSIM):
-        def metric(self, x_net, x, *args, **kwargs):
-            return super().metric((x_net - x_net.mean()) / x_net.std() * x.std() + x.mean(), x, *args, **kwargs)           
+        _trainer = dinv.Trainer      
 
     trainer = _trainer(
         model = _model,
@@ -207,7 +195,6 @@ match args.loss:
             dinv.loss.MOEILoss(transform=diffeo, physics_generator=physics_generator, metric=xm)
         ]
     case "diffeo-moi-ei":
-        from utils.loss_scheduler import RandomLossScheduler
         loss = [
             dinv.loss.MCLoss(),
             RandomLossScheduler(
@@ -226,7 +213,6 @@ match args.loss:
             dinv.loss.MOEILoss(transform=diffeo_rotate2, physics_generator=physics_generator, metric=xm)
         ]
     case "sup-diffeo-mo-ei":
-        from utils.loss_scheduler import RandomLossScheduler
         loss = RandomLossScheduler(
             dinv.loss.SupLoss(),
             [
@@ -254,7 +240,6 @@ match args.loss:
             dinv.loss.MOEILoss(transform=dinv.transform.CPABDiffeomorphism(device=device), physics_generator=physics_generator, metric=xm)
         ]
     case "cole":
-        from utils.multi_operator_adversarial_consistency import MultiOperatorUnsupAdversarialDiscriminatorLoss, MultiOperatorUnsupAdversarialGeneratorLoss, SkipConvDiscriminator
         discrim = SkipConvDiscriminator((320, 320)).to(device)
         
         dataloader_factory = lambda: torch.utils.data.DataLoader(train_dataset, batch_size=args.b, shuffle=True, generator=torch.Generator("cpu").manual_seed(42))
@@ -265,7 +250,6 @@ match args.loss:
     case "vortex":
         from deepinv.transform import Rotate, Shift, Scale, Reflect
         from deepinv.transform.projective import Affine
-        from utils.vortex import VORTEXLoss, VORTEXLoss2, NoiseTransform, RandomPhaseShift
         loss = VORTEXLoss(
             Shift(shift_max=0.1, rng=rng) | Rotate(rng=rng, limits=15),# | Scale(factors=[0.75, 1.25], rng=rng) | Rotate(rng=rng) | Reflect(rng=rng),
             RandomPhaseShift(scale=0.1, rng=rng) * NoiseTransform(rng=rng),
