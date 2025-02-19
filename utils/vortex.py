@@ -175,7 +175,9 @@ class VORTEXLoss2(Loss):
                 if update_parameters:
                     self.e_params = e_params
 
-            return self.model(ye, physics2)
+                return self.model(ye, physics2)
+            else:
+                return self.model(y, physics)
 
         def get_e_params(self):
             if self.e_params is None:
