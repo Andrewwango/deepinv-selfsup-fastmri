@@ -84,6 +84,7 @@ class VORTEXLoss(Loss):
         transform_equiv: Transform,
         transform_invar: Transform,
         metric: Union[Metric, nn.Module] = torch.nn.MSELoss(),
+        no_grad: bool = False,
         *args,
         **kwargs,
     ):
@@ -91,11 +92,17 @@ class VORTEXLoss(Loss):
         self.metric = metric
         self.T_e = transform_equiv
         self.T_i = transform_invar
+        self.no_grad = no_grad
 
-    def forward(self, x_net, y, physics: MRI, model, **kwargs):
+    def forward(self, x_net: Tensor, y: Tensor, physics: MRI, model, **kwargs):
         e_params = self.T_e.get_params(x_net)
+        if self.no_grad:
+            x_net = x_net.detach()
 
         x1 = self.T_e(x_net, **e_params)
+        
+        if self.no_grad:
+            x1 = x1.detach()
         
         yi = self.T_i(y)
         xi = physics.A_adjoint(yi)
