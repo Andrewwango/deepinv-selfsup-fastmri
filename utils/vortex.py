@@ -95,14 +95,11 @@ class VORTEXLoss(Loss):
         self.no_grad = no_grad
 
     def forward(self, x_net: Tensor, y: Tensor, physics: MRI, model, **kwargs):
-        e_params = self.T_e.get_params(x_net)
         if self.no_grad:
             x_net = x_net.detach()
-
-        x1 = self.T_e(x_net, **e_params)
         
-        if self.no_grad:
-            x1 = x1.detach()
+        e_params = self.T_e.get_params(x_net)
+        x1 = self.T_e(x_net, **e_params)
         
         yi = self.T_i(y)
         xi = physics.A_adjoint(yi)
