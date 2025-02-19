@@ -270,6 +270,7 @@ match args.loss:
             Shift(shift_max=0.1, rng=rng),# | Scale(factors=[0.75, 1.25], rng=rng) | Rotate(rng=rng) | Reflect(rng=rng),
             RandomPhaseShift(scale=0.4, rng=rng),#NoiseTransform(rng=rng)
         )
+        loss = [dinv.loss.MCLoss(), loss]
         # Affine(theta_z_max=0, zoom_factor_min=1., shift_max=0., skew_max=10, x_stretch_factor_min=1., y_stretch_factor_min=1., device=device)
 
 # Set epochs > 0 to train the model
