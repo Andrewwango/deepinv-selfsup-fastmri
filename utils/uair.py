@@ -84,3 +84,23 @@ class UAIRGeneratorLoss(MultiOperatorMixin, GeneratorLoss):
         mc_loss = self.metric(y_tilde, y_hat)
 
         return adv_loss + mc_loss * self.weight_mc
+
+class UAIRDiscriminatorLoss(MultiOperatorMixin, DiscriminatorLoss):
+
+    def __init__(self, weight_adv: float = 1.0, D: nn.Module = None, device="cpu", **kwargs):
+        super().__init__(weight_adv=weight_adv, D=D, device=device, **kwargs)
+        self.name = "UAIRDiscriminator"
+
+    def forward(
+        self,
+        y: Tensor,
+        x_net: Tensor,
+        physics: Physics,
+        model: nn.Module,
+        D: nn.Module = None,
+        **kwargs,
+    ):
+        physics_new = self.next_physics(physics, batch_size=len(y))
+        y_hat = physics_new.A(x_net)
+
+        return self.adversarial_loss(y, y_hat, D)
