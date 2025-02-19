@@ -23,7 +23,9 @@ class MultiOperatorMixin:
     ):
         super().__init__(**kwargs)
         self.physics_generator = physics_generator_factory()
-        self.iterator = iter(dataloader_factory())
+        self.dataloader = dataloader_factory()
+        self.prev_epoch = -1
+        self.reset_iter(epoch=0)
 
     def next_physics(self, physics: Physics):
         physics_cur = deepcopy(physics)
@@ -34,11 +36,23 @@ class MultiOperatorMixin:
     def next_data(self):
         return next(self.iterator)[1]
     
+    def reset_iter(self, epoch):
+        if epoch == self.prev_epoch:
+            pass
+        elif epoch == self.prev_epoch + 1:
+            print("Resetting iterator...")
+            self.iterator = iter(self.dataloader)
+            self.prev_epoch += 1
+        else:
+            raise ValueError("This shouldn't happen...")
+
     def physics_like(self, y):
         return MRI(img_size=y.shape, device=y.device)
 
 class MultiOperatorUnsupAdversarialGeneratorLoss(MultiOperatorMixin, UnsupAdversarialGeneratorLoss):
-    def forward(self, y: Tensor, x_net: Tensor, physics: Physics, D: nn.Module = None, **kwargs):
+    def forward(self, y: Tensor, x_net: Tensor, physics: Physics, D: nn.Module = None, epoch=None, **kwargs):
+        self.reset_iter(epoch=epoch)
+
         y_tilde = self.next_data().to(x_net.device)
         physics_new = self.next_physics(physics)
         y_hat = physics_new.A(x_net)
@@ -53,7 +67,9 @@ class MultiOperatorUnsupAdversarialGeneratorLoss(MultiOperatorMixin, UnsupAdvers
         return self.adversarial_loss(x_tilde, x_hat, D)
 
 class MultiOperatorUnsupAdversarialDiscriminatorLoss(MultiOperatorMixin, UnsupAdversarialDiscriminatorLoss):
-    def forward(self, y: Tensor, x_net: Tensor, physics: Physics, D: nn.Module = None, **kwargs):
+    def forward(self, y: Tensor, x_net: Tensor, physics: Physics, D: nn.Module = None, epoch=None, **kwargs):
+        self.reset_iter(epoch=epoch)
+        
         y_tilde = self.next_data().to(x_net.device)
         physics_new = self.next_physics(physics)
         y_hat = physics_new.A(x_net)
