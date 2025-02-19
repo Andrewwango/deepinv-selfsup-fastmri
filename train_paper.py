@@ -252,6 +252,7 @@ match args.loss:
         discrim = SkipConvDiscriminator((320, 320)).to(device)
 
         loss = dinv.loss.adversarial.SupAdversarialGeneratorLoss(weight_adv=1, device=device)
+        loss = [dinv.loss.SupLoss(), loss]
         loss_d=dinv.loss.adversarial.SupAdversarialDiscriminatorLoss(device=device)
     case "uair":
         discrim = SkipConvDiscriminator((320, 320)).to(device)
