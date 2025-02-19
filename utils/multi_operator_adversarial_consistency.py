@@ -12,6 +12,8 @@ if TYPE_CHECKING:
     from deepinv.physics.generator.base import PhysicsGenerator
     from deepinv.physics.forward import Physics
 
+from deepinv.physics.mri import MRI
+
 class MultiOperatorMixin:
     def __init__(
         self,
@@ -34,15 +36,16 @@ class MultiOperatorMixin:
 
 class MultiOperatorUnsupAdversarialGeneratorLoss(MultiOperatorMixin, UnsupAdversarialGeneratorLoss):
     def forward(self, y: Tensor, x_net: Tensor, physics: Physics, D: nn.Module = None, **kwargs):
-        y_tilde = self.next_data()
+        y_tilde = self.next_data().to(x_net.device)
         physics_new = self.next_physics(physics)
         y_hat = physics_new.A(x_net)
         
         assert y_tilde.shape == y_hat.shape
         assert not torch.all(physics.mask == physics_new.mask)
         
-        x_tilde = physics.A_adjoint(y_tilde)
-        x_hat   = physics.A_adjoint(y_hat)
+        physics_full = MRI(img_size=y_hat.shape, mask=1., device=y_hat.device)
+        x_tilde = physics_full.A_adjoint(y_tilde)
+        x_hat   = physics_full.A_adjoint(y_hat)
 
         return self.adversarial_loss(x_tilde, x_hat, D)
 
