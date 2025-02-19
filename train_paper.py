@@ -251,7 +251,7 @@ match args.loss:
         from deepinv.transform import Rotate, Shift, Scale, Reflect
         from deepinv.transform.projective import Affine
         loss = VORTEXLoss(
-            Shift(shift_max=0.1, rng=rng) | Rotate(rng=rng, limits=60) | Rotate(rng=rng, multiples=90) | Scale(factors=[0.75, 1.25], rng=rng) | Reflect(rng=rng),
+            Shift(shift_max=0.1, rng=rng) | Rotate(rng=rng, limits=15),# | Rotate(rng=rng, multiples=90) | Scale(factors=[0.75, 1.25], rng=rng) | Reflect(rng=rng),
             RandomPhaseShift(scale=0.1, rng=rng) * NoiseTransform(rng=rng),
             no_grad=True,
         )
