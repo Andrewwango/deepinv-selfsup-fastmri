@@ -3,8 +3,9 @@ from torch import Tensor
 from deepinv.loss.adversarial.base import GeneratorLoss, DiscriminatorLoss
 from deepinv.physics import Physics
 
+from .multi_operator_adversarial_consistency import MultiOperatorMixin
 
-class UAIRGeneratorLoss(GeneratorLoss):
+class UAIRGeneratorLoss(MultiOperatorMixin, GeneratorLoss):
     r"""Reimplementation of UAIR generator's adversarial loss.
 
     Pajot et al., "Unsupervised Adversarial Image Reconstruction".
@@ -46,6 +47,7 @@ class UAIRGeneratorLoss(GeneratorLoss):
         metric: nn.Module = nn.MSELoss(),
         D: nn.Module = None,
         device="cpu",
+        **kwargs
     ):
         super().__init__(weight_adv=weight_adv, device=device)
         self.name = "UAIRGenerator"
@@ -56,7 +58,7 @@ class UAIRGeneratorLoss(GeneratorLoss):
     def forward(
         self,
         y: Tensor,
-        y_hat: Tensor,
+        x_net: Tensor,
         physics: Physics,
         model: nn.Module,
         D: nn.Module = None,
@@ -72,10 +74,13 @@ class UAIRGeneratorLoss(GeneratorLoss):
         """
         D = self.D if D is None else D
 
+        physics_new = self.next_physics(physics, batch_size=len(y))
+        y_hat = physics_new.A(x_net)
+
         adv_loss = self.adversarial_loss(y, y_hat, D)
 
-        x_tilde = model(y_hat, physics)
-        y_tilde = physics.A(x_tilde)  # use same operator as y_hat
+        x_tilde = model(y_hat, physics_new)
+        y_tilde = physics_new.A(x_tilde)  # use same operator as y_hat
         mc_loss = self.metric(y_tilde, y_hat)
 
         return adv_loss + mc_loss * self.weight_mc
