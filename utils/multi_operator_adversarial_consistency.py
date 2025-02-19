@@ -6,7 +6,8 @@ from torch import Tensor
 import torch
 from torch.utils.data import DataLoader
 
-from consistency import UnsupAdversarialDiscriminatorLoss, UnsupAdversarialGeneratorLoss
+from .consistency import UnsupAdversarialDiscriminatorLoss, UnsupAdversarialGeneratorLoss
+
 if TYPE_CHECKING:
     from deepinv.physics.generator.base import PhysicsGenerator
     from deepinv.physics.forward import Physics

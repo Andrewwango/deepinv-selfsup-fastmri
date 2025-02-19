@@ -2,10 +2,6 @@
 # %%
 import deepinv as dinv
 import torch
-from torchvision.transforms import Resize
-from loss_scheduler import RandomLossScheduler
-from multi_operator_adversarial_consistency import MultiOperatorUnsupAdversarialDiscriminatorLoss, MultiOperatorUnsupAdversarialGeneratorLoss, SkipConvDiscriminator
-from trainer_temp import TempTrainer
 
 device = dinv.utils.get_freer_gpu() if torch.cuda.is_available() else "cpu"
 
@@ -27,7 +23,6 @@ parser.add_argument("--ckpt", type=str, default=None)
 parser.add_argument("--acc", type=int, default=6)
 parser.add_argument("--data", type=str, default="knee", choices=("knee", "brain"))
 parser.add_argument("-lr", type=float, default=None)
-parser.add_argument("--mc_warm_start", action="store_true")
 parser.add_argument("--global_seed", type=int, default=0)
 parser.add_argument("--model", type=str, default="modl", choices=("modl", "varnet"))
 parser.add_argument("--unroll", type=int, default=3)
@@ -109,10 +104,7 @@ def train(loss: dinv.loss.Loss, epochs: int = 0, discrim: torch.nn.Module=None, 
         scheduler = dinv.training.adversarial.AdversarialScheduler(scheduler, torch.optim.lr_scheduler.MultiStepLR(optimizer, args.schedule) if args.schedule is not None else None)
         _trainer = dinv.training.AdversarialTrainer
     else:
-        if args.mc_warm_start:
-            _trainer = TempTrainer
-        else:
-            _trainer = dinv.Trainer
+        _trainer = dinv.Trainer
 
     class PSNR2(dinv.metric.PSNR):
         def __init__(self, **kwargs):
@@ -215,6 +207,7 @@ match args.loss:
             dinv.loss.MOEILoss(transform=diffeo, physics_generator=physics_generator, metric=xm)
         ]
     case "diffeo-moi-ei":
+        from utils.loss_scheduler import RandomLossScheduler
         loss = [
             dinv.loss.MCLoss(),
             RandomLossScheduler(
@@ -233,6 +226,7 @@ match args.loss:
             dinv.loss.MOEILoss(transform=diffeo_rotate2, physics_generator=physics_generator, metric=xm)
         ]
     case "sup-diffeo-mo-ei":
+        from utils.loss_scheduler import RandomLossScheduler
         loss = RandomLossScheduler(
             dinv.loss.SupLoss(),
             [
@@ -260,6 +254,7 @@ match args.loss:
             dinv.loss.MOEILoss(transform=dinv.transform.CPABDiffeomorphism(device=device), physics_generator=physics_generator, metric=xm)
         ]
     case "cole":
+        from utils.multi_operator_adversarial_consistency import MultiOperatorUnsupAdversarialDiscriminatorLoss, MultiOperatorUnsupAdversarialGeneratorLoss, SkipConvDiscriminator
         discrim = SkipConvDiscriminator((320, 320)).to(device)
         
         dataloader_factory = lambda: torch.utils.data.DataLoader(train_dataset, batch_size=args.b, shuffle=True, generator=torch.Generator("cpu").manual_seed(42))
@@ -267,7 +262,15 @@ match args.loss:
         
         loss = MultiOperatorUnsupAdversarialGeneratorLoss(D=discrim, device=device, dataloader_factory=dataloader_factory, physics_generator_factory=physics_generator_factory)
         loss_d=MultiOperatorUnsupAdversarialDiscriminatorLoss(D=discrim, device=device, dataloader_factory=dataloader_factory, physics_generator_factory=physics_generator_factory)
-
+    case "vortex":
+        from deepinv.transform import Rotate, Shift, Scale, Reflect
+        from deepinv.transform.projective import Affine
+        from utils.vortex import VORTEXLoss, NoiseTransform, RandomPhaseShift
+        loss = VORTEXLoss(
+            Shift(shift_max=0.1) | Scale(factors=[0.75, 1.25]) | Rotate() | Reflect(),
+            NoiseTransform() * RandomPhaseShift(scale=0.4),
+        )
+        # Affine(theta_z_max=0, zoom_factor_min=1., shift_max=0., skew_max=10, x_stretch_factor_min=1., y_stretch_factor_min=1., device=device)
 
 # Set epochs > 0 to train the model
 import wandb, json
