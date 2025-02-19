@@ -247,6 +247,7 @@ match args.loss:
         
         loss = MultiOperatorUnsupAdversarialGeneratorLoss(device=device, dataloader_factory=dataloader_factory, physics_generator_factory=physics_generator_factory)
         loss_d=MultiOperatorUnsupAdversarialDiscriminatorLoss(device=device, dataloader_factory=dataloader_factory, physics_generator_factory=physics_generator_factory)
+        loss = [dinv.loss.MCLoss(), loss]
     case "sup-gan":
         discrim = SkipConvDiscriminator((320, 320)).to(device)
 
