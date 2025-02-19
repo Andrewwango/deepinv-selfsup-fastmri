@@ -27,9 +27,9 @@ class MultiOperatorMixin:
         self.prev_epoch = -1
         self.reset_iter(epoch=0)
 
-    def next_physics(self, physics: Physics):
+    def next_physics(self, physics: Physics, batch_size=1):
         physics_cur = deepcopy(physics)
-        params = self.physics_generator.step()
+        params = self.physics_generator.step(batch_size=batch_size)
         physics_cur.update_parameters(**params)
         return physics_cur
     
@@ -40,7 +40,6 @@ class MultiOperatorMixin:
         if epoch == self.prev_epoch:
             pass
         elif epoch == self.prev_epoch + 1:
-            print("Resetting iterator...")
             self.iterator = iter(self.dataloader)
             self.prev_epoch += 1
         else:
@@ -54,7 +53,7 @@ class MultiOperatorUnsupAdversarialGeneratorLoss(MultiOperatorMixin, UnsupAdvers
         self.reset_iter(epoch=epoch)
 
         y_tilde = self.next_data().to(x_net.device)
-        physics_new = self.next_physics(physics)
+        physics_new = self.next_physics(physics, batch_size=len(x_net))
         y_hat = physics_new.A(x_net)
         
         assert y_tilde.shape == y_hat.shape
@@ -71,7 +70,7 @@ class MultiOperatorUnsupAdversarialDiscriminatorLoss(MultiOperatorMixin, UnsupAd
         self.reset_iter(epoch=epoch)
         
         y_tilde = self.next_data().to(x_net.device)
-        physics_new = self.next_physics(physics)
+        physics_new = self.next_physics(physics, batch_size=len(x_net))
         y_hat = physics_new.A(x_net)
         
         assert y_tilde.shape == y_hat.shape

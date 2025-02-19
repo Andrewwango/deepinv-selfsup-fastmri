@@ -247,6 +247,11 @@ match args.loss:
         
         loss = MultiOperatorUnsupAdversarialGeneratorLoss(D=discrim, device=device, dataloader_factory=dataloader_factory, physics_generator_factory=physics_generator_factory)
         loss_d=MultiOperatorUnsupAdversarialDiscriminatorLoss(D=discrim, device=device, dataloader_factory=dataloader_factory, physics_generator_factory=physics_generator_factory)
+    case "sup-gan":
+        discrim = SkipConvDiscriminator((320, 320)).to(device)
+
+        loss = dinv.loss.adversarial.SupAdversarialGeneratorLoss(D=discrim, weight_adv=1, device=device)
+        loss_d=dinv.loss.adversarial.SupAdversarialDiscriminatorLoss(D=discrim, device=device)
     case "vortex":
         from deepinv.transform import Rotate, Shift, Scale, Reflect
         from deepinv.transform.projective import Affine
