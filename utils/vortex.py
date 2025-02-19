@@ -110,3 +110,76 @@ class VORTEXLoss(Loss):
         x2 = model(ye, physics2)
 
         return self.metric(x1, x2)
+
+
+class VORTEXLoss2(Loss):
+    def __init__(
+        self,
+        transform_equiv: Transform,
+        transform_invar: Transform,
+        metric: Union[Metric, nn.Module] = torch.nn.MSELoss(),
+        no_grad: bool = False,
+        *args,
+        **kwargs,
+    ):
+        super().__init__(*args, **kwargs)
+        self.metric = metric
+        self.T_e = transform_equiv
+        self.T_i = transform_invar
+        self.no_grad = no_grad
+
+    def forward(self, x_net, y, physics, model: VORTEXModel, **kwargs):
+        e_params = model.get_e_params()
+        if self.no_grad:
+            with torch.no_grad():
+                x1 = model(y, physics)
+                x1 = x1.detach()
+
+        x1e = self.T_e(x1, **e_params)
+        x2 = x_net
+        return self.metric(x1e, x2)
+
+    def adapt_model(self, model, **kwargs):
+        if isinstance(model, self.VORTEXModel):
+            return model
+        else:
+            return self.VORTEXModel(model, self.T_e, self.T_i)
+
+    class VORTEXModel(Reconstructor):
+        r"""
+        Adapted model for the VORTEX loss
+        """
+        def __init__(self, model: Reconstructor, T_e: Transform, T_i: Transform):
+            super().__init__()
+            self.model = model
+            self.T_e = T_e
+            self.T_i = T_i
+            self.transforms = None
+
+        def forward(self, y: Tensor, physics: MRI, update_parameters=False, **kwargs):
+
+            if self.training:
+                e_params = self.T_e.get_params(y)
+
+                yi = self.T_i(y)
+                xi = physics.A_adjoint(yi)
+                xe = self.T_e(xi, **e_params)
+                #physics_full = MRI(img_size=y.shape, device=physics.device)
+                #ye = physics_full(xe)
+                #x2 = model(ye, physics_full)
+                #ye = physics.A(xe)
+                #x2 = model(ye, physics)
+                physics2 = TransformedMRI(self.T_e, e_params, img_size=y.shape, mask=physics.mask, device=physics.device)
+                ye = physics2(xe)
+
+                if update_parameters:
+                    self.e_params = e_params
+
+            return self.model(ye, physics2)
+
+        def get_e_params(self):
+            if self.e_params is None:
+                raise ValueError(
+                    "Mask not generated during forward pass - use model(y, physics, update_parameters=True)"
+                )
+            return self.e_params
