@@ -271,7 +271,7 @@ match args.loss:
             RandomPhaseShift(scale=0.1, rng=rng) * NoiseTransform(rng=rng),
             no_grad=True,
         )
-        #loss = [dinv.loss.MCLoss(), loss]
+        loss = [dinv.loss.MCLoss(), loss]
         # Affine(theta_z_max=0, zoom_factor_min=1., shift_max=0., skew_max=10, x_stretch_factor_min=1., y_stretch_factor_min=1., device=device)
 
 # Set epochs > 0 to train the model
