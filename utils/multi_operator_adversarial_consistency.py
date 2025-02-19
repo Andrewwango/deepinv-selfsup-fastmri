@@ -54,7 +54,7 @@ class MultiOperatorUnsupAdversarialGeneratorLoss(MultiOperatorMixin, UnsupAdvers
 
 class MultiOperatorUnsupAdversarialDiscriminatorLoss(MultiOperatorMixin, UnsupAdversarialDiscriminatorLoss):
     def forward(self, y: Tensor, x_net: Tensor, physics: Physics, D: nn.Module = None, **kwargs):
-        y_tilde = self.next_data()
+        y_tilde = self.next_data().to(x_net.device)
         physics_new = self.next_physics(physics)
         y_hat = physics_new.A(x_net)
         
