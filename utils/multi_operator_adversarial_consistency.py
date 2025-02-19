@@ -43,7 +43,7 @@ class MultiOperatorUnsupAdversarialGeneratorLoss(MultiOperatorMixin, UnsupAdvers
         assert y_tilde.shape == y_hat.shape
         assert not torch.all(physics.mask == physics_new.mask)
         
-        physics_full = MRI(img_size=y_hat.shape, mask=1., device=y_hat.device)
+        physics_full = MRI(img_size=y_hat.shape, device=y_hat.device)
         x_tilde = physics_full.A_adjoint(y_tilde)
         x_hat   = physics_full.A_adjoint(y_hat)
 
