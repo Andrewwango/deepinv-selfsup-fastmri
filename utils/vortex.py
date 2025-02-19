@@ -58,6 +58,26 @@ class RandomPhaseShift(Transform):
             out += [y * MRIMixin.from_torch_complex(shift)]
         return torch.cat(out)
 
+class NoTransform(Transform):
+    def _get_params(self, *args):
+        return {}
+    
+    def _transform(self, x, **params):
+        return x
+
+from deepinv.transform.base import Transform
+class TransformedMRI(MRI):
+    def __init__(self, transform: Transform, transform_params: dict, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.transform = transform
+        self.transform_params = transform_params
+    
+    def A(self, x, mask=None, **kwargs):
+        return super().A(self.transform.inverse(x, **self.transform_params), mask, **kwargs)
+    
+    def A_adjoint(self, y, mask = None, **kwargs):
+        return self.transform(super().A_adjoint(y, mask, **kwargs), **self.transform_params)
+
 class VORTEXLoss(Loss):
     def __init__(
         self,
@@ -83,7 +103,10 @@ class VORTEXLoss(Loss):
         #physics_full = MRI(img_size=y.shape, device=physics.device)
         #ye = physics_full(xe)
         #x2 = model(ye, physics_full)
-        ye = physics.A(xe)
-        x2 = model(ye, physics)
+        #ye = physics.A(xe)
+        #x2 = model(ye, physics)
+        physics2 = TransformedMRI(self.T_e, e_params, img_size=y.shape, mask=physics.mask, device=physics.device)
+        ye = physics2(xe)
+        x2 = model(ye, physics2)
 
         return self.metric(x1, x2)
