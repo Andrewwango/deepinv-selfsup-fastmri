@@ -80,8 +80,10 @@ class VORTEXLoss(Loss):
         yi = self.T_i(y)
         xi = physics.A_adjoint(yi)
         xe = self.T_e(xi, **e_params)
-        physics_full = MRI(img_size=y.shape, device=physics.device)
-        ye = physics_full(xe)
-        x2 = model(ye, physics_full)
+        #physics_full = MRI(img_size=y.shape, device=physics.device)
+        #ye = physics_full(xe)
+        #x2 = model(ye, physics_full)
+        ye = physics.A(xe)
+        x2 = model(ye, physics)
 
         return self.metric(x1, x2)
