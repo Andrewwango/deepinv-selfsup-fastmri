@@ -245,13 +245,17 @@ match args.loss:
         dataloader_factory = lambda: torch.utils.data.DataLoader(train_dataset, batch_size=args.b, shuffle=True, generator=torch.Generator("cpu").manual_seed(42))
         physics_generator_factory = lambda: dinv.physics.generator.GaussianMaskGenerator(img_size=(320, 320), acceleration=args.acc, rng=torch.Generator(device).manual_seed(42), device=device)
         
-        loss = MultiOperatorUnsupAdversarialGeneratorLoss(D=discrim, device=device, dataloader_factory=dataloader_factory, physics_generator_factory=physics_generator_factory)
-        loss_d=MultiOperatorUnsupAdversarialDiscriminatorLoss(D=discrim, device=device, dataloader_factory=dataloader_factory, physics_generator_factory=physics_generator_factory)
+        loss = MultiOperatorUnsupAdversarialGeneratorLoss(device=device, dataloader_factory=dataloader_factory, physics_generator_factory=physics_generator_factory)
+        loss_d=MultiOperatorUnsupAdversarialDiscriminatorLoss(device=device, dataloader_factory=dataloader_factory, physics_generator_factory=physics_generator_factory)
     case "sup-gan":
         discrim = SkipConvDiscriminator((320, 320)).to(device)
 
-        loss = dinv.loss.adversarial.SupAdversarialGeneratorLoss(D=discrim, weight_adv=1, device=device)
-        loss_d=dinv.loss.adversarial.SupAdversarialDiscriminatorLoss(D=discrim, device=device)
+        loss = dinv.loss.adversarial.SupAdversarialGeneratorLoss(weight_adv=1, device=device)
+        loss_d=dinv.loss.adversarial.SupAdversarialDiscriminatorLoss(device=device)
+    case "uair":
+        discrim = SkipConvDiscriminator((320, 320)).to(device)
+        loss = dinv.loss.adversarial.UAIRGeneratorLoss(device=device)
+        loss_d=dinv.loss.adversarial.UnsupAdversarialDiscriminatorLoss(device=device)
     case "vortex":
         from deepinv.transform import Rotate, Shift, Scale, Reflect
         from deepinv.transform.projective import Affine
