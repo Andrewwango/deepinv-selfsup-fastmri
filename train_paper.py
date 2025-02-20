@@ -260,7 +260,7 @@ match args.loss:
         loss = UAIRGeneratorLoss(device=device, physics_generator_factory=physics_generator_factory)
         loss_d=UAIRDiscriminatorLoss(device=device, physics_generator_factory=physics_generator_factory)
     case "vortex":
-        loss = [dinv.loss.MCLoss(), VORTEXLoss()]
+        loss = [dinv.loss.MCLoss(), VORTEXLoss(rng=rng)]
 
 # Set epochs > 0 to train the model
 import wandb, json
