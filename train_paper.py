@@ -241,7 +241,7 @@ match args.loss:
         ]
     case "cole":
         #discrim = SkipConvDiscriminator((320, 320)).to(device)
-        discrim = dinv.models.gan.PatchGANDiscriminator(2, n_layers=2)
+        discrim = dinv.models.gan.PatchGANDiscriminator(2, n_layers=2).to(device)
         
         dataloader_factory = lambda: torch.utils.data.DataLoader(train_dataset, batch_size=args.b, shuffle=True, generator=torch.Generator("cpu").manual_seed(42))
         physics_generator_factory = lambda: dinv.physics.generator.GaussianMaskGenerator(img_size=(320, 320), acceleration=args.acc, rng=torch.Generator(device).manual_seed(42), device=device)
