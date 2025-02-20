@@ -10,21 +10,18 @@ class AdversarialTrainer(Temp):
         if n(x) or n(y):
             print(f"NANS DETECTED COMPUTE_LOSS {n(x)} {n(y)}")
 
-        out = super().compute_loss(physics, x, y, train, epoch)
+        x_net, logs = super().compute_loss(physics, x, y, train, epoch)
 
-        if n(out):
-            print(f"NANS DETECTED COMPUTE_LOSS {n(out)}")
+        if n(x_net):
+            print(f"NANS DETECTED COMPUTE_LOSS {n(x_net)}")
 
-        return out
+        return x_net, logs
     
     def compute_metrics(self, x, x_net, y, physics, logs, train=True, epoch = None):
         if n(x) or n(y) or n(x_net):
             print(f"NANS DETECTED COMPUTE_METRICS {n(x)} {n(y)} {n(x_net)}")
 
         out = super().compute_metrics(x, x_net, y, physics, logs, train, epoch)
-
-        if n(out):
-            print(f"NANS DETECTED COMPUTE_METRICS {n(out)}")
 
         return out
 
