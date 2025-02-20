@@ -240,8 +240,8 @@ match args.loss:
             dinv.loss.MOEILoss(transform=dinv.transform.CPABDiffeomorphism(device=device), physics_generator=physics_generator, metric=xm)
         ]
     case "cole":
-        #discrim = SkipConvDiscriminator((320, 320)).to(device)
-        discrim = dinv.models.gan.PatchGANDiscriminator(2, n_layers=2, use_sigmoid=False).to(device)
+        discrim = SkipConvDiscriminator((320, 320), use_sigmoid=False).to(device)
+        #discrim = dinv.models.gan.PatchGANDiscriminator(2, n_layers=2, use_sigmoid=False).to(device)
         
         dataloader_factory = lambda: torch.utils.data.DataLoader(train_dataset, batch_size=args.b, shuffle=True, generator=torch.Generator("cpu").manual_seed(42))
         physics_generator_factory = lambda: dinv.physics.generator.GaussianMaskGenerator(img_size=(320, 320), acceleration=args.acc, rng=torch.Generator(device).manual_seed(42), device=device)
