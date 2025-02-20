@@ -240,14 +240,15 @@ match args.loss:
             dinv.loss.MOEILoss(transform=dinv.transform.CPABDiffeomorphism(device=device), physics_generator=physics_generator, metric=xm)
         ]
     case "cole":
-        discrim = SkipConvDiscriminator((320, 320)).to(device)
+        #discrim = SkipConvDiscriminator((320, 320)).to(device)
+        discrim = dinv.models.gan.PatchGANDiscriminator(2, n_layers=2)
         
         dataloader_factory = lambda: torch.utils.data.DataLoader(train_dataset, batch_size=args.b, shuffle=True, generator=torch.Generator("cpu").manual_seed(42))
         physics_generator_factory = lambda: dinv.physics.generator.GaussianMaskGenerator(img_size=(320, 320), acceleration=args.acc, rng=torch.Generator(device).manual_seed(42), device=device)
         
         loss = MultiOperatorUnsupAdversarialGeneratorLoss(device=device, dataloader_factory=dataloader_factory, physics_generator_factory=physics_generator_factory)
         loss_d=MultiOperatorUnsupAdversarialDiscriminatorLoss(device=device, dataloader_factory=dataloader_factory, physics_generator_factory=physics_generator_factory)
-        loss = [dinv.loss.MCLoss(), loss]
+        #loss = [dinv.loss.MCLoss(), loss]
     case "sup-gan":
         discrim = SkipConvDiscriminator((320, 320)).to(device)
 
