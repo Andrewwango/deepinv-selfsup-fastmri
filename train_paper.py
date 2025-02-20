@@ -103,7 +103,7 @@ def train(loss: dinv.loss.Loss, epochs: int = 0, discrim: torch.nn.Module=None, 
         print("ADVERSARIAL TRAINING")
         optimizer = dinv.training.AdversarialOptimizer(optimizer, torch.optim.Adam(discrim.parameters(), args.lr if args.lr is not None else 1e-3))
         scheduler = dinv.training.adversarial.AdversarialScheduler(scheduler, torch.optim.lr_scheduler.MultiStepLR(optimizer, args.schedule)) if args.schedule is not None else None
-        _trainer = dinv.training.AdversarialTrainer
+        _trainer = AdversarialTrainer#dinv.training.AdversarialTrainer
     else:
         _trainer = dinv.Trainer      
 
