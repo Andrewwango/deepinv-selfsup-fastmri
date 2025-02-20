@@ -1,14 +1,11 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, Callable
-
-from torch.nn import MSELoss
-from deepinv.loss.loss import Loss
-from deepinv.models.base import Reconstructor
 
 from typing import Union, Iterable, Tuple
+
 import torch
 import torch.nn as nn
 from torch import Tensor
+
 from deepinv.loss.loss import Loss
 from deepinv.loss.metric.metric import Metric
 from deepinv.transform.base import Transform, TransformParam
@@ -58,134 +55,50 @@ class RandomPhaseShift(Transform):
             out += [y * MRIMixin.from_torch_complex(shift)]
         return torch.cat(out)
 
-class NoTransform(Transform):
-    def _get_params(self, *args):
-        return {}
-    
-    def _transform(self, x, **params):
-        return x
-
-from deepinv.transform.base import Transform
-class TransformedMRI(MRI):
-    def __init__(self, transform: Transform, transform_params: dict, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.transform = transform
-        self.transform_params = transform_params
-    
-    def A(self, x, mask=None, **kwargs):
-        return super().A(self.transform.inverse(x, **self.transform_params), mask, **kwargs)
-    
-    def A_adjoint(self, y, mask = None, **kwargs):
-        return self.transform(super().A_adjoint(y, mask, **kwargs), **self.transform_params)
+from deepinv.transform import Transform, Rotate, Shift, Scale, Reflect
 
 class VORTEXLoss(Loss):
     def __init__(
         self,
-        transform_equiv: Transform,
-        transform_invar: Transform,
+        T_e: Transform = None,
+        T_i: Transform = None,
         metric: Union[Metric, nn.Module] = torch.nn.MSELoss(),
-        no_grad: bool = False,
+        no_grad: bool = True,
+        rng: torch.Generator = None,
         *args,
         **kwargs,
     ):
         super().__init__(*args, **kwargs)
         self.metric = metric
-        self.T_e = transform_equiv
-        self.T_i = transform_invar
+        self.T_e = T_e if T_e is not None else Shift(shift_max=0.1, rng=rng) | Rotate(rng=rng, limits=15) #| Rotate(rng=rng, multiples=90) | Scale(factors=[0.75, 1.25], rng=rng) | Reflect(rng=rng)
+        self.T_i = T_i if T_i is not None else RandomPhaseShift(scale=0.1, rng=rng) * NoiseTransform(rng=rng)
         self.no_grad = no_grad
+
+    class TransformedMRI(MRI):
+        def __init__(self, physics: MRI, transform: Transform, transform_params: dict, *args, **kwargs):
+            super().__init__(*args, img_size=physics.img_size, mask=physics.mask, device=physics.device, three_d=physics.three_d, **kwargs)
+            self.transform = transform
+            self.transform_params = transform_params
+        
+        def A(self, x, mask=None, **kwargs):
+            return super().A(self.transform.inverse(x, **self.transform_params), mask, **kwargs)
+        
+        def A_adjoint(self, y, mask = None, **kwargs):
+            return self.transform(super().A_adjoint(y, mask, **kwargs), **self.transform_params)
 
     def forward(self, x_net: Tensor, y: Tensor, physics: MRI, model, **kwargs):
         if self.no_grad:
+            # Only propagate gradients through augmented branch
             x_net = x_net.detach()
         
+        # Sample E transform
         e_params = self.T_e.get_params(x_net)
-        x1 = self.T_e(x_net, **e_params)
         
-        yi = self.T_i(y)
-        xi = physics.A_adjoint(yi)
-        xe = self.T_e(xi, **e_params)
-        #physics_full = MRI(img_size=y.shape, device=physics.device)
-        #ye = physics_full(xe)
-        #x2 = model(ye, physics_full)
-        #ye = physics.A(xe)
-        #x2 = model(ye, physics)
-        physics2 = TransformedMRI(self.T_e, e_params, img_size=y.shape, mask=physics.mask, device=physics.device)
-        ye = physics2(xe)
-        x2 = model(ye, physics2)
+        # Augment input
+        x_aug = self.T_e(physics.A_adjoint(self.T_i(y)), **e_params)
 
-        return self.metric(x1, x2)
+        # Pass through network
+        physics2 = self.TransformedMRI(physics, self.T_e, e_params)
+        x_aug_net = model(physics2(x_aug), physics2)
 
-
-class VORTEXLoss2(Loss):
-    def __init__(
-        self,
-        transform_equiv: Transform,
-        transform_invar: Transform,
-        metric: Union[Metric, nn.Module] = torch.nn.MSELoss(),
-        no_grad: bool = False,
-        *args,
-        **kwargs,
-    ):
-        super().__init__(*args, **kwargs)
-        self.metric = metric
-        self.T_e = transform_equiv
-        self.T_i = transform_invar
-        self.no_grad = no_grad
-
-    def forward(self, x_net, y, physics, model: VORTEXModel, **kwargs):
-        e_params = model.get_e_params()
-        if self.no_grad:
-            with torch.no_grad():
-                x1 = model(y, physics)
-                x1 = x1.detach()
-
-        x1e = self.T_e(x1, **e_params)
-        x2 = x_net
-        return self.metric(x1e, x2)
-
-    def adapt_model(self, model, **kwargs):
-        if isinstance(model, self.VORTEXModel):
-            return model
-        else:
-            return self.VORTEXModel(model, self.T_e, self.T_i)
-
-    class VORTEXModel(Reconstructor):
-        r"""
-        Adapted model for the VORTEX loss
-        """
-        def __init__(self, model: Reconstructor, T_e: Transform, T_i: Transform):
-            super().__init__()
-            self.model = model
-            self.T_e = T_e
-            self.T_i = T_i
-            self.transforms = None
-
-        def forward(self, y: Tensor, physics: MRI, update_parameters=False, **kwargs):
-
-            if self.training:
-                e_params = self.T_e.get_params(y)
-
-                yi = self.T_i(y)
-                xi = physics.A_adjoint(yi)
-                xe = self.T_e(xi, **e_params)
-                #physics_full = MRI(img_size=y.shape, device=physics.device)
-                #ye = physics_full(xe)
-                #x2 = model(ye, physics_full)
-                #ye = physics.A(xe)
-                #x2 = model(ye, physics)
-                physics2 = TransformedMRI(self.T_e, e_params, img_size=y.shape, mask=physics.mask, device=physics.device)
-                ye = physics2(xe)
-
-                if update_parameters:
-                    self.e_params = e_params
-
-                return self.model(ye, physics2)
-            else:
-                return self.model(y, physics)
-
-        def get_e_params(self):
-            if self.e_params is None:
-                raise ValueError(
-                    "Mask not generated during forward pass - use model(y, physics, update_parameters=True)"
-                )
-            return self.e_params
+        return self.metric(self.T_e(x_net, **e_params), x_aug_net)

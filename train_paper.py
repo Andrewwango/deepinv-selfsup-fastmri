@@ -260,15 +260,7 @@ match args.loss:
         loss = UAIRGeneratorLoss(device=device, physics_generator_factory=physics_generator_factory)
         loss_d=UAIRDiscriminatorLoss(device=device, physics_generator_factory=physics_generator_factory)
     case "vortex":
-        from deepinv.transform import Rotate, Shift, Scale, Reflect
-        from deepinv.transform.projective import Affine
-        loss = VORTEXLoss(
-            Shift(shift_max=0.1, rng=rng) | Rotate(rng=rng, limits=15),# | Rotate(rng=rng, multiples=90) | Scale(factors=[0.75, 1.25], rng=rng) | Reflect(rng=rng),
-            RandomPhaseShift(scale=0.1, rng=rng) * NoiseTransform(rng=rng),
-            no_grad=True,
-        )
-        loss = [dinv.loss.MCLoss(), loss]
-        # Affine(theta_z_max=0, zoom_factor_min=1., shift_max=0., skew_max=10, x_stretch_factor_min=1., y_stretch_factor_min=1., device=device)
+        loss = [dinv.loss.MCLoss(), VORTEXLoss()]
 
 # Set epochs > 0 to train the model
 import wandb, json
