@@ -223,7 +223,7 @@ match args.loss:
             mask_generator=dinv.physics.generator.GaussianSplittingMaskGenerator((2, 320, 320), split_ratio=0.6, device=device, rng=rng),
             eval_split_input=True, eval_n_samples=3
         )
-    case "noisier2noise-ssdu":
+    case "weighted-ssdu":
         split_generator = dinv.physics.generator.GaussianMaskGenerator(img_size=(320, 320), acceleration=2, rng=rng, device=device)
         mask_generator = dinv.physics.generator.MultiplicativeSplittingMaskGenerator((1, 320, 320), split_generator)
         pdf = {"omega": physics_generator.get_pdf(), "lambda": split_generator.get_pdf()}
