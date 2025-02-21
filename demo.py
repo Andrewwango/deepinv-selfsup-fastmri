@@ -129,8 +129,8 @@ match args.loss:
             eval_split_input=True, eval_n_samples=5
         )
     case "noisier2noise-ssdu":
-        split_generator = dinv.physics.generator.GaussianMaskGenerator(img_size=(320, 320), acceleration=2, rng=rng, device=device)
-        mask_generator = dinv.physics.generator.MultiplicativeSplittingMaskGenerator((1, 320, 320), split_generator)
+        split_generator = dinv.physics.generator.GaussianMaskGenerator(img_size=(128, 128), acceleration=2, rng=rng, device=device)
+        mask_generator = dinv.physics.generator.MultiplicativeSplittingMaskGenerator((1, 128, 128), split_generator)
         pdf = {"omega": physics_generator.get_pdf(), "lambda": split_generator.get_pdf()}
         loss = dinv.loss.WeightedSplittingLoss(mask_generator=mask_generator, pdf=pdf)
 
