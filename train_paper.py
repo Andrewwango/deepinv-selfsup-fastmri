@@ -103,7 +103,7 @@ def train(loss: dinv.loss.Loss, epochs: int = 0, discrim: torch.nn.Module=None, 
         print("ADVERSARIAL TRAINING")
         optimizer = dinv.training.AdversarialOptimizer(optimizer, torch.optim.Adam(discrim.parameters(), args.lr if args.lr is not None else 1e-3))
         scheduler = dinv.training.adversarial.AdversarialScheduler(scheduler, torch.optim.lr_scheduler.MultiStepLR(optimizer, args.schedule)) if args.schedule is not None else None
-        _trainer = AdversarialTrainer#dinv.training.AdversarialTrainer
+        _trainer = dinv.training.AdversarialTrainer
     else:
         _trainer = dinv.Trainer      
 
@@ -143,13 +143,6 @@ def train(loss: dinv.loss.Loss, epochs: int = 0, discrim: torch.nn.Module=None, 
     return trainer
 
 # %%
-class SumMetric(dinv.metric.Metric):
-    def __init__(self, *metrics: dinv.metric.Metric):
-        super().__init__()
-        self.metrics = metrics
-    def forward(self, x_net = None, x = None, *args, **kwargs):
-        return sum([m.forward(x_net, x, *args, **kwargs) for m in self.metrics])
-
 match args.x_metric:
     case "mse":
         xm = torch.nn.MSELoss()
