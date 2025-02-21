@@ -225,14 +225,16 @@ match args.loss:
         )
     case "noisier2noise-ssdu":
         split_generator = dinv.physics.generator.GaussianMaskGenerator(img_size=(320, 320), acceleration=2, rng=rng, device=device)
-        mask_generator = dinv.physics.generator.inpainting.MultiplicativeSplittingMaskGenerator((1, 320, 320), split_generator)
+        mask_generator = dinv.physics.generator.MultiplicativeSplittingMaskGenerator((1, 320, 320), split_generator)
         pdf = {"omega": physics_generator.get_pdf(), "lambda": split_generator.get_pdf()}
-        loss = dinv.loss.measplit.K_Weighted_Loss(mask_generator=mask_generator, pdf=pdf, eval_split_input=False)
+        loss = dinv.loss.WeightedSplittingLoss(mask_generator=mask_generator, pdf=pdf)
+    
     case "ei-sure":
         loss = [
             dinv.loss.SureGaussianLoss(sigma=0.),
             dinv.loss.MOEILoss(transform=dinv.transform.CPABDiffeomorphism(device=device), physics_generator=physics_generator, metric=xm)
         ]
+    
     case "cole":
         discrim = SkipConvDiscriminator((320, 320), use_sigmoid=False).to(device)
         
@@ -241,17 +243,13 @@ match args.loss:
         
         loss = MultiOperatorUnsupAdversarialGeneratorLoss(device=device, dataloader_factory=dataloader_factory, physics_generator_factory=physics_generator_factory)
         loss_d=MultiOperatorUnsupAdversarialDiscriminatorLoss(device=device, dataloader_factory=dataloader_factory, physics_generator_factory=physics_generator_factory)
-    case "sup-gan":
-        discrim = SkipConvDiscriminator((320, 320)).to(device)
 
-        loss = dinv.loss.adversarial.SupAdversarialGeneratorLoss(weight_adv=1, device=device)
-        loss = [dinv.loss.SupLoss(), loss]
-        loss_d=dinv.loss.adversarial.SupAdversarialDiscriminatorLoss(device=device)
     case "uair":
         discrim = SkipConvDiscriminator((320, 320), use_sigmoid=False).to(device)
         physics_generator_factory = lambda: dinv.physics.generator.GaussianMaskGenerator(img_size=(320, 320), acceleration=args.acc, rng=torch.Generator(device).manual_seed(42), device=device)
         loss = UAIRGeneratorLoss(device=device, physics_generator_factory=physics_generator_factory)
         loss_d=UAIRDiscriminatorLoss(device=device, physics_generator_factory=physics_generator_factory)
+    
     case "vortex":
         loss = [dinv.loss.MCLoss(), VORTEXLoss(rng=rng)]
 
