@@ -100,7 +100,6 @@ def train(loss: dinv.loss.Loss, epochs: int = 0, discrim: torch.nn.Module=None, 
     scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, args.schedule) if args.schedule is not None else None
 
     if discrim is not None:
-        print("ADVERSARIAL TRAINING")
         optimizer = dinv.training.AdversarialOptimizer(optimizer, torch.optim.Adam(discrim.parameters(), args.lr if args.lr is not None else 1e-3))
         scheduler = dinv.training.adversarial.AdversarialScheduler(scheduler, torch.optim.lr_scheduler.MultiStepLR(optimizer, args.schedule)) if args.schedule is not None else None
         _trainer = dinv.training.AdversarialTrainer
@@ -134,7 +133,6 @@ def train(loss: dinv.loss.Loss, epochs: int = 0, discrim: torch.nn.Module=None, 
     if args.ckpt is not None and args.lr is not None:
         for param in trainer.optimizer.param_groups:
             param["lr"] = args.lr
-        print(trainer.optimizer.param_groups[0]["lr"])
 
     trainer.train()
     trainer.plot_images = True
@@ -237,14 +235,12 @@ match args.loss:
         ]
     case "cole":
         discrim = SkipConvDiscriminator((320, 320), use_sigmoid=False).to(device)
-        #discrim = dinv.models.gan.PatchGANDiscriminator(2, n_layers=2, use_sigmoid=False).to(device)
         
         dataloader_factory = lambda: torch.utils.data.DataLoader(train_dataset, batch_size=args.b, shuffle=True, generator=torch.Generator("cpu").manual_seed(42))
         physics_generator_factory = lambda: dinv.physics.generator.GaussianMaskGenerator(img_size=(320, 320), acceleration=args.acc, rng=torch.Generator(device).manual_seed(42), device=device)
         
         loss = MultiOperatorUnsupAdversarialGeneratorLoss(device=device, dataloader_factory=dataloader_factory, physics_generator_factory=physics_generator_factory)
         loss_d=MultiOperatorUnsupAdversarialDiscriminatorLoss(device=device, dataloader_factory=dataloader_factory, physics_generator_factory=physics_generator_factory)
-        #loss = [dinv.loss.MCLoss(), loss]
     case "sup-gan":
         discrim = SkipConvDiscriminator((320, 320)).to(device)
 
@@ -259,19 +255,11 @@ match args.loss:
     case "vortex":
         loss = [dinv.loss.MCLoss(), VORTEXLoss(rng=rng)]
 
-# Set epochs > 0 to train the model
 import wandb, json
 with wandb.init(project="deepinv-selfsup-fastmri-experiments", config={"loss": args.loss}):
     run_id = wandb.run.id
     trainer = train(loss, epochs=args.epochs, loss_d=loss_d, discrim=discrim)
     trainer.save_folder_im = f"{model_dir}/paper/{run_id}"
-
-if isinstance(loss, dinv.loss.SplittingLoss):
-    assert isinstance(trainer.model, dinv.loss.SplittingLoss.SplittingModel)
-    assert isinstance(trainer.model.mask_generator, dinv.physics.generator.GaussianSplittingMaskGenerator)
-    if args.loss == "noise2inverse":
-        assert trainer.model.eval_split_input == True
-    print("Success")
 
 if args.save_model:
     trainer.save_path = f"{model_dir}/paper/{run_id}"
