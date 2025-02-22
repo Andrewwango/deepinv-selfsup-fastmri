@@ -395,7 +395,7 @@
 
 <section id="title-slide" class="quarto-title-block center">
   <h1 class="title">Self-supervised learning algorithms for imaging without ground truth</h1>
-  <p class="subtitle">ICMS Self-Supervised Machine Learning workshop, 24-25th Feb 2025</p>
+  <p class="subtitle">ICMS Self-Supervised Machine Learning workshop, 24-25th Feb</p>
 
 <div class="quarto-title-authors">
 <div class="quarto-title-author">
@@ -407,26 +407,13 @@
 
 </section><section id="TOC">
 <nav role="doc-toc"> 
-<h2 id="toc-title">Table of contents</h2>
+<h2 id="toc-title">Agenda</h2>
 <ul>
 <li><a href="#/introduction" id="/toc-introduction">Introduction</a></li>
 <li><a href="#/define-experiment-training" id="/toc-define-experiment-training">0. Define experiment training</a></li>
-<li><a href="#/equivariant-imaging-methods" id="/toc-equivariant-imaging-methods">1. Equivariant imaging methods</a>
-<ul>
-<li><a href="#/a.-equivariant-imaging-ei" id="/toc-a.-equivariant-imaging-ei">1a. Equivariant imaging (EI)</a></li>
-<li><a href="#/b.-diffeomorphic-equivariant-imaging" id="/toc-b.-diffeomorphic-equivariant-imaging">1b. Diffeomorphic-equivariant imaging</a></li>
-</ul></li>
-<li><a href="#/multi-operator-methods" id="/toc-multi-operator-methods">2. Multi-operator methods</a>
-<ul>
-<li><a href="#/a.-multi-operator-imaging-moi" id="/toc-a.-multi-operator-imaging-moi">2a. Multi-operator imaging (MOI)</a></li>
-<li><a href="#/b.-multi-operator-equivariant-imaging-mo-ei" id="/toc-b.-multi-operator-equivariant-imaging-mo-ei">2b. Multi-operator equivariant imaging (MO-EI)</a></li>
-</ul></li>
-<li><a href="#/measurement-splitting-methods" id="/toc-measurement-splitting-methods">3. Measurement splitting methods</a>
-<ul>
-<li><a href="#/a.-self-supervised-data-undersampling-ssdu" id="/toc-a.-self-supervised-data-undersampling-ssdu">3a. Self-supervised data undersampling (SSDU)</a></li>
-<li><a href="#/b.-ssdu-with-test-time-monte-carlo" id="/toc-b.-ssdu-with-test-time-monte-carlo">3b. SSDU with test-time Monte Carlo</a></li>
-<li><a href="#/c.-weighted-ssdu" id="/toc-c.-weighted-ssdu">3c. Weighted-SSDU</a></li>
-</ul></li>
+<li><a href="#/equivariant-imaging-methods" id="/toc-equivariant-imaging-methods">1. Equivariant imaging methods</a></li>
+<li><a href="#/multi-operator-methods" id="/toc-multi-operator-methods">2. Multi-operator methods</a></li>
+<li><a href="#/measurement-splitting-methods" id="/toc-measurement-splitting-methods">3. Measurement splitting methods</a></li>
 <li><a href="#/other-methods" id="/toc-other-methods">4. Other methods</a></li>
 <li><a href="#/baselines" id="/toc-baselines">5. Baselines</a></li>
 <li><a href="#/side-by-side-comparison" id="/toc-side-by-side-comparison">6. Side-by-side comparison</a></li>
@@ -434,18 +421,26 @@
 </ul>
 </nav>
 </section>
-<section id="introduction" class="title-slide slide level2 center">
+<section class="slide level3">
+
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="qr.png" style="width:50.0%"></p>
+</figure>
+</div>
+</section>
+<section id="introduction" class="title-slide slide level2 smaller center">
 <h2>Introduction</h2>
 <p>We compare self-supervised learning algorithms for solving imaging inverse problems for accelerated MRI reconstruction, using the latest <a href="https://deepinv.github.io">DeepInverse</a> library. Install using <a href="https://deepinv.github.io/deepinv/quickstart.html#:~:text=pip%20install%20git%2Bhttps%3A//github.com/deepinv/deepinv.git%23egg%3Ddeepinv"><code>pip</code></a>.</p>
 <p>Find the full experiments with more comparisons in the paper: <a href="https://arxiv.org/abs/2502.14009"><em>“Benchmarking Self-Supervised Methods for Accelerated MRI Reconstruction”</em></a>, 2025.</p>
 <p>Notes:</p>
 <ul>
-<li>We assume, in the general case, that measurements are generated from multiple random operators that span the whole space as this is required for many of the algorithms (but not all, including EI).</li>
-<li>We demonstrate feedforward methods rather than generative models. We also provide self-supervised generative models including GANs. See <a href="https://deepinv.github.io/deepinv/auto_examples/adversarial-learning/demo_gan_imaging.html">Example: <em>“Imaging inverse problems with adversarial networks”</em></a>.</li>
-<li>We assume noiseless data, however some methods can be easily generalised to noisy scenarios.</li>
+<li>We assume that measurements are generated from multiple random operators that span the whole space as this is required for many of the algorithms.</li>
+<li>We demonstrate feedforward methods <span class="math inline">\(\hat{x}=f_\theta(y)\)</span> rather than generative models.</li>
+<li>We assume noiseless data; some methods can be easily generalised to noisy scenarios.</li>
 </ul>
-<div class="cell" data-execution_count="1">
-<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1"></a><span class="im">import</span> deepinv <span class="im">as</span> dinv</span>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1" data-code-line-numbers="1-2|4-5"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1"></a><span class="im">import</span> deepinv <span class="im">as</span> dinv</span>
 <span id="cb1-2"><a href="#cb1-2"></a><span class="im">import</span> torch</span>
 <span id="cb1-3"><a href="#cb1-3"></a></span>
 <span id="cb1-4"><a href="#cb1-4"></a>device <span class="op">=</span> dinv.utils.get_freer_gpu() <span class="cf">if</span> torch.cuda.is_available() <span class="cf">else</span> <span class="st">"cpu"</span></span>
@@ -454,127 +449,121 @@
 </div>
 </section>
 
-<section id="define-experiment-training" class="title-slide slide level2 center">
+<section>
+<section id="define-experiment-training" class="title-slide slide level2 smaller center">
 <h2>0. Define experiment training</h2>
-<div class="panel-tabset">
-<ul id="tabset-1" class="panel-tabset-tabby"><li><a data-tabby-default="" href="#tabset-1-1">Summary</a></li><li><a href="#tabset-1-2">Define physics &amp; model</a></li><li><a href="#tabset-1-3">Define data</a></li><li><a href="#tabset-1-4">Define trainer</a></li></ul>
-<div class="tab-content">
-<div id="tabset-1-1">
 <p>First, define all common code for training (MRI physics, masking, model, data and metrics).</p>
 <p>We provide many easy-to-use classes for MRI-related experiments. See <a href="https://deepinv.github.io/deepinv/auto_examples/basics/demo_tour_mri.html">Example - <em>“Tour of MRI functionality in DeepInverse”</em></a> for more.</p>
 <p>We train with a custom <a href="https://fastmri.med.nyu.edu">FastMRI</a> subset of 973 images created using <a href="https://deepinv.github.io/deepinv/api/stubs/deepinv.datasets.FastMRISliceDataset.html#deepinv.datasets.FastMRISliceDataset.save_simple_dataset"><code>deepinv.datasets.FastMRISliceDataset.save_simple_dataset</code></a>. Because of the <a href="https://fastmri.med.nyu.edu/">FastMRI data use agreement</a>, we do not provide this dataset. To run a quick demo, set <code>file_name=None</code> below to download our tiny demo subset. See <a href="https://deepinv.github.io/deepinv/api/stubs/deepinv.datasets.SimpleFastMRISliceDataset.html"><code>deepinv.datasets.SimpleFastMRISliceDataset</code></a> for more details.</p>
 <div class="cell" data-execution_count="2">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1"></a>file_name <span class="op">=</span> <span class="st">"fastmri_knee_singlecoil.pt"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-</div>
-<div id="tabset-1-2">
-<p>Define MRI physics where each image is masked with a random Gaussian-weighted Cartesian mask at 4x acceleration.</p>
-<div class="cell" data-execution_count="3">
-<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1"></a>physics_generator <span class="op">=</span> dinv.physics.generator.GaussianMaskGenerator(</span>
+</section>
+<section id="define-physics-model" class="slide level3">
+<h3>Define physics &amp; model</h3>
+<p>Define MRI physics where each image is masked with a random Gaussian-weighted Cartesian mask at 4x acceleration. Define an unrolled MoDL network with a small UNet backbone (3 scales) and 3 unrolled iterations. See <a href="https://deepinv.github.io/deepinv/auto_examples/basics/demo_tour_mri.html">Example - <em>“Tour of MRI functionality in DeepInverse”</em></a> for other examples.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb3" data-code-line-numbers="1-3|4|6|7"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1"></a>physics_generator <span class="op">=</span> dinv.physics.generator.GaussianMaskGenerator(</span>
 <span id="cb3-2"><a href="#cb3-2"></a>    img_size<span class="op">=</span>(<span class="dv">128</span>, <span class="dv">128</span>), acceleration<span class="op">=</span><span class="dv">4</span>, rng<span class="op">=</span>rng, device<span class="op">=</span>device</span>
 <span id="cb3-3"><a href="#cb3-3"></a>)</span>
-<span id="cb3-4"><a href="#cb3-4"></a>physics <span class="op">=</span> dinv.physics.MRI(img_size<span class="op">=</span>(<span class="dv">128</span>, <span class="dv">128</span>), device<span class="op">=</span>device)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb3-4"><a href="#cb3-4"></a>physics <span class="op">=</span> dinv.physics.MRI(img_size<span class="op">=</span>(<span class="dv">128</span>, <span class="dv">128</span>), device<span class="op">=</span>device)</span>
+<span id="cb3-5"><a href="#cb3-5"></a></span>
+<span id="cb3-6"><a href="#cb3-6"></a>denoiser <span class="op">=</span> dinv.models.UNet(<span class="dv">2</span>, <span class="dv">2</span>, scales<span class="op">=</span><span class="dv">3</span>)</span>
+<span id="cb3-7"><a href="#cb3-7"></a>model <span class="op">=</span> <span class="kw">lambda</span>: dinv.utils.demo.demo_mri_model(denoiser<span class="op">=</span>denoiser, num_iter<span class="op">=</span><span class="dv">3</span>, device<span class="op">=</span>device).to(device)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>Define an unrolled MoDL network with a small UNet backbone (3 scales) and 3 unrolled iterations. See <a href="https://deepinv.github.io/deepinv/auto_examples/basics/demo_tour_mri.html">Example - <em>“Tour of MRI functionality in DeepInverse”</em></a> for other examples.</p>
-<div class="cell" data-execution_count="4">
-<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1"></a>denoiser <span class="op">=</span> dinv.models.UNet(<span class="dv">2</span>, <span class="dv">2</span>, scales<span class="op">=</span><span class="dv">3</span>)</span>
-<span id="cb4-2"><a href="#cb4-2"></a>model <span class="op">=</span> <span class="kw">lambda</span>: dinv.utils.demo.demo_mri_model(denoiser<span class="op">=</span>denoiser, num_iter<span class="op">=</span><span class="dv">3</span>, device<span class="op">=</span>device).to(device)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-</div>
-<div id="tabset-1-3">
+</section>
+<section id="define-data" class="slide level3">
+<h3>Define data</h3>
 <p>Define FastMRI small train and test datasets resized for speed, then simulate random k-space measurements using the physics, then load the generated measurements. We keep the test set at maximum 50 images for speed.</p>
-<div class="cell" data-execution_count="5">
-<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1"></a><span class="im">from</span> torchvision.transforms <span class="im">import</span> Resize</span>
-<span id="cb5-2"><a href="#cb5-2"></a>train_dataset <span class="op">=</span> dinv.datasets.SimpleFastMRISliceDataset(<span class="st">"data"</span>, file_name<span class="op">=</span>file_name, transform<span class="op">=</span>Resize(<span class="dv">128</span>), train<span class="op">=</span><span class="va">True</span>, train_percent<span class="op">=</span><span class="fl">0.8</span>, download<span class="op">=</span><span class="va">True</span>)</span>
-<span id="cb5-3"><a href="#cb5-3"></a>test_dataset <span class="op">=</span> dinv.datasets.SimpleFastMRISliceDataset(<span class="st">"data"</span>, file_name<span class="op">=</span>file_name, transform<span class="op">=</span>Resize(<span class="dv">128</span>), train<span class="op">=</span><span class="va">False</span>, train_percent<span class="op">=</span><span class="fl">0.8</span>,)</span>
-<span id="cb5-4"><a href="#cb5-4"></a></span>
-<span id="cb5-5"><a href="#cb5-5"></a>path <span class="op">=</span> dinv.datasets.generate_dataset(train_dataset<span class="op">=</span>train_dataset, test_dataset<span class="op">=</span>test_dataset, physics<span class="op">=</span>physics, physics_generator<span class="op">=</span>physics_generator, save_physics_generator_params<span class="op">=</span><span class="va">True</span>, overwrite_existing<span class="op">=</span><span class="va">False</span>, device<span class="op">=</span>device, save_dir<span class="op">=</span><span class="st">"data"</span>, batch_size<span class="op">=</span><span class="dv">1</span>)</span>
-<span id="cb5-6"><a href="#cb5-6"></a></span>
-<span id="cb5-7"><a href="#cb5-7"></a>train_dataset, test_dataset <span class="op">=</span> dinv.datasets.HDF5Dataset(path, split<span class="op">=</span><span class="st">"train"</span>, load_physics_generator_params<span class="op">=</span><span class="va">True</span>), dinv.datasets.HDF5Dataset(path, split<span class="op">=</span><span class="st">"test"</span>, load_physics_generator_params<span class="op">=</span><span class="va">True</span>)</span>
-<span id="cb5-8"><a href="#cb5-8"></a>train_dataloader, test_dataloader <span class="op">=</span> torch.utils.data.DataLoader(train_dataset, shuffle<span class="op">=</span><span class="va">True</span>), torch.utils.data.DataLoader(torch.utils.data.Subset(test_dataset, <span class="bu">range</span>(<span class="bu">min</span>(<span class="bu">len</span>(test_dataset), <span class="dv">50</span>))))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb4" data-code-line-numbers="1-3|5|7-8"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1"></a><span class="im">from</span> torchvision.transforms <span class="im">import</span> Resize</span>
+<span id="cb4-2"><a href="#cb4-2"></a>train_dataset <span class="op">=</span> dinv.datasets.SimpleFastMRISliceDataset(<span class="st">"data"</span>, file_name<span class="op">=</span>file_name, transform<span class="op">=</span>Resize(<span class="dv">128</span>), train<span class="op">=</span><span class="va">True</span>, train_percent<span class="op">=</span><span class="fl">0.8</span>, download<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb4-3"><a href="#cb4-3"></a>test_dataset <span class="op">=</span> dinv.datasets.SimpleFastMRISliceDataset(<span class="st">"data"</span>, file_name<span class="op">=</span>file_name, transform<span class="op">=</span>Resize(<span class="dv">128</span>), train<span class="op">=</span><span class="va">False</span>, train_percent<span class="op">=</span><span class="fl">0.8</span>,)</span>
+<span id="cb4-4"><a href="#cb4-4"></a></span>
+<span id="cb4-5"><a href="#cb4-5"></a>path <span class="op">=</span> dinv.datasets.generate_dataset(train_dataset<span class="op">=</span>train_dataset, test_dataset<span class="op">=</span>test_dataset, physics<span class="op">=</span>physics, physics_generator<span class="op">=</span>physics_generator, save_physics_generator_params<span class="op">=</span><span class="va">True</span>, overwrite_existing<span class="op">=</span><span class="va">False</span>, device<span class="op">=</span>device, save_dir<span class="op">=</span><span class="st">"data"</span>, batch_size<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb4-6"><a href="#cb4-6"></a></span>
+<span id="cb4-7"><a href="#cb4-7"></a>train_dataset, test_dataset <span class="op">=</span> dinv.datasets.HDF5Dataset(path, split<span class="op">=</span><span class="st">"train"</span>, load_physics_generator_params<span class="op">=</span><span class="va">True</span>), dinv.datasets.HDF5Dataset(path, split<span class="op">=</span><span class="st">"test"</span>, load_physics_generator_params<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb4-8"><a href="#cb4-8"></a>train_dataloader, test_dataloader <span class="op">=</span> torch.utils.data.DataLoader(train_dataset, shuffle<span class="op">=</span><span class="va">True</span>), torch.utils.data.DataLoader(torch.utils.data.Subset(test_dataset, <span class="bu">range</span>(<span class="bu">min</span>(<span class="bu">len</span>(test_dataset), <span class="dv">50</span>))))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div class="cell" data-execution_count="6">
-<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1"></a>x, y, params <span class="op">=</span> <span class="bu">next</span>(<span class="bu">iter</span>(test_dataloader))</span>
-<span id="cb6-2"><a href="#cb6-2"></a>dinv.utils.plot({<span class="st">"x"</span>: x, <span class="st">"y"</span>: y, <span class="st">"Mask"</span>: params[<span class="st">"mask"</span>], <span class="st">"Zero-filled"</span>: physics.A_adjoint(y, <span class="op">**</span>params)})</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section class="slide level3">
+
+<div class="cell">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1"></a>x, y, params <span class="op">=</span> <span class="bu">next</span>(<span class="bu">iter</span>(test_dataloader))</span>
+<span id="cb5-2"><a href="#cb5-2"></a>dinv.utils.plot({</span>
+<span id="cb5-3"><a href="#cb5-3"></a>    <span class="st">"x"</span>: x,</span>
+<span id="cb5-4"><a href="#cb5-4"></a>    <span class="st">"y"</span>: y,</span>
+<span id="cb5-5"><a href="#cb5-5"></a>    <span class="st">"Mask"</span>: params[<span class="st">"mask"</span>],</span>
+<span id="cb5-6"><a href="#cb5-6"></a>    <span class="st">"Zero-filled"</span>: physics.A_adjoint(y, <span class="op">**</span>params)</span>
+<span id="cb5-7"><a href="#cb5-7"></a>}, figsize<span class="op">=</span>(<span class="dv">15</span>, <span class="dv">4</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display">
-<p><img data-src="demo_files/figure-revealjs/cell-7-output-1.png"></p>
-</div>
-</div>
-</div>
-<div id="tabset-1-4">
-<div class="cell" data-execution_count="7">
-<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1"></a><span class="kw">def</span> train(loss: dinv.loss.Loss, epochs: <span class="bu">int</span> <span class="op">=</span> <span class="dv">0</span>):</span>
-<span id="cb7-2"><a href="#cb7-2"></a>    _model <span class="op">=</span> model()</span>
-<span id="cb7-3"><a href="#cb7-3"></a>        </span>
-<span id="cb7-4"><a href="#cb7-4"></a>    trainer <span class="op">=</span> dinv.Trainer(</span>
-<span id="cb7-5"><a href="#cb7-5"></a>        model <span class="op">=</span> _model,</span>
-<span id="cb7-6"><a href="#cb7-6"></a>        physics <span class="op">=</span> physics,</span>
-<span id="cb7-7"><a href="#cb7-7"></a>        optimizer <span class="op">=</span> torch.optim.Adam(_model.parameters(), lr<span class="op">=</span><span class="fl">1e-3</span>),</span>
-<span id="cb7-8"><a href="#cb7-8"></a>        train_dataloader <span class="op">=</span> train_dataloader,</span>
-<span id="cb7-9"><a href="#cb7-9"></a>        eval_dataloader <span class="op">=</span> test_dataloader,</span>
-<span id="cb7-10"><a href="#cb7-10"></a>        epochs <span class="op">=</span> epochs,</span>
-<span id="cb7-11"><a href="#cb7-11"></a>        losses <span class="op">=</span> loss,</span>
-<span id="cb7-12"><a href="#cb7-12"></a>        scheduler <span class="op">=</span> <span class="va">None</span>,</span>
-<span id="cb7-13"><a href="#cb7-13"></a>        metrics <span class="op">=</span> dinv.metric.PSNR(complex_abs<span class="op">=</span><span class="va">True</span>),</span>
-<span id="cb7-14"><a href="#cb7-14"></a>        ckp_interval <span class="op">=</span> <span class="dv">10</span>,</span>
-<span id="cb7-15"><a href="#cb7-15"></a>        device <span class="op">=</span> device,</span>
-<span id="cb7-16"><a href="#cb7-16"></a>        eval_interval <span class="op">=</span> <span class="dv">1</span>,</span>
-<span id="cb7-17"><a href="#cb7-17"></a>        save_path <span class="op">=</span> <span class="st">"models"</span>,</span>
-<span id="cb7-18"><a href="#cb7-18"></a>        plot_images <span class="op">=</span> <span class="va">False</span>,</span>
-<span id="cb7-19"><a href="#cb7-19"></a>        wandb_vis <span class="op">=</span> <span class="va">False</span>,</span>
-<span id="cb7-20"><a href="#cb7-20"></a>    )</span>
-<span id="cb7-21"><a href="#cb7-21"></a></span>
-<span id="cb7-22"><a href="#cb7-22"></a>    trainer.train()</span>
-<span id="cb7-23"><a href="#cb7-23"></a>    trainer.plot_images <span class="op">=</span> <span class="va">True</span></span>
-<span id="cb7-24"><a href="#cb7-24"></a>    <span class="cf">return</span> trainer</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-</div>
+<p><img data-src="demo_files/figure-revealjs/cell-6-output-1.png"></p>
 </div>
 </div>
 </section>
-
+<section id="define-trainer" class="slide level3">
+<h3>Define trainer</h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb6" data-code-line-numbers="1,4,22,24|2,5|6|7|8-9|1,11|10,12,13,14,15,16,17,18,19,23"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1"></a><span class="kw">def</span> train(loss: dinv.loss.Loss, epochs: <span class="bu">int</span> <span class="op">=</span> <span class="dv">0</span>):</span>
+<span id="cb6-2"><a href="#cb6-2"></a>    _model <span class="op">=</span> model()</span>
+<span id="cb6-3"><a href="#cb6-3"></a>        </span>
+<span id="cb6-4"><a href="#cb6-4"></a>    trainer <span class="op">=</span> dinv.Trainer(</span>
+<span id="cb6-5"><a href="#cb6-5"></a>        model <span class="op">=</span> _model,</span>
+<span id="cb6-6"><a href="#cb6-6"></a>        physics <span class="op">=</span> physics,</span>
+<span id="cb6-7"><a href="#cb6-7"></a>        optimizer <span class="op">=</span> torch.optim.Adam(_model.parameters(), lr<span class="op">=</span><span class="fl">1e-3</span>),</span>
+<span id="cb6-8"><a href="#cb6-8"></a>        train_dataloader <span class="op">=</span> train_dataloader,</span>
+<span id="cb6-9"><a href="#cb6-9"></a>        eval_dataloader <span class="op">=</span> test_dataloader,</span>
+<span id="cb6-10"><a href="#cb6-10"></a>        epochs <span class="op">=</span> epochs,</span>
+<span id="cb6-11"><a href="#cb6-11"></a>        losses <span class="op">=</span> loss,</span>
+<span id="cb6-12"><a href="#cb6-12"></a>        scheduler <span class="op">=</span> <span class="va">None</span>,</span>
+<span id="cb6-13"><a href="#cb6-13"></a>        metrics <span class="op">=</span> dinv.metric.PSNR(complex_abs<span class="op">=</span><span class="va">True</span>),</span>
+<span id="cb6-14"><a href="#cb6-14"></a>        ckp_interval <span class="op">=</span> <span class="dv">10</span>,</span>
+<span id="cb6-15"><a href="#cb6-15"></a>        device <span class="op">=</span> device,</span>
+<span id="cb6-16"><a href="#cb6-16"></a>        eval_interval <span class="op">=</span> <span class="dv">1</span>,</span>
+<span id="cb6-17"><a href="#cb6-17"></a>        save_path <span class="op">=</span> <span class="st">"models"</span>,</span>
+<span id="cb6-18"><a href="#cb6-18"></a>        plot_images <span class="op">=</span> <span class="va">False</span>,</span>
+<span id="cb6-19"><a href="#cb6-19"></a>        wandb_vis <span class="op">=</span> <span class="va">False</span>,</span>
+<span id="cb6-20"><a href="#cb6-20"></a>    )</span>
+<span id="cb6-21"><a href="#cb6-21"></a></span>
+<span id="cb6-22"><a href="#cb6-22"></a>    trainer.train()</span>
+<span id="cb6-23"><a href="#cb6-23"></a>    trainer.plot_images <span class="op">=</span> <span class="va">True</span></span>
+<span id="cb6-24"><a href="#cb6-24"></a>    <span class="cf">return</span> trainer</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section></section>
 <section>
 <section id="equivariant-imaging-methods" class="title-slide slide level2 center">
 <h2>1. Equivariant imaging methods</h2>
 
 </section>
-<section id="a.-equivariant-imaging-ei" class="slide level3">
+<section id="a.-equivariant-imaging-ei" class="slide level3 smaller">
 <h3>1a. Equivariant imaging (EI)</h3>
-<div class="panel-tabset">
-<ul id="tabset-2" class="panel-tabset-tabby"><li><a data-tabby-default="" href="#tabset-2-1">Summary</a></li><li><a href="#tabset-2-2">Results</a></li></ul>
-<div class="tab-content">
-<div id="tabset-2-1">
 <p>The EI self-supervised loss [1] assumes that the set of signals is invariant to a group of transformations in order to learn from incomplete measurement data alone:</p>
 <p><span class="math inline">\(\mathcal{L}_\text{EI}=\lVert T_g \hat{x} - f(A(T_g \hat{x}), A)\rVert_2^2\)</span></p>
 <p>where <span class="math inline">\(\hat{x}=f(y, A)\)</span> is a reconstructed signal and <span class="math inline">\(T_g\)</span> is a transformation sampled at random from a group <span class="math inline">\(g\sim G\)</span>. EI was applied to MRI in [2]. Note that this works even when <span class="math inline">\(A\)</span> is fixed across the dataset as it constructs multiple <em>virtual</em> operators.</p>
 <p>See also: <a href="https://deepinv.github.io/deepinv/auto_examples/self-supervised-learning/demo_equivariant_imaging.html">Example - <em>“Self-supervised learning with Equivariant Imaging for MRI”</em></a>; <a href="https://deepinv.github.io/deepinv/auto_examples/self-supervised-learning/demo_ei_transforms.html">Example - <em>“Image transformations for Equivariant Imaging”</em></a>; <a href="https://deepinv.github.io/deepinv/api/stubs/deepinv.loss.EILoss.html">Docs - <code>deepinv.loss.EILoss</code></a>.</p>
 <p>[1] Chen D., Tachella J. &amp; Davies M., <a href="https://arxiv.org/abs/2103.14756"><em>“Equivariant Imaging: Learning Beyond the Range Space”</em></a><br>
 [2] Chen D., Tachella J. &amp; Davies M., <a href="https://arxiv.org/abs/2111.12855"><em>“Robust Equivariant Imaging: a fully unsupervised framework for learning to image from noisy and partial measurements”</em></a></p>
-</div>
-<div id="tabset-2-2">
-<div class="cell" data-execution_count="8">
-<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1"></a>loss <span class="op">=</span> [</span>
-<span id="cb8-2"><a href="#cb8-2"></a>    dinv.loss.MCLoss(),</span>
-<span id="cb8-3"><a href="#cb8-3"></a>    dinv.loss.EILoss(transform<span class="op">=</span>dinv.transform.Rotate())</span>
-<span id="cb8-4"><a href="#cb8-4"></a>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="cell" data-execution_count="9">
-<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1"></a><span class="co"># Set epochs &gt; 0 to train the model</span></span>
-<span id="cb9-2"><a href="#cb9-2"></a>trainer <span class="op">=</span> train(loss, epochs<span class="op">=</span><span class="dv">0</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>The model has 2070091 trainable parameters</code></pre>
-</div>
-</div>
-<div class="cell" data-execution_count="10">
-<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1"></a><span class="co"># Load pretrained model for 50 epochs, test on test dataset, and save sample reconstruction</span></span>
-<span id="cb11-2"><a href="#cb11-2"></a>trainer.load_model(<span class="st">"models/pretrained/ei.pth.tar"</span>)</span>
-<span id="cb11-3"><a href="#cb11-3"></a></span>
-<span id="cb11-4"><a href="#cb11-4"></a>results[<span class="st">"ei"</span>] <span class="op">=</span> trainer.test(test_dataloader)</span>
-<span id="cb11-5"><a href="#cb11-5"></a></span>
-<span id="cb11-6"><a href="#cb11-6"></a>physics.update_parameters(<span class="op">**</span>params)</span>
-<span id="cb11-7"><a href="#cb11-7"></a>results[<span class="st">"ei"</span>][<span class="st">"sample"</span>] <span class="op">=</span> trainer.model(y, physics)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="a.-equivariant-imaging-results" class="slide level3 smaller">
+<h3>1a. Equivariant Imaging Results</h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb7" data-code-line-numbers="1-4|6-7|9-10|12|14-15"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1"></a>loss <span class="op">=</span> [</span>
+<span id="cb7-2"><a href="#cb7-2"></a>    dinv.loss.MCLoss(),</span>
+<span id="cb7-3"><a href="#cb7-3"></a>    dinv.loss.EILoss(transform<span class="op">=</span>dinv.transform.Rotate())</span>
+<span id="cb7-4"><a href="#cb7-4"></a>]</span>
+<span id="cb7-5"><a href="#cb7-5"></a></span>
+<span id="cb7-6"><a href="#cb7-6"></a><span class="co"># Set epochs &gt; 0 to train the model</span></span>
+<span id="cb7-7"><a href="#cb7-7"></a>trainer <span class="op">=</span> train(loss, epochs<span class="op">=</span><span class="dv">0</span>)</span>
+<span id="cb7-8"><a href="#cb7-8"></a></span>
+<span id="cb7-9"><a href="#cb7-9"></a><span class="co"># Load pretrained model for 50 epochs, test on test dataset, and save sample reconstruction</span></span>
+<span id="cb7-10"><a href="#cb7-10"></a>trainer.load_model(<span class="st">"models/pretrained/ei.pth.tar"</span>)</span>
+<span id="cb7-11"><a href="#cb7-11"></a></span>
+<span id="cb7-12"><a href="#cb7-12"></a>results[<span class="st">"ei"</span>] <span class="op">=</span> trainer.test(test_dataloader)</span>
+<span id="cb7-13"><a href="#cb7-13"></a></span>
+<span id="cb7-14"><a href="#cb7-14"></a>physics.update_parameters(<span class="op">**</span>params)</span>
+<span id="cb7-15"><a href="#cb7-15"></a>results[<span class="st">"ei"</span>][<span class="st">"sample"</span>] <span class="op">=</span> trainer.model(y, physics)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display">
-<p><img data-src="demo_files/figure-revealjs/cell-11-output-1.png"></p>
+<p><img data-src="demo_files/figure-revealjs/cell-8-output-1.png"></p>
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Test results:
@@ -582,45 +571,42 @@ PSNR no learning: 26.897 +- 2.730
 PSNR: 30.643 +- 2.992</code></pre>
 </div>
 </div>
-</div>
-</div>
-</div>
 </section>
-<section id="b.-diffeomorphic-equivariant-imaging" class="slide level3">
+<section id="b.-diffeomorphic-equivariant-imaging" class="slide level3 smaller">
 <h3>1b. Diffeomorphic-equivariant imaging</h3>
 <div class="panel-tabset">
-<ul id="tabset-3" class="panel-tabset-tabby"><li><a data-tabby-default="" href="#tabset-3-1">Summary</a></li><li><a href="#tabset-3-2">Results</a></li></ul>
+<ul id="tabset-1" class="panel-tabset-tabby"><li><a data-tabby-default="" href="#tabset-1-1">Summary</a></li><li><a href="#tabset-1-2">Results</a></li></ul>
 <div class="tab-content">
-<div id="tabset-3-1">
+<div id="tabset-1-1">
 <p>EI was extended beyond the Euclidean transformation group to the non-linear diffeomorphic group in [3] for MRI problems:</p>
 <p><span class="math inline">\(\mathcal{L}_\text{Diffeo-EI}=\mathcal{L}_\text{EI}\text{ where }G=\text{Diff}(\mathbb{R}^n)\)</span></p>
 <p>See also: <a href="https://deepinv.github.io/deepinv/auto_examples/basics/demo_transforms.html">Example - <em>“Image transforms for equivariance &amp; augmentations”</em></a>.</p>
 <p>[3] Wang A. &amp; Davies M., <a href="https://arxiv.org/abs/2410.08646"><em>“Fully unsupervised dynamic MRI reconstruction via geometrotemporal equivariance”</em></a>; <a href="https://andrewwango.github.io/ddei">demo page</a></p>
 </div>
-<div id="tabset-3-2">
+<div id="tabset-1-2">
 <div class="cell">
-<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1"></a>loss <span class="op">=</span> [</span>
-<span id="cb13-2"><a href="#cb13-2"></a>    dinv.loss.MCLoss(),</span>
-<span id="cb13-3"><a href="#cb13-3"></a>    dinv.loss.EILoss(transform<span class="op">=</span>dinv.transform.CPABDiffeomorphism(device<span class="op">=</span>device))</span>
-<span id="cb13-4"><a href="#cb13-4"></a>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1"></a>loss <span class="op">=</span> [</span>
+<span id="cb9-2"><a href="#cb9-2"></a>    dinv.loss.MCLoss(),</span>
+<span id="cb9-3"><a href="#cb9-3"></a>    dinv.loss.EILoss(transform<span class="op">=</span>dinv.transform.CPABDiffeomorphism(device<span class="op">=</span>device))</span>
+<span id="cb9-4"><a href="#cb9-4"></a>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="cell" data-execution_count="12">
-<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1"></a><span class="co"># Set epochs &gt; 0 to train the model</span></span>
-<span id="cb14-2"><a href="#cb14-2"></a>trainer <span class="op">=</span> train(loss, epochs<span class="op">=</span><span class="dv">0</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1"></a><span class="co"># Set epochs &gt; 0 to train the model</span></span>
+<span id="cb10-2"><a href="#cb10-2"></a>trainer <span class="op">=</span> train(loss, epochs<span class="op">=</span><span class="dv">0</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>The model has 2070091 trainable parameters</code></pre>
 </div>
 </div>
 <div class="cell" data-execution_count="13">
-<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1"></a><span class="co"># Load pretrained model for 50 epochs, test on test dataset, and save sample reconstruction</span></span>
-<span id="cb16-2"><a href="#cb16-2"></a>trainer.load_model(<span class="st">"models/pretrained/diffeo-ei.pth.tar"</span>)</span>
-<span id="cb16-3"><a href="#cb16-3"></a></span>
-<span id="cb16-4"><a href="#cb16-4"></a>results[<span class="st">"diffeo-ei"</span>] <span class="op">=</span> trainer.test(test_dataloader)</span>
-<span id="cb16-5"><a href="#cb16-5"></a></span>
-<span id="cb16-6"><a href="#cb16-6"></a>physics.update_parameters(<span class="op">**</span>params)</span>
-<span id="cb16-7"><a href="#cb16-7"></a>results[<span class="st">"diffeo-ei"</span>][<span class="st">"sample"</span>] <span class="op">=</span> trainer.model(y, physics)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1"></a><span class="co"># Load pretrained model for 50 epochs, test on test dataset, and save sample reconstruction</span></span>
+<span id="cb12-2"><a href="#cb12-2"></a>trainer.load_model(<span class="st">"models/pretrained/diffeo-ei.pth.tar"</span>)</span>
+<span id="cb12-3"><a href="#cb12-3"></a></span>
+<span id="cb12-4"><a href="#cb12-4"></a>results[<span class="st">"diffeo-ei"</span>] <span class="op">=</span> trainer.test(test_dataloader)</span>
+<span id="cb12-5"><a href="#cb12-5"></a></span>
+<span id="cb12-6"><a href="#cb12-6"></a>physics.update_parameters(<span class="op">**</span>params)</span>
+<span id="cb12-7"><a href="#cb12-7"></a>results[<span class="st">"diffeo-ei"</span>][<span class="st">"sample"</span>] <span class="op">=</span> trainer.model(y, physics)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display">
-<p><img data-src="demo_files/figure-revealjs/cell-14-output-1.png"></p>
+<p><img data-src="demo_files/figure-revealjs/cell-11-output-1.png"></p>
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Test results:
@@ -637,42 +623,42 @@ PSNR: 31.388 +- 2.496</code></pre>
 <h2>2. Multi-operator methods</h2>
 
 </section>
-<section id="a.-multi-operator-imaging-moi" class="slide level3">
+<section id="a.-multi-operator-imaging-moi" class="slide level3 smaller">
 <h3>2a. Multi-operator imaging (MOI)</h3>
 <div class="panel-tabset">
-<ul id="tabset-4" class="panel-tabset-tabby"><li><a data-tabby-default="" href="#tabset-4-1">Summary</a></li><li><a href="#tabset-4-2">Results</a></li></ul>
+<ul id="tabset-2" class="panel-tabset-tabby"><li><a data-tabby-default="" href="#tabset-2-1">Summary</a></li><li><a href="#tabset-2-2">Results</a></li></ul>
 <div class="tab-content">
-<div id="tabset-4-1">
+<div id="tabset-2-1">
 <p>The MOI self-supervised loss [4] can be used to learn when signals are observed via multiple (possibly incomplete) forward operators <span class="math inline">\(\{A_g\}_{g=1}^{G}\)</span>, i.e.&nbsp;<span class="math inline">\(y_i = A_{g_i}x_i\)</span> where <span class="math inline">\(g_i\in \{1,\dots,G\}\)</span>. The loss is constructed as follows:</p>
 <p><span class="math inline">\(\mathcal{L}_\text{MOI}=\lVert\hat{x} - f(A_g\hat{x},A_g)\rVert_2^2\)</span></p>
 <p>where <span class="math inline">\(\hat{x}=f(y,A_s)\)</span> is a reconstructed signal (observed via operator <span class="math inline">\(A_s\)</span>) and <span class="math inline">\(A_g\)</span> is a forward operator sampled at random from a set <span class="math inline">\(\{A_g\}_{g=1}^{G}\)</span>.</p>
 <p>See also: <a href="https://deepinv.github.io/deepinv/auto_examples/self-supervised-learning/demo_multioperator_imaging.html">Example - <em>“Self-supervised learning from incomplete measurements of multiple operators.”</em></a>; <a href="https://deepinv.github.io/deepinv/api/stubs/deepinv.loss.MOILoss.html">Docs - <code>deepinv.loss.MOILoss</code></a>.</p>
 <p>[4] Chen D., Tachella J. &amp; Davies M., <a href="https://arxiv.org/abs/2201.12151"><em>“Unsupervised Learning From Incomplete Measurements for Inverse Problems”</em></a></p>
 </div>
-<div id="tabset-4-2">
+<div id="tabset-2-2">
 <div class="cell" data-execution_count="14">
-<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1"></a>loss <span class="op">=</span> [</span>
-<span id="cb18-2"><a href="#cb18-2"></a>    dinv.loss.MCLoss(),</span>
-<span id="cb18-3"><a href="#cb18-3"></a>    dinv.loss.MOILoss(physics_generator<span class="op">=</span>physics_generator)</span>
-<span id="cb18-4"><a href="#cb18-4"></a>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1"></a>loss <span class="op">=</span> [</span>
+<span id="cb14-2"><a href="#cb14-2"></a>    dinv.loss.MCLoss(),</span>
+<span id="cb14-3"><a href="#cb14-3"></a>    dinv.loss.MOILoss(physics_generator<span class="op">=</span>physics_generator)</span>
+<span id="cb14-4"><a href="#cb14-4"></a>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="cell" data-execution_count="15">
-<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1"></a><span class="co"># Set epochs &gt; 0 to train the model</span></span>
-<span id="cb19-2"><a href="#cb19-2"></a>trainer <span class="op">=</span> train(loss, epochs<span class="op">=</span><span class="dv">0</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1"></a><span class="co"># Set epochs &gt; 0 to train the model</span></span>
+<span id="cb15-2"><a href="#cb15-2"></a>trainer <span class="op">=</span> train(loss, epochs<span class="op">=</span><span class="dv">0</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>The model has 2070091 trainable parameters</code></pre>
 </div>
 </div>
 <div class="cell" data-execution_count="16">
-<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1"></a><span class="co"># Load pretrained model for 50 epochs, test on test dataset, and save sample reconstruction</span></span>
-<span id="cb21-2"><a href="#cb21-2"></a>trainer.load_model(<span class="st">"models/pretrained/moi.pth.tar"</span>)</span>
-<span id="cb21-3"><a href="#cb21-3"></a></span>
-<span id="cb21-4"><a href="#cb21-4"></a>results[<span class="st">"moi"</span>] <span class="op">=</span> trainer.test(test_dataloader)</span>
-<span id="cb21-5"><a href="#cb21-5"></a></span>
-<span id="cb21-6"><a href="#cb21-6"></a>physics.update_parameters(<span class="op">**</span>params)</span>
-<span id="cb21-7"><a href="#cb21-7"></a>results[<span class="st">"moi"</span>][<span class="st">"sample"</span>] <span class="op">=</span> trainer.model(y, physics)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1"></a><span class="co"># Load pretrained model for 50 epochs, test on test dataset, and save sample reconstruction</span></span>
+<span id="cb17-2"><a href="#cb17-2"></a>trainer.load_model(<span class="st">"models/pretrained/moi.pth.tar"</span>)</span>
+<span id="cb17-3"><a href="#cb17-3"></a></span>
+<span id="cb17-4"><a href="#cb17-4"></a>results[<span class="st">"moi"</span>] <span class="op">=</span> trainer.test(test_dataloader)</span>
+<span id="cb17-5"><a href="#cb17-5"></a></span>
+<span id="cb17-6"><a href="#cb17-6"></a>physics.update_parameters(<span class="op">**</span>params)</span>
+<span id="cb17-7"><a href="#cb17-7"></a>results[<span class="st">"moi"</span>][<span class="st">"sample"</span>] <span class="op">=</span> trainer.model(y, physics)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display">
-<p><img data-src="demo_files/figure-revealjs/cell-17-output-1.png"></p>
+<p><img data-src="demo_files/figure-revealjs/cell-14-output-1.png"></p>
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Test results:
@@ -684,42 +670,42 @@ PSNR: 31.260 +- 2.339</code></pre>
 </div>
 </div>
 </section>
-<section id="b.-multi-operator-equivariant-imaging-mo-ei" class="slide level3">
+<section id="b.-multi-operator-equivariant-imaging-mo-ei" class="slide level3 smaller">
 <h3>2b. Multi-operator equivariant imaging (MO-EI)</h3>
 <div class="panel-tabset">
-<ul id="tabset-5" class="panel-tabset-tabby"><li><a data-tabby-default="" href="#tabset-5-1">Summary</a></li><li><a href="#tabset-5-2">Results</a></li></ul>
+<ul id="tabset-3" class="panel-tabset-tabby"><li><a data-tabby-default="" href="#tabset-3-1">Summary</a></li><li><a href="#tabset-3-2">Results</a></li></ul>
 <div class="tab-content">
-<div id="tabset-5-1">
+<div id="tabset-3-1">
 <p>One can combine the multi-operator and equivariant imaging losses to leverage an even greater set of virtual operators (using notation from above), introduced in [5]:</p>
 <p><span class="math inline">\(\mathcal{L}_\text{MO-EI}=\lVert T_g\hat{x} - f(A_h(T_g \hat{x}), A_h)\rVert_2^2,\quad A_h\in\{A_h\}_{h=1}^{H},g\in G\)</span></p>
 <p>See also: <a href="https://deepinv.github.io/deepinv/api/stubs/deepinv.loss.MOEILoss.html">Docs - <code>deepinv.loss.MOEILoss</code></a>.</p>
 <p>where <span class="math inline">\(H\)</span> is the set of operators and <span class="math inline">\(G\)</span> is the group.</p>
 <p>[5] Wang A. &amp; Davies M., <a href="https://arxiv.org/abs/2502.14009"><em>“Benchmarking Self-Supervised Methods for Accelerated MRI Reconstruction”</em></a></p>
 </div>
-<div id="tabset-5-2">
+<div id="tabset-3-2">
 <div class="cell" data-execution_count="17">
-<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1"></a>loss <span class="op">=</span> [</span>
-<span id="cb23-2"><a href="#cb23-2"></a>    dinv.loss.MCLoss(),</span>
-<span id="cb23-3"><a href="#cb23-3"></a>    dinv.loss.MOEILoss(transform<span class="op">=</span>dinv.transform.CPABDiffeomorphism(device<span class="op">=</span>device), physics_generator<span class="op">=</span>physics_generator)</span>
-<span id="cb23-4"><a href="#cb23-4"></a>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1"></a>loss <span class="op">=</span> [</span>
+<span id="cb19-2"><a href="#cb19-2"></a>    dinv.loss.MCLoss(),</span>
+<span id="cb19-3"><a href="#cb19-3"></a>    dinv.loss.MOEILoss(transform<span class="op">=</span>dinv.transform.CPABDiffeomorphism(device<span class="op">=</span>device), physics_generator<span class="op">=</span>physics_generator)</span>
+<span id="cb19-4"><a href="#cb19-4"></a>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="cell" data-execution_count="18">
-<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb24-1"><a href="#cb24-1"></a><span class="co"># Set epochs &gt; 0 to train the model</span></span>
-<span id="cb24-2"><a href="#cb24-2"></a>trainer <span class="op">=</span> train(loss, epochs<span class="op">=</span><span class="dv">0</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1"></a><span class="co"># Set epochs &gt; 0 to train the model</span></span>
+<span id="cb20-2"><a href="#cb20-2"></a>trainer <span class="op">=</span> train(loss, epochs<span class="op">=</span><span class="dv">0</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>The model has 2070091 trainable parameters</code></pre>
 </div>
 </div>
 <div class="cell" data-execution_count="19">
-<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb26-1"><a href="#cb26-1"></a><span class="co"># Load pretrained model for 50 epochs, test on test dataset, and save sample reconstruction</span></span>
-<span id="cb26-2"><a href="#cb26-2"></a>trainer.load_model(<span class="st">"models/pretrained/mo-ei.pth.tar"</span>)</span>
-<span id="cb26-3"><a href="#cb26-3"></a></span>
-<span id="cb26-4"><a href="#cb26-4"></a>results[<span class="st">"mo-ei"</span>] <span class="op">=</span> trainer.test(test_dataloader)</span>
-<span id="cb26-5"><a href="#cb26-5"></a></span>
-<span id="cb26-6"><a href="#cb26-6"></a>physics.update_parameters(<span class="op">**</span>params)</span>
-<span id="cb26-7"><a href="#cb26-7"></a>results[<span class="st">"mo-ei"</span>][<span class="st">"sample"</span>] <span class="op">=</span> trainer.model(y, physics)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1"></a><span class="co"># Load pretrained model for 50 epochs, test on test dataset, and save sample reconstruction</span></span>
+<span id="cb22-2"><a href="#cb22-2"></a>trainer.load_model(<span class="st">"models/pretrained/mo-ei.pth.tar"</span>)</span>
+<span id="cb22-3"><a href="#cb22-3"></a></span>
+<span id="cb22-4"><a href="#cb22-4"></a>results[<span class="st">"mo-ei"</span>] <span class="op">=</span> trainer.test(test_dataloader)</span>
+<span id="cb22-5"><a href="#cb22-5"></a></span>
+<span id="cb22-6"><a href="#cb22-6"></a>physics.update_parameters(<span class="op">**</span>params)</span>
+<span id="cb22-7"><a href="#cb22-7"></a>results[<span class="st">"mo-ei"</span>][<span class="st">"sample"</span>] <span class="op">=</span> trainer.model(y, physics)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display">
-<p><img data-src="demo_files/figure-revealjs/cell-20-output-1.png"></p>
+<p><img data-src="demo_files/figure-revealjs/cell-17-output-1.png"></p>
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Test results:
@@ -736,42 +722,42 @@ PSNR: 31.601 +- 2.326</code></pre>
 <h2>3. Measurement splitting methods</h2>
 
 </section>
-<section id="a.-self-supervised-data-undersampling-ssdu" class="slide level3">
+<section id="a.-self-supervised-data-undersampling-ssdu" class="slide level3 smaller">
 <h3>3a. Self-supervised data undersampling (SSDU)</h3>
 <div class="panel-tabset">
-<ul id="tabset-6" class="panel-tabset-tabby"><li><a data-tabby-default="" href="#tabset-6-1">Summary</a></li><li><a href="#tabset-6-2">Results</a></li></ul>
+<ul id="tabset-4" class="panel-tabset-tabby"><li><a data-tabby-default="" href="#tabset-4-1">Summary</a></li><li><a href="#tabset-4-2">Results</a></li></ul>
 <div class="tab-content">
-<div id="tabset-6-1">
-<p>The SSDU measurement splitting loss [6] splits the measurement <span class="math inline">\(y\in\mathbb{R}^m\)</span> and forward operator <span class="math inline">\(A\)</span> into two smaller pairs <span class="math inline">\((y_1\in\mathbb{R}^{m_1},A_1)\)</span> and <span class="math inline">\((y_2\in\mathbb{R}^{m_2},A_2)\)</span> to compute the self-supervised loss:</p>
+<div id="tabset-4-1">
+<p>The SSDU measurement splitting loss [6,7,8] splits the measurement <span class="math inline">\(y\in\mathbb{R}^m\)</span> and forward operator <span class="math inline">\(A\)</span> into two smaller pairs <span class="math inline">\((y_1\in\mathbb{R}^{m_1},A_1)\)</span> and <span class="math inline">\((y_2\in\mathbb{R}^{m_2},A_2)\)</span> to compute the self-supervised loss:</p>
 <p><span class="math inline">\(\mathcal{L}_\text{SSDU}=\frac{m}{m_2}\lVert y_2 - A_2 f(y_1,A_1)\rVert_2^2\)</span></p>
-<p>where <span class="math inline">\(f\)</span> is the network, <span class="math inline">\(A_1 = M_1A, A_2 = M_2A\)</span>, and <span class="math inline">\(M_i\)</span> are randomly generated masks (i.e.&nbsp;diagonal matrices) such that <span class="math inline">\(M_1+M_2=\mathbb{I}_m\)</span>. At inference-time, SSDU simply uses the full measurements <span class="math inline">\(\hat x=f(y,A)\)</span>. Special cases include Artifact2Artifact [7] where <span class="math inline">\(M_1,M_2\)</span> are independent in the case of sequentially arriving data, and Phase2Phase [8].</p>
-<p>See also: <a href="https://deepinv.github.io/deepinv/auto_examples/self-supervised-learning/demo_splitting_loss.html">Example - <em>“Self-supervised learning with measurement splitting”</em></a>; <a href="https://deepinv.github.io/deepinv/auto_examples/self-supervised-learning/demo_artifact2artifact.html">Example - <em>“Self-supervised MRI reconstruction with Artifact2Artifact”</em></a>; <a href="https://deepinv.github.io/deepinv/api/stubs/deepinv.loss.SplittingLoss.html">Docs - <code>deepinv.loss.SplittingLoss</code></a>; <a href="https://deepinv.github.io/deepinv/api/stubs/deepinv.loss.Artifact2ArtifactLoss.html">Docs - <code>deepinv.loss.Artifact2ArtifactLoss</code></a>; <a href="https://deepinv.github.io/deepinv/api/stubs/deepinv.loss.Phase2PhaseLoss.html">Docs - <code>deepinv.loss.Phase2PhaseLoss</code></a>.</p>
-<p>[6] Yaman B. et al., <a href="https://pubmed.ncbi.nlm.nih.gov/32614100/"><em>“Self-supervised learning of physics-guided reconstruction neural networks without fully sampled reference data”</em></a><br>
-[7] Liu J. et al., <a href="https://arxiv.org/abs/1912.05854"><em>“RARE: Image Reconstruction using Deep Priors Learned without Ground Truth”</em></a><br>
+<p>where <span class="math inline">\(f\)</span> is the network, <span class="math inline">\(A_1 = M_1A, A_2 = M_2A\)</span>, and <span class="math inline">\(M_i\)</span> are randomly generated masks (i.e.&nbsp;diagonal matrices) such that <span class="math inline">\(M_1+M_2=\mathbb{I}_m\)</span>. At inference-time, SSDU simply uses the full measurements <span class="math inline">\(\hat x=f(y,A)\)</span>.</p>
+<p>See also: <a href="https://deepinv.github.io/deepinv/auto_examples/self-supervised-learning/demo_splitting_loss.html">Example - <em>“Self-supervised learning with measurement splitting”</em></a>.</p>
+<p>[6] Yaman B. et al., <a href="https://pubmed.ncbi.nlm.nih.gov/32614100/"><em>“SSDU”</em></a><br>
+[7] Liu J. et al., <a href="https://arxiv.org/abs/1912.05854"><em>“RARE: Image Reconstruction using Deep Priors Learned without GT”</em></a><br>
 [8] Eldeniz C. et al., <a href="https://journals.lww.com/investigativeradiology/abstract/2021/12000/phase2phase__respiratory_motion_resolved.4.aspx"><em>“Phase2Phase…”</em></a></p>
 </div>
-<div id="tabset-6-2">
+<div id="tabset-4-2">
 <div class="cell" data-execution_count="20">
-<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb28-1"><a href="#cb28-1"></a>mask_generator <span class="op">=</span> dinv.physics.generator.GaussianSplittingMaskGenerator((<span class="dv">2</span>, <span class="dv">128</span>, <span class="dv">128</span>), split_ratio<span class="op">=</span><span class="fl">0.6</span>, device<span class="op">=</span>device, rng<span class="op">=</span>rng)</span>
-<span id="cb28-2"><a href="#cb28-2"></a>loss <span class="op">=</span> dinv.loss.SplittingLoss(mask_generator<span class="op">=</span>mask_generator, eval_split_input<span class="op">=</span><span class="va">False</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb24-1"><a href="#cb24-1"></a>mask_generator <span class="op">=</span> dinv.physics.generator.GaussianSplittingMaskGenerator((<span class="dv">2</span>, <span class="dv">128</span>, <span class="dv">128</span>), split_ratio<span class="op">=</span><span class="fl">0.6</span>, device<span class="op">=</span>device, rng<span class="op">=</span>rng)</span>
+<span id="cb24-2"><a href="#cb24-2"></a>loss <span class="op">=</span> dinv.loss.SplittingLoss(mask_generator<span class="op">=</span>mask_generator, eval_split_input<span class="op">=</span><span class="va">False</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="cell" data-execution_count="21">
-<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb29-1"><a href="#cb29-1"></a><span class="co"># Set epochs &gt; 0 to train the model</span></span>
-<span id="cb29-2"><a href="#cb29-2"></a>trainer <span class="op">=</span> train(loss, epochs<span class="op">=</span><span class="dv">0</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb25-1"><a href="#cb25-1"></a><span class="co"># Set epochs &gt; 0 to train the model</span></span>
+<span id="cb25-2"><a href="#cb25-2"></a>trainer <span class="op">=</span> train(loss, epochs<span class="op">=</span><span class="dv">0</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>The model has 2070091 trainable parameters</code></pre>
 </div>
 </div>
 <div class="cell" data-execution_count="22">
-<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb31-1"><a href="#cb31-1"></a><span class="co"># Load pretrained model for 50 epochs, test on test dataset, and save sample reconstruction</span></span>
-<span id="cb31-2"><a href="#cb31-2"></a>trainer.load_model(<span class="st">"models/pretrained/ssdu.pth.tar"</span>)</span>
-<span id="cb31-3"><a href="#cb31-3"></a></span>
-<span id="cb31-4"><a href="#cb31-4"></a>results[<span class="st">"ssdu"</span>] <span class="op">=</span> trainer.test(test_dataloader)</span>
-<span id="cb31-5"><a href="#cb31-5"></a></span>
-<span id="cb31-6"><a href="#cb31-6"></a>physics.update_parameters(<span class="op">**</span>params)</span>
-<span id="cb31-7"><a href="#cb31-7"></a>results[<span class="st">"ssdu"</span>][<span class="st">"sample"</span>] <span class="op">=</span> trainer.model(y, physics)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb27-1"><a href="#cb27-1"></a><span class="co"># Load pretrained model for 50 epochs, test on test dataset, and save sample reconstruction</span></span>
+<span id="cb27-2"><a href="#cb27-2"></a>trainer.load_model(<span class="st">"models/pretrained/ssdu.pth.tar"</span>)</span>
+<span id="cb27-3"><a href="#cb27-3"></a></span>
+<span id="cb27-4"><a href="#cb27-4"></a>results[<span class="st">"ssdu"</span>] <span class="op">=</span> trainer.test(test_dataloader)</span>
+<span id="cb27-5"><a href="#cb27-5"></a></span>
+<span id="cb27-6"><a href="#cb27-6"></a>physics.update_parameters(<span class="op">**</span>params)</span>
+<span id="cb27-7"><a href="#cb27-7"></a>results[<span class="st">"ssdu"</span>][<span class="st">"sample"</span>] <span class="op">=</span> trainer.model(y, physics)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display">
-<p><img data-src="demo_files/figure-revealjs/cell-23-output-1.png"></p>
+<p><img data-src="demo_files/figure-revealjs/cell-20-output-1.png"></p>
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Test results:
@@ -783,38 +769,38 @@ PSNR: 26.796 +- 2.191</code></pre>
 </div>
 </div>
 </section>
-<section id="b.-ssdu-with-test-time-monte-carlo" class="slide level3">
+<section id="b.-ssdu-with-test-time-monte-carlo" class="slide level3 smaller">
 <h3>3b. SSDU with test-time Monte Carlo</h3>
 <div class="panel-tabset">
-<ul id="tabset-7" class="panel-tabset-tabby"><li><a data-tabby-default="" href="#tabset-7-1">Summary</a></li><li><a href="#tabset-7-2">Results</a></li></ul>
+<ul id="tabset-5" class="panel-tabset-tabby"><li><a data-tabby-default="" href="#tabset-5-1">Summary</a></li><li><a href="#tabset-5-2">Results</a></li></ul>
 <div class="tab-content">
-<div id="tabset-7-1">
+<div id="tabset-5-1">
 <p>We can extend SSDU [6] during inference-time by averaging the model over multiple realizations of the random splitting, i.e.</p>
 <p><span class="math inline">\(\hat{x} = \frac{1}{N}\sum_{i=1}^N f(y_1^{(i)},A_1^{(i)})\)</span></p>
 <p>where <span class="math inline">\(N\)</span> is the number of Monte-Carlo samples. The training loss function remains the same as SSDU. This was proposed in [9] for CT denoising, and has shown promising results in [3].</p>
 <p>[9] Hendriksen A., Pelt D., Batenburg K., <a href="https://arxiv.org/abs/2001.11801"><em>“Noise2Inverse: Self-supervised deep convolutional denoising for tomography”</em></a></p>
 </div>
-<div id="tabset-7-2">
+<div id="tabset-5-2">
 <div class="cell" data-execution_count="23">
-<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb33-1"><a href="#cb33-1"></a>loss <span class="op">=</span> dinv.loss.SplittingLoss(mask_generator<span class="op">=</span>mask_generator, eval_split_input<span class="op">=</span><span class="va">True</span>, eval_n_samples<span class="op">=</span><span class="dv">20</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb29-1"><a href="#cb29-1"></a>loss <span class="op">=</span> dinv.loss.SplittingLoss(mask_generator<span class="op">=</span>mask_generator, eval_split_input<span class="op">=</span><span class="va">True</span>, eval_n_samples<span class="op">=</span><span class="dv">20</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="cell" data-execution_count="24">
-<div class="sourceCode cell-code" id="cb34"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb34-1"><a href="#cb34-1"></a><span class="co"># Set epochs &gt; 0 to train the model</span></span>
-<span id="cb34-2"><a href="#cb34-2"></a>trainer <span class="op">=</span> train(loss, epochs<span class="op">=</span><span class="dv">0</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb30-1"><a href="#cb30-1"></a><span class="co"># Set epochs &gt; 0 to train the model</span></span>
+<span id="cb30-2"><a href="#cb30-2"></a>trainer <span class="op">=</span> train(loss, epochs<span class="op">=</span><span class="dv">0</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>The model has 2070091 trainable parameters</code></pre>
 </div>
 </div>
 <div class="cell" data-execution_count="25">
-<div class="sourceCode cell-code" id="cb36"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb36-1"><a href="#cb36-1"></a><span class="co"># Load pretrained SSDU model for 50 epochs, test on test dataset, and save sample reconstruction</span></span>
-<span id="cb36-2"><a href="#cb36-2"></a>trainer.load_model(<span class="st">"models/pretrained/ssdu.pth.tar"</span>)</span>
-<span id="cb36-3"><a href="#cb36-3"></a></span>
-<span id="cb36-4"><a href="#cb36-4"></a>results[<span class="st">"noise2inverse"</span>] <span class="op">=</span> trainer.test(test_dataloader)</span>
-<span id="cb36-5"><a href="#cb36-5"></a></span>
-<span id="cb36-6"><a href="#cb36-6"></a>physics.update_parameters(<span class="op">**</span>params)</span>
-<span id="cb36-7"><a href="#cb36-7"></a>results[<span class="st">"noise2inverse"</span>][<span class="st">"sample"</span>] <span class="op">=</span> trainer.model(y, physics)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb32"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb32-1"><a href="#cb32-1"></a><span class="co"># Load pretrained SSDU model for 50 epochs, test on test dataset, and save sample reconstruction</span></span>
+<span id="cb32-2"><a href="#cb32-2"></a>trainer.load_model(<span class="st">"models/pretrained/ssdu.pth.tar"</span>)</span>
+<span id="cb32-3"><a href="#cb32-3"></a></span>
+<span id="cb32-4"><a href="#cb32-4"></a>results[<span class="st">"noise2inverse"</span>] <span class="op">=</span> trainer.test(test_dataloader)</span>
+<span id="cb32-5"><a href="#cb32-5"></a></span>
+<span id="cb32-6"><a href="#cb32-6"></a>physics.update_parameters(<span class="op">**</span>params)</span>
+<span id="cb32-7"><a href="#cb32-7"></a>results[<span class="st">"noise2inverse"</span>][<span class="st">"sample"</span>] <span class="op">=</span> trainer.model(y, physics)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display">
-<p><img data-src="demo_files/figure-revealjs/cell-26-output-1.png"></p>
+<p><img data-src="demo_files/figure-revealjs/cell-23-output-1.png"></p>
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Test results:
@@ -826,44 +812,44 @@ PSNR: 26.282 +- 2.030</code></pre>
 </div>
 </div>
 </section>
-<section id="c.-weighted-ssdu" class="slide level3">
+<section id="c.-weighted-ssdu" class="slide level3 smaller">
 <h3>3c. Weighted-SSDU</h3>
 <div class="panel-tabset">
-<ul id="tabset-8" class="panel-tabset-tabby"><li><a data-tabby-default="" href="#tabset-8-1">Summary</a></li><li><a href="#tabset-8-2">Results</a></li></ul>
+<ul id="tabset-6" class="panel-tabset-tabby"><li><a data-tabby-default="" href="#tabset-6-1">Summary</a></li><li><a href="#tabset-6-2">Results</a></li></ul>
 <div class="tab-content">
-<div id="tabset-8-1">
+<div id="tabset-6-1">
 <p>The Weighted-SSDU [10] loss frames SSDU [6] as a Bernoulli-noise special case of Noisier2Noise [11] and propose a weighting to the SSDU loss to improve SSDU:</p>
 <p><span class="math inline">\(\mathcal{L}_\text{Weighted-SSDU}=(1-\mathbf{K})^{-1/2}\mathcal{L}_\text{SSDU}\)</span></p>
 <p>where <span class="math inline">\(\mathbf{K}\)</span> depends on the PDF of the measurement mask <span class="math inline">\(M\)</span> and the splitting mask <span class="math inline">\(M_1\)</span>.</p>
 <p>[10] Millard C. &amp; Chiew M., <a href="https://arxiv.org/abs/2205.10278"><em>“A theoretical framework for self-supervised MR image reconstruction using sub-sampling via variable density Noisier2Noise”</em></a><br>
 [11] Moran N. et al., <a href="https://arxiv.org/abs/1910.11908"><em>“Noisier2Noise: Learning to Denoise from Unpaired Noisy Data”</em></a></p>
 </div>
-<div id="tabset-8-2">
+<div id="tabset-6-2">
 <div class="cell" data-execution_count="8">
-<div class="sourceCode cell-code" id="cb38"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb38-1"><a href="#cb38-1"></a>split_generator <span class="op">=</span> dinv.physics.generator.GaussianMaskGenerator(img_size<span class="op">=</span>(<span class="dv">128</span>, <span class="dv">128</span>), acceleration<span class="op">=</span><span class="dv">2</span>, rng<span class="op">=</span>rng, device<span class="op">=</span>device)</span>
-<span id="cb38-2"><a href="#cb38-2"></a></span>
-<span id="cb38-3"><a href="#cb38-3"></a>loss <span class="op">=</span> dinv.loss.WeightedSplittingLoss(</span>
-<span id="cb38-4"><a href="#cb38-4"></a>    mask_generator<span class="op">=</span>dinv.physics.generator.MultiplicativeSplittingMaskGenerator((<span class="dv">1</span>, <span class="dv">128</span>, <span class="dv">128</span>), split_generator),</span>
-<span id="cb38-5"><a href="#cb38-5"></a>    pdf<span class="op">=</span>{<span class="st">"omega"</span>: physics_generator.get_pdf(), <span class="st">"lambda"</span>: split_generator.get_pdf()}</span>
-<span id="cb38-6"><a href="#cb38-6"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb34"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb34-1"><a href="#cb34-1"></a>split_generator <span class="op">=</span> dinv.physics.generator.GaussianMaskGenerator(img_size<span class="op">=</span>(<span class="dv">128</span>, <span class="dv">128</span>), acceleration<span class="op">=</span><span class="dv">2</span>, rng<span class="op">=</span>rng, device<span class="op">=</span>device)</span>
+<span id="cb34-2"><a href="#cb34-2"></a></span>
+<span id="cb34-3"><a href="#cb34-3"></a>loss <span class="op">=</span> dinv.loss.WeightedSplittingLoss(</span>
+<span id="cb34-4"><a href="#cb34-4"></a>    mask_generator<span class="op">=</span>dinv.physics.generator.MultiplicativeSplittingMaskGenerator((<span class="dv">1</span>, <span class="dv">128</span>, <span class="dv">128</span>), split_generator),</span>
+<span id="cb34-5"><a href="#cb34-5"></a>    pdf<span class="op">=</span>{<span class="st">"omega"</span>: physics_generator.get_pdf(), <span class="st">"lambda"</span>: split_generator.get_pdf()}</span>
+<span id="cb34-6"><a href="#cb34-6"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="cell" data-execution_count="9">
-<div class="sourceCode cell-code" id="cb39"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb39-1"><a href="#cb39-1"></a><span class="co"># Set epochs &gt; 0 to train the model</span></span>
-<span id="cb39-2"><a href="#cb39-2"></a>trainer <span class="op">=</span> train(loss, epochs<span class="op">=</span><span class="dv">0</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb35"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb35-1"><a href="#cb35-1"></a><span class="co"># Set epochs &gt; 0 to train the model</span></span>
+<span id="cb35-2"><a href="#cb35-2"></a>trainer <span class="op">=</span> train(loss, epochs<span class="op">=</span><span class="dv">0</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>The model has 2070091 trainable parameters</code></pre>
 </div>
 </div>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb41"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb41-1"><a href="#cb41-1"></a><span class="co"># Load pretrained model for 50 epochs, test on test dataset, and save sample reconstruction</span></span>
-<span id="cb41-2"><a href="#cb41-2"></a>trainer.load_model(<span class="st">"models/pretrained/weighted-ssdu.pth.tar"</span>)</span>
-<span id="cb41-3"><a href="#cb41-3"></a></span>
-<span id="cb41-4"><a href="#cb41-4"></a>results[<span class="st">"weighted-ssdu"</span>] <span class="op">=</span> trainer.test(test_dataloader)</span>
-<span id="cb41-5"><a href="#cb41-5"></a></span>
-<span id="cb41-6"><a href="#cb41-6"></a>physics.update_parameters(<span class="op">**</span>params)</span>
-<span id="cb41-7"><a href="#cb41-7"></a>results[<span class="st">"weighted-ssdu"</span>][<span class="st">"sample"</span>] <span class="op">=</span> trainer.model(y, physics)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb37"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb37-1"><a href="#cb37-1"></a><span class="co"># Load pretrained model for 50 epochs, test on test dataset, and save sample reconstruction</span></span>
+<span id="cb37-2"><a href="#cb37-2"></a>trainer.load_model(<span class="st">"models/pretrained/weighted-ssdu.pth.tar"</span>)</span>
+<span id="cb37-3"><a href="#cb37-3"></a></span>
+<span id="cb37-4"><a href="#cb37-4"></a>results[<span class="st">"weighted-ssdu"</span>] <span class="op">=</span> trainer.test(test_dataloader)</span>
+<span id="cb37-5"><a href="#cb37-5"></a></span>
+<span id="cb37-6"><a href="#cb37-6"></a>physics.update_parameters(<span class="op">**</span>params)</span>
+<span id="cb37-7"><a href="#cb37-7"></a>results[<span class="st">"weighted-ssdu"</span>][<span class="st">"sample"</span>] <span class="op">=</span> trainer.model(y, physics)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display">
-<p><img data-src="demo_files/figure-revealjs/cell-29-output-1.png"></p>
+<p><img data-src="demo_files/figure-revealjs/cell-26-output-1.png"></p>
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Test results:
@@ -875,7 +861,7 @@ PSNR: 26.780 +- 1.295</code></pre>
 </div>
 </div>
 </section></section>
-<section id="other-methods" class="title-slide slide level2 center">
+<section id="other-methods" class="title-slide slide level2 smaller center">
 <h2>4. Other methods</h2>
 <p>We have numerous other self-supervised learning methods implemented in <a href="https://deepinv.github.io/deepinv/user_guide/training/loss.html#self-supervised-learning">DeepInverse</a> and benchmarked in <a href="https://arxiv.org/abs/2502.14009"><em>“Benchmarking Self-Supervised Methods for Accelerated MRI Reconstruction”</em></a>, including:</p>
 <ul>
@@ -883,31 +869,31 @@ PSNR: 26.780 +- 1.295</code></pre>
 <li>Deep Image Prior [15]: <a href="https://deepinv.github.io/deepinv/auto_examples/basics/demo_dip.html"><em>Example - Reconstructing an image using the deep image prior</em></a>.</li>
 <li>Denoising e.g.&nbsp;[16]: <a href="https://deepinv.github.io/deepinv/user_guide/training/loss.html#id2"><em>User Guide - Self-supervised denoising losses</em></a>.</li>
 </ul>
-<p>[12] Bora A., Price E. &amp; Dimakis A., <a href="https://openreview.net/forum?id=Hy7fDog0b"><em>“AmbientGAN: Generative models from lossy measurements”</em></a><br>
+<p>[12] Bora A., Price E. &amp; Dimakis A., <a href="https://openreview.net/forum?id=Hy7fDog0b"><em>“AmbientGAN”</em></a><br>
 [13] Pajot A., de Bezenac E., Gallinari P., <a href="https://openreview.net/forum?id=BJg4Z3RqF7"><em>“Unsupervised Adversarial Image Reconstruction”</em></a><br>
-[14] Cole E., <a href="https://openaccess.thecvf.com/content/ICCV2021W/LCI/html/Cole_Fast_Unsupervised_MRI_Reconstruction_Without_Fully-Sampled_Ground_Truth_Data_Using_ICCVW_2021_paper.html"><em>“Fast Unsupervised MRI Reconstruction Without Fully-Sampled Ground Truth Data Using Generative Adversarial Networks”</em></a><br>
+[14] Cole E. et al., <a href="https://openaccess.thecvf.com/content/ICCV2021W/LCI/html/Cole_Fast_Unsupervised_MRI_Reconstruction_Without_Fully-Sampled_Ground_Truth_Data_Using_ICCVW_2021_paper.html"><em>“Fast Unsupervised MRI Reconstruction … Using GANs”</em></a><br>
 [15] Darestani M. &amp; Heckel R., <a href="https://arxiv.org/abs/2007.02471"><em>“Accelerated MRI with Un-trained Neural Networks”</em></a><br>
-[16] Tachella J., Davies M. &amp; Jacques L., <a href="https://arxiv.org/abs/2409.01985"><em>“UNSURE: self-supervised learning with Unknown Noise level and Stein’s Unbiased Risk Estimate”</em></a></p>
+[16] Tachella J., Davies M. &amp; Jacques L., <a href="https://arxiv.org/abs/2409.01985"><em>“UNSURE”</em></a></p>
 </section>
 
 <section id="baselines" class="title-slide slide level2 center">
 <h2>5. Baselines</h2>
 <div class="panel-tabset">
-<ul id="tabset-9" class="panel-tabset-tabby"><li><a data-tabby-default="" href="#tabset-9-1">Summary</a></li><li><a href="#tabset-9-2">Results</a></li></ul>
+<ul id="tabset-7" class="panel-tabset-tabby"><li><a data-tabby-default="" href="#tabset-7-1">Summary</a></li><li><a href="#tabset-7-2">Results</a></li></ul>
 <div class="tab-content">
-<div id="tabset-9-1">
+<div id="tabset-7-1">
 <p>We also provide an upper-limit experiment using oracle supervised learning…</p>
 <p><span class="math inline">\(\mathcal{L}_\text{sup}=\lVert\hat x-x\rVert_2^2\)</span></p>
 <p>…and a naive unsupervised baseline using only measurement consistency:</p>
 <p><span class="math inline">\(\mathcal{L}_\text{MC}=\lVert A\hat x-y\rVert_2^2\)</span></p>
 </div>
-<div id="tabset-9-2">
+<div id="tabset-7-2">
 <div class="cell" data-execution_count="26">
-<div class="sourceCode cell-code" id="cb43"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb43-1"><a href="#cb43-1"></a>trainer <span class="op">=</span> train(dinv.loss.SupLoss(), epochs<span class="op">=</span><span class="dv">0</span>)</span>
-<span id="cb43-2"><a href="#cb43-2"></a>trainer.load_model(<span class="st">"models/pretrained/sup.pth.tar"</span>)</span>
-<span id="cb43-3"><a href="#cb43-3"></a>results[<span class="st">"sup"</span>] <span class="op">=</span> trainer.test(test_dataloader)</span>
-<span id="cb43-4"><a href="#cb43-4"></a>physics.update_parameters(<span class="op">**</span>params)</span>
-<span id="cb43-5"><a href="#cb43-5"></a>results[<span class="st">"sup"</span>][<span class="st">"sample"</span>] <span class="op">=</span> trainer.model(y, physics)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb39"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb39-1"><a href="#cb39-1"></a>trainer <span class="op">=</span> train(dinv.loss.SupLoss(), epochs<span class="op">=</span><span class="dv">0</span>)</span>
+<span id="cb39-2"><a href="#cb39-2"></a>trainer.load_model(<span class="st">"models/pretrained/sup.pth.tar"</span>)</span>
+<span id="cb39-3"><a href="#cb39-3"></a>results[<span class="st">"sup"</span>] <span class="op">=</span> trainer.test(test_dataloader)</span>
+<span id="cb39-4"><a href="#cb39-4"></a>physics.update_parameters(<span class="op">**</span>params)</span>
+<span id="cb39-5"><a href="#cb39-5"></a>results[<span class="st">"sup"</span>][<span class="st">"sample"</span>] <span class="op">=</span> trainer.model(y, physics)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>The model has 2070091 trainable parameters
 Test results:
@@ -915,15 +901,15 @@ PSNR no learning: 26.897 +- 2.730
 PSNR: 31.779 +- 2.595</code></pre>
 </div>
 <div class="cell-output cell-output-display">
-<p><img data-src="demo_files/figure-revealjs/cell-30-output-2.png"></p>
+<p><img data-src="demo_files/figure-revealjs/cell-27-output-2.png"></p>
 </div>
 </div>
 <div class="cell" data-execution_count="27">
-<div class="sourceCode cell-code" id="cb45"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb45-1"><a href="#cb45-1"></a>trainer <span class="op">=</span> train(dinv.loss.MCLoss(), epochs<span class="op">=</span><span class="dv">0</span>)</span>
-<span id="cb45-2"><a href="#cb45-2"></a>trainer.load_model(<span class="st">"models/pretrained/mc.pth.tar"</span>)</span>
-<span id="cb45-3"><a href="#cb45-3"></a>results[<span class="st">"mc"</span>] <span class="op">=</span> trainer.test(test_dataloader)</span>
-<span id="cb45-4"><a href="#cb45-4"></a>physics.update_parameters(<span class="op">**</span>params)</span>
-<span id="cb45-5"><a href="#cb45-5"></a>results[<span class="st">"mc"</span>][<span class="st">"sample"</span>] <span class="op">=</span> trainer.model(y, physics)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb41"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb41-1"><a href="#cb41-1"></a>trainer <span class="op">=</span> train(dinv.loss.MCLoss(), epochs<span class="op">=</span><span class="dv">0</span>)</span>
+<span id="cb41-2"><a href="#cb41-2"></a>trainer.load_model(<span class="st">"models/pretrained/mc.pth.tar"</span>)</span>
+<span id="cb41-3"><a href="#cb41-3"></a>results[<span class="st">"mc"</span>] <span class="op">=</span> trainer.test(test_dataloader)</span>
+<span id="cb41-4"><a href="#cb41-4"></a>physics.update_parameters(<span class="op">**</span>params)</span>
+<span id="cb41-5"><a href="#cb41-5"></a>results[<span class="st">"mc"</span>][<span class="st">"sample"</span>] <span class="op">=</span> trainer.model(y, physics)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>The model has 2070091 trainable parameters
 Test results:
@@ -931,7 +917,7 @@ PSNR no learning: 26.897 +- 2.730
 PSNR: 26.896 +- 2.730</code></pre>
 </div>
 <div class="cell-output cell-output-display">
-<p><img data-src="demo_files/figure-revealjs/cell-31-output-2.png"></p>
+<p><img data-src="demo_files/figure-revealjs/cell-28-output-2.png"></p>
 </div>
 </div>
 </div>
@@ -939,12 +925,13 @@ PSNR: 26.896 +- 2.730</code></pre>
 </div>
 </section>
 
-<section id="side-by-side-comparison" class="title-slide slide level2 center">
+<section>
+<section id="side-by-side-comparison" class="title-slide slide level2 smaller center">
 <h2>6. Side-by-side comparison</h2>
-<p>For full benchmark results on full datasets see the paper <a href="https://arxiv.org/abs/2502.14009"><em>“Benchmarking Self-Supervised Methods for Accelerated MRI Reconstruction”</em></a>.</p>
+<p>Note: these results are for a toy problem on 128x128 images trained for 50 epochs. For full benchmark results on full datasets see the paper <a href="https://arxiv.org/abs/2502.14009"><em>“Benchmarking Self-Supervised Methods for Accelerated MRI Reconstruction”</em></a>.</p>
 <div class="cell" data-execution_count="28">
-<div class="sourceCode cell-code" id="cb47"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb47-1"><a href="#cb47-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
-<span id="cb47-2"><a href="#cb47-2"></a>pd.DataFrame.from_dict(results, orient<span class="op">=</span><span class="st">"index"</span>, columns<span class="op">=</span>(<span class="st">"PSNR"</span>, <span class="st">"PSNR no learning"</span>)).sort_values(<span class="st">'PSNR'</span>, ascending<span class="op">=</span><span class="va">False</span>).<span class="bu">round</span>(<span class="dv">3</span>).transpose()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb43"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb43-1"><a href="#cb43-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb43-2"><a href="#cb43-2"></a>pd.DataFrame.from_dict(results, orient<span class="op">=</span><span class="st">"index"</span>, columns<span class="op">=</span>(<span class="st">"PSNR"</span>, <span class="st">"PSNR no learning"</span>)).sort_values(<span class="st">'PSNR'</span>, ascending<span class="op">=</span><span class="va">False</span>).<span class="bu">round</span>(<span class="dv">3</span>).transpose()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="28">
 <div>
 <style scoped="">
@@ -1004,28 +991,31 @@ PSNR: 26.896 +- 2.730</code></pre>
 </div>
 </div>
 </div>
-<div class="cell" data-execution_count="29">
-<div class="sourceCode cell-code" id="cb48"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb48-1"><a href="#cb48-1"></a>dinv.utils.plot({<span class="ss">f"</span><span class="sc">{</span>k<span class="sc">}</span><span class="ss">: </span><span class="sc">{</span><span class="bu">round</span>(v[<span class="st">'PSNR'</span>], <span class="dv">2</span>)<span class="sc">}</span><span class="ss"> dB"</span>: v[<span class="st">'sample'</span>] <span class="cf">for</span> (k, v) <span class="kw">in</span> results.items()})</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display">
-<p><img data-src="demo_files/figure-revealjs/cell-33-output-1.png"></p>
-</div>
-</div>
 </section>
-
+<section id="side-by-side-comparison-1" class="slide level3 smaller">
+<h3>6. Side-by-side comparison</h3>
+<p>Note: these results are for a toy problem on 128x128 images trained for 50 epochs. For full benchmark results on full datasets see the paper <a href="https://arxiv.org/abs/2502.14009"><em>“Benchmarking Self-Supervised Methods for Accelerated MRI Reconstruction”</em></a>.</p>
+<div class="cell" data-execution_count="29">
+<div class="sourceCode cell-code" id="cb44"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb44-1"><a href="#cb44-1"></a>dinv.utils.plot({<span class="ss">f"</span><span class="sc">{</span>k<span class="sc">}</span><span class="ss">: </span><span class="sc">{</span><span class="bu">round</span>(v[<span class="st">'PSNR'</span>], <span class="dv">2</span>)<span class="sc">}</span><span class="ss"> dB"</span>: v[<span class="st">'sample'</span>] <span class="cf">for</span> (k, v) <span class="kw">in</span> results.items()})</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<p><img data-src="demo_files/figure-revealjs/cell-30-output-1.png"></p>
+</div>
+</div>
+</section></section>
 <section id="citation" class="title-slide slide level2 center">
 <h2>Citation</h2>
-<p>If you found this useful, please cite the paper using:</p>
-<div class="sourceCode" id="cb49"><pre class="sourceCode numberSource bibtex number-lines code-with-copy"><code class="sourceCode bibtex"><span id="cb49-1"><a href="#cb49-1"></a><span class="va">@misc</span>{<span class="ot">wang2025benchmarking</span>,</span>
-<span id="cb49-2"><a href="#cb49-2"></a>      <span class="dt">title</span>={Benchmarking Self-Supervised Methods for Accelerated MRI Reconstruction}, </span>
-<span id="cb49-3"><a href="#cb49-3"></a>      <span class="dt">author</span>={Andrew Wang and Mike Davies},</span>
-<span id="cb49-4"><a href="#cb49-4"></a>      <span class="dt">year</span>={2025},</span>
-<span id="cb49-5"><a href="#cb49-5"></a>      <span class="dt">eprint</span>={2502.14009},</span>
-<span id="cb49-6"><a href="#cb49-6"></a>      <span class="dt">archivePrefix</span>={arXiv},</span>
-<span id="cb49-7"><a href="#cb49-7"></a>      <span class="dt">primaryClass</span>={eess.IV},</span>
-<span id="cb49-8"><a href="#cb49-8"></a>      <span class="dt">url</span>={https://arxiv.org/abs/2502.14009}, </span>
-<span id="cb49-9"><a href="#cb49-9"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>If you found this useful, please cite the <a href="https://arxiv.org/abs/2502.14009">paper</a> using:</p>
+<div class="sourceCode" id="cb45"><pre class="sourceCode numberSource bibtex number-lines code-with-copy"><code class="sourceCode bibtex"><span id="cb45-1"><a href="#cb45-1"></a><span class="va">@misc</span>{<span class="ot">wang2025benchmarking</span>,</span>
+<span id="cb45-2"><a href="#cb45-2"></a>      <span class="dt">title</span>={Benchmarking Self-Supervised Methods for Accelerated MRI Reconstruction}, </span>
+<span id="cb45-3"><a href="#cb45-3"></a>      <span class="dt">author</span>={Andrew Wang and Mike Davies},</span>
+<span id="cb45-4"><a href="#cb45-4"></a>      <span class="dt">year</span>={2025},</span>
+<span id="cb45-5"><a href="#cb45-5"></a>      <span class="dt">eprint</span>={2502.14009},</span>
+<span id="cb45-6"><a href="#cb45-6"></a>      <span class="dt">archivePrefix</span>={arXiv},</span>
+<span id="cb45-7"><a href="#cb45-7"></a>      <span class="dt">primaryClass</span>={eess.IV},</span>
+<span id="cb45-8"><a href="#cb45-8"></a>      <span class="dt">url</span>={https://arxiv.org/abs/2502.14009}, </span>
+<span id="cb45-9"><a href="#cb45-9"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="footer footer-default">
-
+<p><a href="https://andrewwango.github.io/deepinv-selfsup-fastmri/demo">andrewwango.github.io/deepinv-selfsup-fastmri</a></p>
 </div>
 </section>
     </div>
@@ -1054,13 +1044,13 @@ PSNR: 26.896 +- 2.730</code></pre>
       Reveal.initialize({
 'controlsAuto': true,
 'previewLinksAuto': false,
-'smaller': true,
+'smaller': false,
 'pdfSeparateFragments': false,
 'autoAnimateEasing': "ease",
 'autoAnimateDuration': 1,
 'autoAnimateUnmatched': true,
 'menu': {"side":"left","useTextContentForMissingTitles":true,"markers":false,"loadIcons":false,"custom":[{"title":"Tools","icon":"<i class=\"fas fa-gear\"></i>","content":"<ul class=\"slide-menu-items\">\n<li class=\"slide-tool-item active\" data-item=\"0\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.fullscreen(event)\"><kbd>f</kbd> Fullscreen</a></li>\n<li class=\"slide-tool-item\" data-item=\"1\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.speakerMode(event)\"><kbd>s</kbd> Speaker View</a></li>\n<li class=\"slide-tool-item\" data-item=\"2\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.overview(event)\"><kbd>o</kbd> Slide Overview</a></li>\n<li class=\"slide-tool-item\" data-item=\"3\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.togglePdfExport(event)\"><kbd>e</kbd> PDF Export Mode</a></li>\n<li class=\"slide-tool-item\" data-item=\"4\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.keyboardHelp(event)\"><kbd>?</kbd> Keyboard Help</a></li>\n</ul>"}],"openButton":true},
-'smaller': true,
+'smaller': false,
  
         // Display controls in the bottom right corner
         controls: false,
@@ -1096,7 +1086,7 @@ PSNR: 26.896 +- 2.730</code></pre>
         respondToHashChanges: true,
 
         // Push each slide change to the browser history
-        history: true,
+        history: false,
 
         // Enable keyboard shortcuts for navigation
         keyboard: true,
@@ -1185,10 +1175,10 @@ PSNR: 26.896 +- 2.730</code></pre>
         previewLinks: false,
 
         // Transition style (none/fade/slide/convex/concave/zoom)
-        transition: 'none',
+        transition: 'fade',
 
         // Transition speed (default/fast/slow)
-        transitionSpeed: 'default',
+        transitionSpeed: 'fast',
 
         // Transition style for full page slide backgrounds
         // (none/fade/slide/convex/concave/zoom)
