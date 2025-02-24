@@ -2,7 +2,7 @@ from .loss_scheduler import RandomLossScheduler
 from .multi_operator_adversarial_consistency import MultiOperatorUnsupAdversarialDiscriminatorLoss, MultiOperatorUnsupAdversarialGeneratorLoss, SkipConvDiscriminator
 from .vortex import VORTEXLoss, RandomNoise, RandomPhaseError
 from .uair import UAIRGeneratorLoss, UAIRDiscriminatorLoss
-
+from .gan import SkipConvDiscriminator
 
 from deepinv.loss.metric import PSNR, SSIM, Metric
 
