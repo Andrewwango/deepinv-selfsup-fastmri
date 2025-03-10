@@ -228,7 +228,7 @@ match args.loss:
         mask_generator = dinv.physics.generator.MultiplicativeSplittingMaskGenerator((1, 320, 320), split_generator)
         loss = dinv.loss.WeightedSplittingLoss(mask_generator=mask_generator, physics_generator=physics_generator)
     case "weighted-ssdu-ablation-1":
-        mask_generator = dinv.physics.generator.GaussianSplittingMaskGenerator((320, 320), split_ratio=0.6, device=device, rng=rng)
+        mask_generator = dinv.physics.generator.GaussianSplittingMaskGenerator((1, 320, 320), split_ratio=0.6, device=device, rng=rng)
         loss = dinv.loss.WeightedSplittingLoss(mask_generator=mask_generator, physics_generator=physics_generator)
     case "weighted-ssdu-ablation-2":
         split_generator = dinv.physics.generator.GaussianMaskGenerator(img_size=(320, 320), acceleration=2, rng=rng, device=device)
