@@ -228,8 +228,7 @@ match args.loss:
         mask_generator = dinv.physics.generator.MultiplicativeSplittingMaskGenerator((1, 320, 320), split_generator)
         loss = dinv.loss.WeightedSplittingLoss(mask_generator=mask_generator, physics_generator=physics_generator)
     case "weighted-ssdu-ablation-1":
-        split_generator = dinv.physics.generator.GaussianMaskGenerator(img_size=(320, 320), acceleration=2, rng=rng, device=device)
-        mask_generator = dinv.physics.generator.GaussianSplittingMaskGenerator((2, 320, 320), split_ratio=0.6, device=device, rng=rng)
+        mask_generator = dinv.physics.generator.GaussianSplittingMaskGenerator((320, 320), split_ratio=0.6, device=device, rng=rng)
         loss = dinv.loss.WeightedSplittingLoss(mask_generator=mask_generator, physics_generator=physics_generator)
     case "weighted-ssdu-ablation-2":
         split_generator = dinv.physics.generator.GaussianMaskGenerator(img_size=(320, 320), acceleration=2, rng=rng, device=device)
@@ -310,5 +309,6 @@ if not args.no_save:
 # python train_paper.py --loss "sup" --epochs 150 --save_model --schedule 20 --save_gt --acc 6
 # python train_paper.py --loss "ssdu" --epochs 150 --save_model --acc 6
 # python train_paper.py --loss "noise2inverse" --epochs 0 --ckpt "i65an1aa/ckpt_149.pth.tar"
-# python train_paper.py --loss weighted-ssdu --data brain --epochs 120 --save_model --unroll 7 -lr 1e-4 --norm_metrics
 # python train_paper.py --loss "sup" --epochs 150 --save_model --schedule 20 --save_gt --data "brain" --acc 6
+
+# python train_paper.py --loss weighted-ssdu-ablation-1 --data brain --epochs 120 --save_model -lr 1e-4
