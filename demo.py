@@ -131,8 +131,7 @@ match args.loss:
     case "weighted-ssdu":
         split_generator = dinv.physics.generator.GaussianMaskGenerator(img_size=(128, 128), acceleration=2, rng=rng, device=device)
         mask_generator = dinv.physics.generator.MultiplicativeSplittingMaskGenerator((1, 128, 128), split_generator)
-        pdf = {"omega": physics_generator.get_pdf(), "lambda": split_generator.get_pdf()}
-        loss = dinv.loss.WeightedSplittingLoss(mask_generator=mask_generator, pdf=pdf)
+        loss = dinv.loss.WeightedSplittingLoss(mask_generator=mask_generator, physics_generator=physics_generator)
 
 # Set epochs > 0 to train the model
 import wandb, json

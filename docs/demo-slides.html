@@ -840,12 +840,12 @@ PSNR: 26.282 +- 2.030</code></pre>
 [11] Moran N. et al., <a href="https://arxiv.org/abs/1910.11908"><em>“Noisier2Noise: Learning to Denoise from Unpaired Noisy Data”</em></a></p>
 </div>
 <div id="tabset-6-2">
-<div class="cell" data-execution_count="8">
+<div class="cell">
 <div class="sourceCode cell-code" id="cb35"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb35-1"><a href="#cb35-1"></a>split_generator <span class="op">=</span> dinv.physics.generator.GaussianMaskGenerator(img_size<span class="op">=</span>(<span class="dv">128</span>, <span class="dv">128</span>), acceleration<span class="op">=</span><span class="dv">2</span>, rng<span class="op">=</span>rng, device<span class="op">=</span>device)</span>
 <span id="cb35-2"><a href="#cb35-2"></a></span>
 <span id="cb35-3"><a href="#cb35-3"></a>loss <span class="op">=</span> dinv.loss.WeightedSplittingLoss(</span>
 <span id="cb35-4"><a href="#cb35-4"></a>    mask_generator<span class="op">=</span>dinv.physics.generator.MultiplicativeSplittingMaskGenerator((<span class="dv">1</span>, <span class="dv">128</span>, <span class="dv">128</span>), split_generator),</span>
-<span id="cb35-5"><a href="#cb35-5"></a>    pdf<span class="op">=</span>{<span class="st">"omega"</span>: physics_generator.get_pdf(), <span class="st">"lambda"</span>: split_generator.get_pdf()}</span>
+<span id="cb35-5"><a href="#cb35-5"></a>    physics_generator<span class="op">=</span>physics_generator</span>
 <span id="cb35-6"><a href="#cb35-6"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="cell" data-execution_count="9">
