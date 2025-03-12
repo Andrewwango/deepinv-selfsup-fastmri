@@ -274,7 +274,7 @@ if args.save_model:
     trainer.save_path = f"{model_dir}/paper/{run_id}"
     trainer.save_model(trainer.epochs - 1)
 
-results = trainer.test(test_dataloader, f"{model_dir}/paper/{run_id}")
+results = trainer.test(test_dataloader, f"{model_dir}/paper/{run_id}", log_raw_metrics=True)
 with open(f"{model_dir}/paper/{run_id}/results.json", "w") as f:
     json.dump(results, f)
 
