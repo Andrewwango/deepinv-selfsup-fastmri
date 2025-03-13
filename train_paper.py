@@ -49,7 +49,6 @@ elif args.physics == "multicoil":
     physics = dinv.physics.MultiCoilMRI(img_size=(320, 320), coil_maps=8, device=device)
 elif args.physics == "single":
     physics.update(**physics_generator.step())
-    physics_generator = None
 
 # %%
 # Define unrolled network
@@ -81,7 +80,7 @@ dataset_path = dinv.datasets.generate_dataset(
     train_dataset=train_dataset,
     test_dataset=test_dataset,
     physics=physics,
-    physics_generator=physics_generator,
+    physics_generator=physics_generator if args.physics != "single" else None,
     save_physics_generator_params=True,
     overwrite_existing=False,
     device=device,
