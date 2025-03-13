@@ -28,7 +28,7 @@ parser.add_argument("--global_seed", type=int, default=0)
 parser.add_argument("--model", type=str, default="modl", choices=("modl", "varnet"))
 parser.add_argument("--unroll", type=int, default=3)
 parser.add_argument("--norm_metrics", action="store_true")
-parser.add_argument("-b", "--batch_size", type=int, default=4)
+parser.add_argument("-b", type=int, default=4)
 args = parser.parse_args()
 
 torch.manual_seed(args.global_seed)
