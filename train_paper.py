@@ -15,7 +15,7 @@ parser = ArgumentParser()
 parser.add_argument("--loss", type=str, default="ei")
 parser.add_argument("--x_metric", type=str, default="mse", choices=("mse", "ssim-mse"))
 parser.add_argument("--epochs", type=int, default=0)
-parser.add_argument("--physics", type=str, default="mri", choices=("mri", "noisy", "multicoil"))
+parser.add_argument("--physics", type=str, default="mri", choices=("mri", "noisy", "multicoil", "single"), help="Default multi-operator singlecoil MRI, Gaussian noised, Multicoil, or single-operator")
 parser.add_argument("--no_save", action="store_true")
 parser.add_argument("--save_gt", action="store_true")
 parser.add_argument("--save_model", action="store_true")
@@ -28,7 +28,7 @@ parser.add_argument("--global_seed", type=int, default=0)
 parser.add_argument("--model", type=str, default="modl", choices=("modl", "varnet"))
 parser.add_argument("--unroll", type=int, default=3)
 parser.add_argument("--norm_metrics", action="store_true")
-parser.add_argument("-b", type=int, default=4)
+parser.add_argument("-b", "--batch_size", type=int, default=4)
 args = parser.parse_args()
 
 torch.manual_seed(args.global_seed)
@@ -47,6 +47,9 @@ if args.physics == "noisy":
     physics.noise_model = dinv.physics.GaussianNoise(0.1, rng=rng)
 elif args.physics == "multicoil":
     physics = dinv.physics.MultiCoilMRI(img_size=(320, 320), coil_maps=8, device=device)
+elif args.physics == "single":
+    physics.update(**physics_generator.step())
+    physics_generator = None
 
 # %%
 # Define unrolled network
@@ -84,7 +87,7 @@ dataset_path = dinv.datasets.generate_dataset(
     device=device,
     save_dir=model_dir.replace("models", "data"),
     batch_size=1,
-    dataset_filename="dinv_dataset_paper" + (f"_{args.data}" if args.data != "knee" else "") + (f"_{args.acc}" if args.acc != 8 else "") + ("_noisy" if args.physics == "noisy" else "") + ("_multicoil" if args.physics == "multicoil" else "")
+    dataset_filename="dinv_dataset_paper" + (f"_{args.data}" if args.data != "knee" else "") + (f"_{args.acc}" if args.acc != 8 else "") + ("_noisy" if args.physics == "noisy" else "") + ("_multicoil" if args.physics == "multicoil" else "") + ("_single" if args.physics == "single" else "")
 )
 
 # Load saved datasets
