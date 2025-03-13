@@ -268,7 +268,7 @@ match args.loss:
         loss = [dinv.loss.MCLoss(), VORTEXLoss(rng=rng)]
 
 import wandb, json
-with wandb.init(project="deepinv-selfsup-fastmri-experiments", config={"loss": args.loss}):
+with wandb.init(project="deepinv-selfsup-fastmri-experiments", config=vars(args)):
     run_id = wandb.run.id
     trainer = train(loss, epochs=args.epochs, loss_d=loss_d, discrim=discrim)
     trainer.save_folder_im = f"{model_dir}/paper/{run_id}"
