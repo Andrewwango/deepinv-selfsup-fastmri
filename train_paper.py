@@ -220,6 +220,11 @@ match args.loss:
             mask_generator=dinv.physics.generator.GaussianSplittingMaskGenerator((2, 320, 320), split_ratio=0.6, device=device, rng=rng),
             eval_split_input=False
         )
+    case "ssdu-ablation-1":
+        loss = dinv.loss.SplittingLoss(
+            mask_generator=dinv.physics.generator.BernoulliSplittingMaskGenerator((1, 320, 320), split_ratio=0.6, device=device, rng=rng),
+            eval_split_input=False
+        )        
     case "noise2inverse":
         loss = dinv.loss.SplittingLoss(
             mask_generator=dinv.physics.generator.GaussianSplittingMaskGenerator((2, 320, 320), split_ratio=0.6, device=device, rng=rng),
@@ -240,7 +245,9 @@ match args.loss:
         split_generator = dinv.physics.generator.GaussianMaskGenerator(img_size=(320, 320), acceleration=2, rng=rng, device=device)
         mask_generator = dinv.physics.generator.MultiplicativeSplittingMaskGenerator((1, 320, 320), split_generator, device=device)
         loss = dinv.loss.SplittingLoss(mask_generator=mask_generator, eval_split_input=True, eval_n_samples=3)
-
+    case "weighted-ssdu-ablation-4":
+        mask_generator = dinv.physics.generator.BernoulliSplittingMaskGenerator((1, 320, 320), split_ratio=0.6, device=device, rng=rng)
+        loss = dinv.loss.WeightedSplittingLoss(mask_generator=mask_generator, physics_generator=physics_generator)
 
     case "ei-sure":
         loss = [
