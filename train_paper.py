@@ -248,7 +248,10 @@ match args.loss:
     case "weighted-ssdu-bernoulli":
         mask_generator = dinv.physics.generator.BernoulliSplittingMaskGenerator((1, 320, 320), split_ratio=0.6, device=device, rng=rng)
         loss = dinv.loss.WeightedSplittingLoss(mask_generator=mask_generator, physics_generator=physics_generator)
-
+    case "weighted-ssdu-3":
+        split_generator = dinv.physics.generator.GaussianMaskGenerator(img_size=(320, 320), acceleration=3, rng=rng, device=device)
+        mask_generator = dinv.physics.generator.MultiplicativeSplittingMaskGenerator((1, 320, 320), split_generator, device=device)
+        loss = dinv.loss.WeightedSplittingLoss(mask_generator=mask_generator, physics_generator=physics_generator)
     case "ei-sure":
         loss = [
             dinv.loss.SureGaussianLoss(sigma=0.),
