@@ -252,6 +252,10 @@ match args.loss:
         split_generator = dinv.physics.generator.GaussianMaskGenerator(img_size=(320, 320), acceleration=3, rng=rng, device=device)
         mask_generator = dinv.physics.generator.MultiplicativeSplittingMaskGenerator((1, 320, 320), split_generator, device=device)
         loss = dinv.loss.WeightedSplittingLoss(mask_generator=mask_generator, physics_generator=physics_generator)
+    case "weighted-ssdu-no-acs":
+        split_generator = dinv.physics.generator.GaussianMaskGenerator(img_size=(320, 320), acceleration=2, center_fraction=0., rng=rng, device=device)
+        mask_generator = dinv.physics.generator.MultiplicativeSplittingMaskGenerator((1, 320, 320), split_generator, device=device)
+        loss = dinv.loss.WeightedSplittingLoss(mask_generator=mask_generator, physics_generator=physics_generator)        
     case "ei-sure":
         loss = [
             dinv.loss.SureGaussianLoss(sigma=0.),
