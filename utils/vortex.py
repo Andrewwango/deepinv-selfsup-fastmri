@@ -45,7 +45,7 @@ class RandomNoise(Transform):
     def _get_params(self, *args) -> dict:
         if isinstance(sr := self.sigma, tuple):
             sigma = (
-                torch.rand(self.n_trans, generator=self.rng) * (sr[1] - sr[0])
+                torch.rand(self.n_trans, generator=self.rng, device=self.rng.device) * (sr[1] - sr[0])
             ) + sr[0]
         else:
             sigma = [self.sigma] * self.n_trans
@@ -88,7 +88,7 @@ class RandomPhaseError(Transform):
     def _get_params(self, *args) -> dict:
         if isinstance(s := self.scale, tuple):
             scale = (
-                torch.rand((1, self.n_trans), generator=self.rng) * (s[1] - s[0])
+                torch.rand((1, self.n_trans), generator=self.rng, device=self.rng.device) * (s[1] - s[0])
             ) + s[0]
         else:
             scale = self.scale
