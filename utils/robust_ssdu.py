@@ -27,9 +27,9 @@ class RobustSplittingLoss(WeightedSplittingLoss):
         recon_loss = super().forward(x_net, y, physics, model, **kwargs)
         
         mask = model.get_mask() * getattr(physics, "mask", 1.0) # M_\lambda\cap\omega 
-        denoi_loss = mask * (physics.A(x_net) - y) * (1 + 1/self.a2)
+        residual = mask * (physics.A(x_net) - y) * (1 + 1/self.a2)
 
-        return recon_loss + denoi_loss
+        return recon_loss + (residual**2).mean()
 
     def adapt_model(self, model: torch.nn.Module) -> RobustSplittingModel:
         if isinstance(model, self.RobustSplittingModel):
