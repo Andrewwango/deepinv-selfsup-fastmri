@@ -43,6 +43,5 @@ class RobustSplittingLoss(WeightedSplittingLoss):
             self.noise_model = noise_model
 
         def split(self, mask, y, physics=None):
-            print("Noisy splitting")
             y1, physics1 = SplittingLoss.split(mask, y, physics)
             return mask * self.noise_model(y1), physics1

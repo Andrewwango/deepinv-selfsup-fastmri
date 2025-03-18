@@ -285,7 +285,7 @@ match args.loss:
     case "vortex":
         loss = [dinv.loss.MCLoss(), VORTEXLoss(rng=rng)]
 
-    case "ei-sure":
+    case "sure-diffeo-mo-ei":
         loss = [dinv.loss.SureGaussianLoss(sigma=sigma), dinv.loss.MOEILoss(transform=diffeo, physics_generator=physics_generator, metric=xm)]
     
     case "robust-ssdu":
