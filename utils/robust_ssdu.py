@@ -39,14 +39,8 @@ class RobustSplittingLoss(WeightedSplittingLoss):
 
     class RobustSplittingModel(SplittingLoss.SplittingModel):
         def __init__(self, model, mask_generator, noise_model):
-            super().__init__()
-            self.model = model
-            self.eval_n_samples = 1
-            self.mask = 0
-            self.mask_generator = mask_generator
+            super().__init__(model, split_ratio=None, mask_generator=mask_generator, eval_n_samples=1, eval_split_input=False, eval_split_output=False, pixelwise=True)
             self.noise_model = noise_model
-            self.eval_split_input = False
-            self.eval_split_output = False
 
         def split(self, mask, y, physics=None):
             print("Noisy splitting")
