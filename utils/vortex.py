@@ -7,6 +7,7 @@ import torch.nn as nn
 from torch import Tensor
 
 from deepinv.loss.loss import Loss
+from deepinv.loss.measplit import SplittingLoss
 from deepinv.loss.metric.metric import Metric
 from deepinv.transform.base import Transform, TransformParam
 from deepinv.physics.mri import MRI, MRIMixin
@@ -232,6 +233,13 @@ class VORTEXLoss(Loss):
 
         # Pass through network
         physics2 = self.TransformedMRI(physics, self.T_2, e_params)
-        x_aug_net = model(physics2(x_aug), physics2)
+        
+        if isinstance(model, SplittingLoss.SplittingModel):
+            _model = model.model
+            print("Splitting base model in Noise2Recon")
+        else:
+            _model = model
+        
+        x_aug_net = _model(physics2(x_aug), physics2)
 
         return self.metric(self.T_2(x_net, **e_params), x_aug_net)

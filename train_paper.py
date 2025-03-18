@@ -292,6 +292,14 @@ match args.loss:
         split_generator = dinv.physics.generator.GaussianMaskGenerator(img_size=(320, 320), acceleration=2, center_fraction=0., rng=rng, device=device)
         mask_generator = dinv.physics.generator.MultiplicativeSplittingMaskGenerator((1, 320, 320), split_generator, device=device)
         loss = RobustSplittingLoss(mask_generator, physics_generator, dinv.physics.GaussianNoise(sigma=sigma, rng=torch.Generator(device).manual_seed(42)))
+    
+    case "noise2recon-ssdu":
+        split_generator = dinv.physics.generator.GaussianMaskGenerator(img_size=(320, 320), acceleration=2, center_fraction=0., rng=rng, device=device)
+        mask_generator = dinv.physics.generator.MultiplicativeSplittingMaskGenerator((1, 320, 320), split_generator, device=device)
+        loss = [
+            dinv.loss.WeightedSplittingLoss(mask_generator=mask_generator, physics_generator=physics_generator),
+            VORTEXLoss(RandomNoise(sigma=(sigma * 0.5, sigma * 2), rng=rng), IdentityTransform(), no_grad=False)
+        ]
 
 import wandb, json
 with wandb.init(project="deepinv-selfsup-fastmri-experiments", config=vars(args)):
