@@ -236,7 +236,6 @@ class VORTEXLoss(Loss):
         
         if isinstance(model, SplittingLoss.SplittingModel):
             _model = model.model
-            print("Splitting base model in Noise2Recon")
         else:
             _model = model
         

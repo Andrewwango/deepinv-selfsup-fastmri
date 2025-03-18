@@ -300,6 +300,9 @@ match args.loss:
             dinv.loss.WeightedSplittingLoss(mask_generator=mask_generator, physics_generator=physics_generator),
             VORTEXLoss(RandomNoise(sigma=(sigma * 0.5, sigma * 2), rng=rng), IdentityTransform(), no_grad=False)
         ]
+    
+    case "ensure":
+        loss = ENSURELoss(sigma=sigma, physics_generator=physics_generator)
 
 import wandb, json
 with wandb.init(project="deepinv-selfsup-fastmri-experiments", config=vars(args)):
