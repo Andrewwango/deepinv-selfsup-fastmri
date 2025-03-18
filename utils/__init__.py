@@ -3,6 +3,7 @@ from .multi_operator_adversarial_consistency import MultiOperatorUnsupAdversaria
 from .vortex import VORTEXLoss, RandomNoise, RandomPhaseError
 from .uair import UAIRGeneratorLoss, UAIRDiscriminatorLoss
 from .gan import SkipConvDiscriminator
+from .robust_ssdu import RobustSplittingLoss
 
 from deepinv.loss.metric import PSNR, SSIM, Metric
 

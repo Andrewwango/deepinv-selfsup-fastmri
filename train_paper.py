@@ -44,7 +44,8 @@ physics_generator = dinv.physics.generator.GaussianMaskGenerator(
 physics = dinv.physics.MRI(img_size=(320, 320), device=device)
 
 if args.physics == "noisy":
-    physics.noise_model = dinv.physics.GaussianNoise(0.1, rng=rng)
+    sigma = 0.1
+    physics.noise_model = dinv.physics.GaussianNoise(sigma, rng=rng)
 elif args.physics == "multicoil":
     physics = dinv.physics.MultiCoilMRI(img_size=(320, 320), coil_maps=8, device=device)
 elif args.physics == "single":
@@ -266,13 +267,6 @@ match args.loss:
         mask_generator = dinv.physics.generator.MultiplicativeSplittingMaskGenerator((1, 320, 320), split_generator, device=device)
         loss = dinv.loss.SplittingLoss(mask_generator=mask_generator, eval_split_input=False)
     
-
-    case "ei-sure":
-        loss = [
-            dinv.loss.SureGaussianLoss(sigma=0.),
-            dinv.loss.MOEILoss(transform=dinv.transform.CPABDiffeomorphism(device=device), physics_generator=physics_generator, metric=xm)
-        ]
-    
     case "cole":
         discrim = SkipConvDiscriminator((320, 320), use_sigmoid=False).to(device)
         
@@ -290,6 +284,14 @@ match args.loss:
     
     case "vortex":
         loss = [dinv.loss.MCLoss(), VORTEXLoss(rng=rng)]
+
+    case "ei-sure":
+        loss = [dinv.loss.SureGaussianLoss(sigma=sigma), dinv.loss.MOEILoss(transform=diffeo, physics_generator=physics_generator, metric=xm)]
+    
+    case "robust-ssdu":
+        split_generator = dinv.physics.generator.GaussianMaskGenerator(img_size=(320, 320), acceleration=2, center_fraction=0., rng=rng, device=device)
+        mask_generator = dinv.physics.generator.MultiplicativeSplittingMaskGenerator((1, 320, 320), split_generator, device=device)
+        loss = RobustSplittingLoss(mask_generator, physics_generator, dinv.physics.GaussianNoise(sigma=sigma, rng=torch.Generator(device).manual_seed(42)))
 
 import wandb, json
 with wandb.init(project="deepinv-selfsup-fastmri-experiments", config=vars(args)):
