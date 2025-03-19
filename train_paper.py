@@ -288,6 +288,9 @@ match args.loss:
     case "sure-diffeo-mo-ei":
         loss = [dinv.loss.SureGaussianLoss(sigma=sigma), dinv.loss.MOEILoss(transform=diffeo, physics_generator=physics_generator, metric=xm)]
     
+    case "sure-ei":
+        loss = [dinv.loss.SureGaussianLoss(sigma=sigma), dinv.loss.EILoss(transform=rotate, metric=xm)]
+
     case "robust-ssdu":
         split_generator = dinv.physics.generator.GaussianMaskGenerator(img_size=(320, 320), acceleration=2, center_fraction=0., rng=rng, device=device)
         mask_generator = dinv.physics.generator.MultiplicativeSplittingMaskGenerator((1, 320, 320), split_generator, device=device)
