@@ -68,7 +68,7 @@ class TempModel(torch.nn.Module):
         super().__init__(*args, **kwargs)
         self.model = backbone
     def forward(self, y, physics, **kwargs):
-        print(y.shape, physics.mask.shape, physics.coil_maps.shape)
+        #print(y.shape, physics.mask.shape, physics.coil_maps.shape)
         return self.model.forward(y, physics, **kwargs)
 match args.model:
     case "modl":
