@@ -13,7 +13,7 @@ import os
 import argparse
 from ambient_diffusion_mri.torch_utils.ambient_diffusion import nrmse_np, psnr, create_masks, nrmse
 import pickle
-import ambient_diffusion_mri.dnnlib
+import ambient_diffusion_mri.dnnlib as dnnlib
 from ambient_diffusion_mri.torch_utils.misc import StackedRandomGenerator
 from ambient_diffusion_mri.torch_utils import distributed as dist
 from skimage.metrics import structural_similarity as ssim
