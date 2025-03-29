@@ -64,16 +64,16 @@ match args.physics:
 # Define unrolled network
 denoiser = dinv.models.UNet(2, 2, scales=4, batch_norm=False)
 class TempModel(torch.nn.Module):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, backbone, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.model = dinv.utils.demo.demo_mri_model(denoiser=denoiser, num_iter=args.unroll, device=device).to(device)
+        self.model = backbone
     def forward(self, y, physics, **kwargs):
         print(y.shape, physics.mask.shape, physics.coil_maps.shape)
         return self.model.forward(y, physics, **kwargs)
 match args.model:
     case "modl":
         #model = lambda: dinv.utils.demo.demo_mri_model(denoiser=denoiser, num_iter=args.unroll, device=device).to(device)
-        model = lambda: TempModel()
+        model = lambda: TempModel(dinv.utils.demo.demo_mri_model(denoiser=denoiser, num_iter=args.unroll, device=device).to(device)).to(device)
     case "varnet":
         model = lambda: dinv.models.VarNet(denoiser, num_cascades=args.unroll).to(device)
 
