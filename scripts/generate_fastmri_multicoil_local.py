@@ -9,7 +9,7 @@ from deepinv.physics.generator import RandomMaskGenerator
 
 def get_dataset(fnames, mask_generator, img_size, n_coils, slice_index="middle"):
     return FastMRISliceDataset(
-        "../fastmri-experiments/local_data/volumes/brain",
+        "/home/s2558406/RDS/data/fastmri/brain/multicoil_train",
         slice_index=slice_index,
         transform=FullMultiCoilFastMRITransform(
             mask_generator=mask_generator,
