@@ -11,11 +11,11 @@ import numpy as np
 import torch
 import os
 import argparse
-from ambient_diffusion_mri.torch_utils.ambient_diffusion import nrmse_np, psnr, create_masks, nrmse
+from torch_utils.ambient_diffusion import nrmse_np, psnr, create_masks, nrmse
 import pickle
-import ambient_diffusion_mri.dnnlib as dnnlib
-from ambient_diffusion_mri.torch_utils.misc import StackedRandomGenerator
-from ambient_diffusion_mri.torch_utils import distributed as dist
+import dnnlib
+from torch_utils.misc import StackedRandomGenerator
+from torch_utils import distributed as dist
 from skimage.metrics import structural_similarity as ssim
 import json
 from collections import OrderedDict
@@ -341,4 +341,4 @@ for args.sample in range(len(os.listdir(args.measurements_path))):
     torch.save(dict, results_dir + '/checkpoint.pt')
 
 
-# python scripts/solve_inverse_adps.py --inference_R 8 --training_R 8 --seed 2 --latent_seeds 2 --l_ss 1 --num_steps 500 --S_churn 0 --gpu 1 
+# python scripts/ambient_diffusion_mri/solve_inverse_adps.py --inference_R 8 --training_R 8 --seed 2 --latent_seeds 2 --l_ss 1 --num_steps 500 --S_churn 0 --gpu 1 
