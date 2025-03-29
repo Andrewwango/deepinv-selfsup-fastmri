@@ -55,7 +55,7 @@ match args.physics:
         sigma = 0.1
         physics.noise_model = dinv.physics.GaussianNoise(sigma, rng=rng)
     case "multicoil":
-        #physics = dinv.physics.MultiCoilMRI(device=device)
+        physics = dinv.physics.MultiCoilMRI(device=device)
         physics_generator = dinv.physics.generator.RandomMaskGenerator(img_size=img_size, acceleration=args.acc, center_fraction=0.0625, rng=rng, device=device)
     case "single":
         physics.update(**physics_generator.step())
