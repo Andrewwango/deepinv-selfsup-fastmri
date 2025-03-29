@@ -20,8 +20,6 @@ def get_dataset(fnames, mask_generator, img_size, n_coils, slice_index="middle")
         save_metadata_to_cache=True,
         metadata_cache_file="/home/s2558406/RDS/data/fastmri/brain/multicoil_train_cache_new.pkl"
     )
-dataset = get_dataset()
-
 
 if __name__ == "__main__":
     # TODO insert here fname extraction from cache from fastmri-experiments
