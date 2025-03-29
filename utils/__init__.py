@@ -8,6 +8,7 @@ from .identity_transform import IdentityTransform
 from .ensure import ENSURELoss
 
 from deepinv.loss.metric import PSNR, SSIM, Metric
+from deepinv.physics.mri import MRIMixin
 
 class SumMetric(Metric):
     def __init__(self, *metrics: Metric):
@@ -27,4 +28,12 @@ class PSNR3(PSNR):
         return super().metric((x_net - x_net.mean()) / x_net.std() * x.std() + x.mean(), x, *args, **kwargs)
 class SSIM3(SSIM):
     def metric(self, x_net, x, *args, **kwargs):
-        return super().metric((x_net - x_net.mean()) / x_net.std() * x.std() + x.mean(), x, *args, **kwargs)     
+        return super().metric((x_net - x_net.mean()) / x_net.std() * x.std() + x.mean(), x, *args, **kwargs)
+
+class CropSSIM(SSIM, MRIMixin):
+    def forward(self, x_net=None, x=None, *args, **kwargs):
+        return super().forward(self.crop(x_net, shape=x.shape), x, *args, **kwargs)
+
+class CropPSNR(PSNR, MRIMixin):
+    def forward(self, x_net=None, x=None, *args, **kwargs):
+        return super().forward(self.crop(x_net, shape=x.shape), x, *args, **kwargs)
