@@ -42,10 +42,14 @@ rng_cpu = torch.Generator(device="cpu").manual_seed(0)
 
 # %%
 # Define MRI physics with random masks
+img_size = (320, 320)
+if args.physics == "multicoil":
+    img_size = (384, 320)
+
 physics_generator = dinv.physics.generator.GaussianMaskGenerator(
-    img_size=(320, 320), acceleration=args.acc, rng=rng, device=device
+    img_size=img_size, acceleration=args.acc, rng=rng, device=device
 )
-physics = dinv.physics.MRI(img_size=(320, 320), device=device)
+physics = dinv.physics.MRI(img_size=img_size, device=device)
 
 match args.physics:
     case "noisy":
@@ -240,67 +244,67 @@ match args.loss:
         )
     case "ssdu":
         loss = dinv.loss.SplittingLoss(
-            mask_generator=dinv.physics.generator.GaussianSplittingMaskGenerator((2, 320, 320), split_ratio=0.6, device=device, rng=rng),
+            mask_generator=dinv.physics.generator.GaussianSplittingMaskGenerator((2, *img_size), split_ratio=0.6, device=device, rng=rng),
             eval_split_input=False
         )
     case "ssdu-bernoulli":
         loss = dinv.loss.SplittingLoss(
-            mask_generator=dinv.physics.generator.BernoulliSplittingMaskGenerator((1, 320, 320), split_ratio=0.6, device=device, rng=rng),
+            mask_generator=dinv.physics.generator.BernoulliSplittingMaskGenerator((1, *img_size), split_ratio=0.6, device=device, rng=rng),
             eval_split_input=False
         )        
     case "noise2inverse":
         loss = dinv.loss.SplittingLoss(
-            mask_generator=dinv.physics.generator.GaussianSplittingMaskGenerator((2, 320, 320), split_ratio=0.6, device=device, rng=rng),
+            mask_generator=dinv.physics.generator.GaussianSplittingMaskGenerator((2, *img_size), split_ratio=0.6, device=device, rng=rng),
             eval_split_input=True, eval_n_samples=3
         )
     case "noise2inverse-bernoulli":
         loss = dinv.loss.SplittingLoss(
-            mask_generator=dinv.physics.generator.BernoulliSplittingMaskGenerator((1, 320, 320), split_ratio=0.6, device=device, rng=rng),
+            mask_generator=dinv.physics.generator.BernoulliSplittingMaskGenerator((1, *img_size), split_ratio=0.6, device=device, rng=rng),
             eval_split_input=True, eval_n_samples=3
         )
     case "weighted-ssdu":
-        split_generator = dinv.physics.generator.GaussianMaskGenerator(img_size=(320, 320), acceleration=2, rng=rng, device=device)
-        mask_generator = dinv.physics.generator.MultiplicativeSplittingMaskGenerator((1, 320, 320), split_generator, device=device)
+        split_generator = dinv.physics.generator.GaussianMaskGenerator(img_size=img_size, acceleration=2, rng=rng, device=device)
+        mask_generator = dinv.physics.generator.MultiplicativeSplittingMaskGenerator((1, *img_size), split_generator, device=device)
         loss = dinv.loss.WeightedSplittingLoss(mask_generator=mask_generator, physics_generator=physics_generator)
     case "weighted-ssdu-ablation-1":
-        mask_generator = dinv.physics.generator.GaussianSplittingMaskGenerator((1, 320, 320), split_ratio=0.6, device=device, rng=rng)
+        mask_generator = dinv.physics.generator.GaussianSplittingMaskGenerator((1, *img_size), split_ratio=0.6, device=device, rng=rng)
         loss = dinv.loss.WeightedSplittingLoss(mask_generator=mask_generator, physics_generator=physics_generator)
     case "weighted-ssdu-ablation-2":
-        split_generator = dinv.physics.generator.GaussianMaskGenerator(img_size=(320, 320), acceleration=2, rng=rng, device=device)
-        mask_generator = dinv.physics.generator.MultiplicativeSplittingMaskGenerator((1, 320, 320), split_generator, device=device)
+        split_generator = dinv.physics.generator.GaussianMaskGenerator(img_size=img_size, acceleration=2, rng=rng, device=device)
+        mask_generator = dinv.physics.generator.MultiplicativeSplittingMaskGenerator((1, *img_size), split_generator, device=device)
         loss = dinv.loss.SplittingLoss(mask_generator=mask_generator, eval_split_input=False)
     case "weighted-ssdu-ablation-3":
-        split_generator = dinv.physics.generator.GaussianMaskGenerator(img_size=(320, 320), acceleration=2, rng=rng, device=device)
-        mask_generator = dinv.physics.generator.MultiplicativeSplittingMaskGenerator((1, 320, 320), split_generator, device=device)
+        split_generator = dinv.physics.generator.GaussianMaskGenerator(img_size=img_size, acceleration=2, rng=rng, device=device)
+        mask_generator = dinv.physics.generator.MultiplicativeSplittingMaskGenerator((1, *img_size), split_generator, device=device)
         loss = dinv.loss.SplittingLoss(mask_generator=mask_generator, eval_split_input=True, eval_n_samples=3)
     case "weighted-ssdu-bernoulli":
-        mask_generator = dinv.physics.generator.BernoulliSplittingMaskGenerator((1, 320, 320), split_ratio=0.6, device=device, rng=rng)
+        mask_generator = dinv.physics.generator.BernoulliSplittingMaskGenerator((1, *img_size), split_ratio=0.6, device=device, rng=rng)
         loss = dinv.loss.WeightedSplittingLoss(mask_generator=mask_generator, physics_generator=physics_generator)
     case "weighted-ssdu-3":
-        split_generator = dinv.physics.generator.GaussianMaskGenerator(img_size=(320, 320), acceleration=3, rng=rng, device=device)
-        mask_generator = dinv.physics.generator.MultiplicativeSplittingMaskGenerator((1, 320, 320), split_generator, device=device)
+        split_generator = dinv.physics.generator.GaussianMaskGenerator(img_size=img_size, acceleration=3, rng=rng, device=device)
+        mask_generator = dinv.physics.generator.MultiplicativeSplittingMaskGenerator((1, *img_size), split_generator, device=device)
         loss = dinv.loss.WeightedSplittingLoss(mask_generator=mask_generator, physics_generator=physics_generator)
     case "weighted-ssdu-no-acs":
-        split_generator = dinv.physics.generator.GaussianMaskGenerator(img_size=(320, 320), acceleration=2, center_fraction=0., rng=rng, device=device)
-        mask_generator = dinv.physics.generator.MultiplicativeSplittingMaskGenerator((1, 320, 320), split_generator, device=device)
+        split_generator = dinv.physics.generator.GaussianMaskGenerator(img_size=img_size, acceleration=2, center_fraction=0., rng=rng, device=device)
+        mask_generator = dinv.physics.generator.MultiplicativeSplittingMaskGenerator((1, *img_size), split_generator, device=device)
         loss = dinv.loss.WeightedSplittingLoss(mask_generator=mask_generator, physics_generator=physics_generator)        
     case "ssdu-1d-no-acs":
-        split_generator = dinv.physics.generator.GaussianMaskGenerator(img_size=(320, 320), acceleration=2, center_fraction=0., rng=rng, device=device)
-        mask_generator = dinv.physics.generator.MultiplicativeSplittingMaskGenerator((1, 320, 320), split_generator, device=device)
+        split_generator = dinv.physics.generator.GaussianMaskGenerator(img_size=img_size, acceleration=2, center_fraction=0., rng=rng, device=device)
+        mask_generator = dinv.physics.generator.MultiplicativeSplittingMaskGenerator((1, *img_size), split_generator, device=device)
         loss = dinv.loss.SplittingLoss(mask_generator=mask_generator, eval_split_input=False)
     
     case "cole":
-        discrim = SkipConvDiscriminator((320, 320), use_sigmoid=False).to(device)
+        discrim = SkipConvDiscriminator(img_size, use_sigmoid=False).to(device)
         
         dataloader_factory = lambda: torch.utils.data.DataLoader(train_dataset, batch_size=args.b, shuffle=True, generator=torch.Generator("cpu").manual_seed(42))
-        physics_generator_factory = lambda: dinv.physics.generator.GaussianMaskGenerator(img_size=(320, 320), acceleration=args.acc, rng=torch.Generator(device).manual_seed(42), device=device)
+        physics_generator_factory = lambda: dinv.physics.generator.GaussianMaskGenerator(img_size=img_size, acceleration=args.acc, rng=torch.Generator(device).manual_seed(42), device=device)
         
         loss = MultiOperatorUnsupAdversarialGeneratorLoss(device=device, dataloader_factory=dataloader_factory, physics_generator_factory=physics_generator_factory)
         loss_d=MultiOperatorUnsupAdversarialDiscriminatorLoss(device=device, dataloader_factory=dataloader_factory, physics_generator_factory=physics_generator_factory)
 
     case "uair":
-        discrim = SkipConvDiscriminator((320, 320), use_sigmoid=False).to(device)
-        physics_generator_factory = lambda: dinv.physics.generator.GaussianMaskGenerator(img_size=(320, 320), acceleration=args.acc, rng=torch.Generator(device).manual_seed(42), device=device)
+        discrim = SkipConvDiscriminator(img_size, use_sigmoid=False).to(device)
+        physics_generator_factory = lambda: dinv.physics.generator.GaussianMaskGenerator(img_size=img_size, acceleration=args.acc, rng=torch.Generator(device).manual_seed(42), device=device)
         loss = UAIRGeneratorLoss(device=device, physics_generator_factory=physics_generator_factory)
         loss_d=UAIRDiscriminatorLoss(device=device, physics_generator_factory=physics_generator_factory)
     
@@ -314,13 +318,13 @@ match args.loss:
         loss = [dinv.loss.SureGaussianLoss(sigma=sigma), dinv.loss.EILoss(transform=rotate, metric=xm)]
 
     case "robust-ssdu":
-        split_generator = dinv.physics.generator.GaussianMaskGenerator(img_size=(320, 320), acceleration=2, center_fraction=0., rng=rng, device=device)
-        mask_generator = dinv.physics.generator.MultiplicativeSplittingMaskGenerator((1, 320, 320), split_generator, device=device)
+        split_generator = dinv.physics.generator.GaussianMaskGenerator(img_size=img_size, acceleration=2, center_fraction=0., rng=rng, device=device)
+        mask_generator = dinv.physics.generator.MultiplicativeSplittingMaskGenerator((1, *img_size), split_generator, device=device)
         loss = RobustSplittingLoss(mask_generator, physics_generator, dinv.physics.GaussianNoise(sigma=sigma, rng=torch.Generator(device).manual_seed(42)))
     
     case "noise2recon-ssdu":
-        split_generator = dinv.physics.generator.GaussianMaskGenerator(img_size=(320, 320), acceleration=2, center_fraction=0., rng=rng, device=device)
-        mask_generator = dinv.physics.generator.MultiplicativeSplittingMaskGenerator((1, 320, 320), split_generator, device=device)
+        split_generator = dinv.physics.generator.GaussianMaskGenerator(img_size=img_size, acceleration=2, center_fraction=0., rng=rng, device=device)
+        mask_generator = dinv.physics.generator.MultiplicativeSplittingMaskGenerator((1, *img_size), split_generator, device=device)
         loss = [
             dinv.loss.WeightedSplittingLoss(mask_generator=mask_generator, physics_generator=physics_generator),
             VORTEXLoss(RandomNoise(sigma=(sigma * 0.5, sigma * 2), rng=rng), IdentityTransform(), no_grad=False)
