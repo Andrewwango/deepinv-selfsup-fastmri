@@ -47,9 +47,7 @@ img_size = (320, 320)
 if args.physics == "multicoil":
     img_size = (384, 320)
 
-physics_generator = dinv.physics.generator.GaussianMaskGenerator(
-    img_size=img_size, acceleration=args.acc, rng=rng, device=device
-)
+physics_generator = dinv.physics.generator.GaussianMaskGenerator(img_size=img_size, acceleration=args.acc, rng=rng, device=device)
 physics = dinv.physics.MRI(img_size=img_size, device=device)
 
 match args.physics:
@@ -58,6 +56,7 @@ match args.physics:
         physics.noise_model = dinv.physics.GaussianNoise(sigma, rng=rng)
     case "multicoil":
         physics = dinv.physics.MultiCoilMRI(device=device)
+        physics_generator = dinv.physics.generator.RandomMaskGenerator(img_size=img_size, acceleration=args.acc, center_fraction=0.0625, rng=rng, device=device)
     case "single":
         physics.update(**physics_generator.step())
 
@@ -398,4 +397,4 @@ if not args.no_save:
 
 # python scripts/train_paper.py --loss weighted-ssdu-ablation-1 --data brain --epochs 120 --save_model -lr 1e-4
 
-# python scripts/train_paper.py --physics multicoil --acc 8 --n_coils 16 --data brain -b 4 --loss diffeo-mo-ei  -lr 1e-3 --epochs 1 --save_model --save_gt --compare_dagger
+# python scripts/train_paper.py --physics multicoil --acc 8 --n_coils 16 --data brain -b 4 --loss diffeo-mo-ei --adj_mc -lr 1e-3 --epochs 30 --save_model --save_gt
