@@ -71,8 +71,8 @@ if args.physics == "multicoil":
     if args.data != "brain":
         raise ValueError("data must be brain for multicoil.")
 
-    train_dataset = dinv.datasets.LocalFastMRISliceDataset(f"/home/s2558406/RDS/data/fastmri/brain/multicoil_train_slices_{args.acc}_{args.n_coils}_train")
-    test_dataset  = dinv.datasets.LocalFastMRISliceDataset(f"/home/s2558406/RDS/data/fastmri/brain/multicoil_train_slices_{args.acc}_{args.n_coils}_test")
+    train_dataset = dinv.datasets.LocalDataset(f"/home/s2558406/RDS/data/fastmri/brain/multicoil_train_slices_{args.acc}_{args.n_coils}_train")
+    test_dataset  = dinv.datasets.LocalDataset(f"/home/s2558406/RDS/data/fastmri/brain/multicoil_train_slices_{args.acc}_{args.n_coils}_test")
 else:
     match args.data:
         case "knee":
@@ -381,11 +381,11 @@ if not args.no_save:
 
     savez(f"{model_dir}/paper/{run_id}/samples.npz", **samples_to_save)
 
-# python train_paper.py --loss "sup" --epochs 150 --save_model --schedule 20 --save_gt --acc 6
-# python train_paper.py --loss "ssdu" --epochs 150 --save_model --acc 6
-# python train_paper.py --loss "noise2inverse" --epochs 0 --ckpt "i65an1aa/ckpt_149.pth.tar"
-# python train_paper.py --loss "sup" --epochs 150 --save_model --schedule 20 --save_gt --data "brain" --acc 6
+# python scripts/train_paper.py --loss "sup" --epochs 150 --save_model --schedule 20 --save_gt --acc 6
+# python scripts/train_paper.py --loss "ssdu" --epochs 150 --save_model --acc 6
+# python scripts/train_paper.py --loss "noise2inverse" --epochs 0 --ckpt "i65an1aa/ckpt_149.pth.tar"
+# python scripts/train_paper.py --loss "sup" --epochs 150 --save_model --schedule 20 --save_gt --data "brain" --acc 6
 
-# python train_paper.py --loss weighted-ssdu-ablation-1 --data brain --epochs 120 --save_model -lr 1e-4
+# python scripts/train_paper.py --loss weighted-ssdu-ablation-1 --data brain --epochs 120 --save_model -lr 1e-4
 
-# python train_paper.py --physics multicoil --acc 8 --n_coils 16 --data brain -b 4 --loss diffeo-mo-ei  -lr 1e-3 --epochs 1 --save_model --save_gt --compare_dagger
+# python scripts/train_paper.py --physics multicoil --acc 8 --n_coils 16 --data brain -b 4 --loss diffeo-mo-ei  -lr 1e-3 --epochs 1 --save_model --save_gt --compare_dagger
