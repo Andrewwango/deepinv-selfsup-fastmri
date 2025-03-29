@@ -67,7 +67,7 @@ match args.model:
     case "modl":
         model = lambda: dinv.utils.demo.demo_mri_model(denoiser=denoiser, num_iter=args.unroll, device=device).to(device)
     case "varnet":
-        model = lambda: dinv.models.VarNet(denoiser, num_cascades=args.unroll)
+        model = lambda: dinv.models.VarNet(denoiser, num_cascades=args.unroll).to(device)
 
 # %%
 # Define FastMRI datasets
