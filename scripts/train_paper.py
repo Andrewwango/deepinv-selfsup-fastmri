@@ -15,6 +15,7 @@ model_dir = "/home/s2558406/RDS/models/deepinv-selfsup-fastmri"
 from argparse import ArgumentParser
 parser = ArgumentParser()
 parser.add_argument("--loss", type=str, default="ei")
+parser.add_argument("-b", type=int, default=4, help="batch size")
 parser.add_argument("--x_metric", type=str, default="mse", choices=("mse", "ssim-mse"))
 parser.add_argument("--epochs", type=int, default=0)
 parser.add_argument("--physics", type=str, default="mri", choices=("mri", "noisy", "multicoil", "single"), help="Default multi-operator singlecoil MRI, Gaussian noised, Multicoil, or single-operator")
@@ -32,7 +33,7 @@ parser.add_argument("--unroll", type=int, default=3)
 parser.add_argument("--norm_metrics", action="store_true")
 parser.add_argument("--n_coils", type=int, default=16)
 parser.add_argument("--compare_dagger", action="store_true")
-parser.add_argument("-b", type=int, default=4)
+parser.add_argument("--adj_mc", action="store_true")
 args = parser.parse_args()
 
 torch.manual_seed(args.global_seed)
@@ -184,39 +185,44 @@ diffeo = dinv.transform.CPABDiffeomorphism(device=device)
 diffeo_rotate = rotate | diffeo
 diffeo_rotate2 = rotate * diffeo
 
+if args.adj_mc:
+    mcloss = AdjMCLoss()
+else:
+    mcloss = dinv.loss.MCLoss()
+
 match args.loss:
     case "mc":
-        loss = dinv.loss.MCLoss()
+        loss = mcloss
     case "sup":
         loss = dinv.loss.SupLoss(metric=xm)
     case "ei":
         loss = [
-            dinv.loss.MCLoss(),
+            mcloss,
             dinv.loss.EILoss(transform=rotate, metric=xm)
         ]
     case "diffeo-ei":
         loss = [
-            dinv.loss.MCLoss(),
+            mcloss,
             dinv.loss.EILoss(transform=diffeo, metric=xm)
         ]
     case "moi":
         loss = [
-            dinv.loss.MCLoss(),
+            mcloss,
             dinv.loss.MOILoss(physics_generator=physics_generator, metric=xm)
         ]
     case "rotate-mo-ei":
         loss = [
-            dinv.loss.MCLoss(),
+            mcloss,
             dinv.loss.MOEILoss(transform=rotate, physics_generator=physics_generator, metric=xm)
         ]
     case "diffeo-mo-ei":
         loss = [
-            dinv.loss.MCLoss(),
+            mcloss,
             dinv.loss.MOEILoss(transform=diffeo, physics_generator=physics_generator, metric=xm)
         ]
     case "diffeo-moi-ei":
         loss = [
-            dinv.loss.MCLoss(),
+            mcloss,
             RandomLossScheduler(
                 dinv.loss.MOILoss(physics_generator=physics_generator, metric=xm),
                 dinv.loss.EILoss(transform=diffeo, metric=xm),
@@ -224,19 +230,19 @@ match args.loss:
         ]
     case "diffeo-rotate-mo-ei":
         loss = [
-            dinv.loss.MCLoss(),
+            mcloss,
             dinv.loss.MOEILoss(transform=diffeo_rotate, physics_generator=physics_generator, metric=xm)
         ]
     case "diffeo*rotate-mo-ei":
         loss = [
-            dinv.loss.MCLoss(),
+            mcloss,
             dinv.loss.MOEILoss(transform=diffeo_rotate2, physics_generator=physics_generator, metric=xm)
         ]
     case "sup-diffeo-mo-ei":
         loss = RandomLossScheduler(
             dinv.loss.SupLoss(),
             [
-                dinv.loss.MCLoss(),
+                mcloss,
                 dinv.loss.MOEILoss(transform=diffeo, physics_generator=physics_generator, metric=xm)
             ],
             generator=None,
@@ -309,7 +315,7 @@ match args.loss:
         loss_d=UAIRDiscriminatorLoss(device=device, physics_generator_factory=physics_generator_factory)
     
     case "vortex":
-        loss = [dinv.loss.MCLoss(), VORTEXLoss(rng=rng)]
+        loss = [mcloss, VORTEXLoss(rng=rng)]
 
     case "sure-diffeo-mo-ei":
         loss = [dinv.loss.SureGaussianLoss(sigma=sigma), dinv.loss.MOEILoss(transform=diffeo, physics_generator=physics_generator, metric=xm)]

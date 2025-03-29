@@ -9,6 +9,7 @@ from .ensure import ENSURELoss
 
 from deepinv.loss.metric import PSNR, SSIM, Metric
 from deepinv.physics.mri import MRIMixin
+from deepinv.loss.mc import MCLoss
 
 class SumMetric(Metric):
     def __init__(self, *metrics: Metric):
@@ -37,3 +38,7 @@ class CropSSIM(SSIM, MRIMixin):
 class CropPSNR(PSNR, MRIMixin):
     def forward(self, x_net=None, x=None, *args, **kwargs):
         return super().forward(self.crop(x_net, shape=x.shape), x, *args, **kwargs)
+
+class AdjMCLoss(MCLoss):
+    def forward(self, y, x_net, physics, **kwargs):
+        return self.metric(physics.A_adjoint(physics.A(x_net)), physics.A_adjoint(y))
