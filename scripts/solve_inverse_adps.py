@@ -215,7 +215,7 @@ parser.add_argument('--solver', type=str, default='euler') # ['euler', 'heun']
 parser.add_argument('--schedule', type=str, default='linear') # ['vp', 've', 'linear']
 parser.add_argument('--scaling', type=str, default='none') # ['vp', 'none']
 parser.add_argument('--outdir', type=str, default='/home/s2558406/RDS/models/deepinv-selfsup-fastmri/ambient-diffusion/results_8') # ['vp', 'none']
-parser.add_argument('--network', type=str, default='/home/s2558406/RDS/models/deepinv-selfsup-fastmri/ambient-diffusion/brainMRI_8') # ['vp', 'none']
+parser.add_argument('--network', type=str, default='/home/s2558406/RDS/models/deepinv-selfsup-fastmri/ambient-diffusion/R=8') # ['vp', 'none']
 parser.add_argument('--img_channels', type=int, default=2) # ['vp', 'none']
 parser.add_argument('--method', type=str, default='ambient') # ['edm', 'ambient']
 

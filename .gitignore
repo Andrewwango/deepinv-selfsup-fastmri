@@ -6,6 +6,7 @@ wandb/wandb/*
 !wandb/wandb/.temp
 models/old/*
 models/paper/*
+models/ambient-diffusion-mri/*
 *.h5
 *.pt
 *.tif
