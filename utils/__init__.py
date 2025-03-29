@@ -8,7 +8,7 @@ from .identity_transform import IdentityTransform
 from .ensure import ENSURELoss
 
 from deepinv.loss.metric import PSNR, SSIM, Metric
-from deepinv.physics.mri import MRIMixin
+from deepinv.physics.mri import MRIMixin, MultiCoilMRI
 from deepinv.loss.mc import MCLoss
 
 class SumMetric(Metric):
@@ -42,3 +42,11 @@ class CropPSNR(PSNR, MRIMixin):
 class AdjMCLoss(MCLoss):
     def forward(self, y, x_net, physics, **kwargs):
         return self.metric(physics.A_adjoint(physics.A(x_net)), physics.A_adjoint(y))
+
+from deepinv.datasets.fastmri import LocalDataset
+class SimulatedLocalDataset(LocalDataset):
+    def __getitem__(self, idx):
+        x, _, params = super().__getitem__(idx)
+        physics = MultiCoilMRI(**params)
+        y = physics(x.unsqueeze(0)).squeeze(0)
+        return x, y, params

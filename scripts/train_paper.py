@@ -75,8 +75,8 @@ if args.physics == "multicoil":
     if args.data != "brain":
         raise ValueError("data must be brain for multicoil.")
 
-    train_dataset = dinv.datasets.LocalDataset(f"/home/s2558406/RDS/data/fastmri/brain/multicoil_train_slices_{args.acc}_{args.n_coils}_train")
-    test_dataset  = dinv.datasets.LocalDataset(f"/home/s2558406/RDS/data/fastmri/brain/multicoil_train_slices_{args.acc}_{args.n_coils}_test")
+    train_dataset = SimulatedLocalDataset(f"/home/s2558406/RDS/data/fastmri/brain/multicoil_train_slices_{args.acc}_{args.n_coils}_train")
+    test_dataset  = SimulatedLocalDataset(f"/home/s2558406/RDS/data/fastmri/brain/multicoil_train_slices_{args.acc}_{args.n_coils}_test")
 else:
     match args.data:
         case "knee":
