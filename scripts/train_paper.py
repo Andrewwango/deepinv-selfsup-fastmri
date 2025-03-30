@@ -38,7 +38,7 @@ parser.add_argument("--simulated", action="store_true")
 parser.add_argument("--simulated2", action="store_true")
 parser.add_argument("--temp_rss", action="store_true")
 parser.add_argument("--simulate_coils", type=int, default=0)
-parser.add_argument("--temp_singlecoil_filter", action="store_true")
+parser.add_argument("--singlecoil_filter", action="store_true")
 args = parser.parse_args()
 
 torch.manual_seed(args.global_seed)
@@ -87,8 +87,8 @@ if args.physics == "multicoil":
         train_dataset = SimulatedLocalDataset(f"/home/s2558406/RDS/data/fastmri/brain/multicoil_train_slices_{args.acc}_{args.n_coils}_train{rss}", simulate_coils=args.simulate_coils, simulated2=args.simulated2, physics_generator=physics_generator)
         test_dataset  = SimulatedLocalDataset(f"/home/s2558406/RDS/data/fastmri/brain/multicoil_train_slices_{args.acc}_{args.n_coils}_test{rss}", simulate_coils=args.simulate_coils, simulated2=args.simulated2, physics_generator=physics_generator)
     else:
-        train_dataset = dinv.datasets.LocalDataset(f"/home/s2558406/RDS/data/fastmri/brain/multicoil_train_slices_{args.acc}_{args.n_coils}_train{rss}")
-        test_dataset  = dinv.datasets.LocalDataset(f"/home/s2558406/RDS/data/fastmri/brain/multicoil_train_slices_{args.acc}_{args.n_coils}_test{rss}")        
+        train_dataset = dinv.datasets.LocalDataset(f"/home/s2558406/RDS/data/fastmri/brain/multicoil_train_slices_{args.acc}_train{rss}")
+        test_dataset  = dinv.datasets.LocalDataset(f"/home/s2558406/RDS/data/fastmri/brain/multicoil_train_slices_{args.acc}_test{rss}")        
 else:
     match args.data:
         case "knee":
@@ -96,7 +96,7 @@ else:
         case "brain":
             file_name = "fastmri_brain_singlecoil.pt"
 
-    if not args.temp_singlecoil_filter:
+    if not args.singlecoil_filter:
         dataset = dinv.datasets.SimpleFastMRISliceDataset(
             model_dir.replace("models", "data"),
             file_name=file_name,
@@ -106,8 +106,8 @@ else:
         )
         train_dataset, test_dataset = torch.utils.data.random_split(dataset, (0.8, 0.2), generator=rng_cpu)
     else:
-        train_dataset = dinv.datasets.SimpleFastMRISliceDataset("/home/s2558406/RDS/data/fastmri/brain", file_name="fastmri_brain_singlecoil_filter_train_temp.pt") 
-        test_dataset  = dinv.datasets.SimpleFastMRISliceDataset("/home/s2558406/RDS/data/fastmri/brain", file_name="fastmri_brain_singlecoil_filter_test_temp.pt") 
+        train_dataset = dinv.datasets.SimpleFastMRISliceDataset("/home/s2558406/RDS/data/fastmri/brain", file_name="fastmri_brain_singlecoil_filter_train.pt") 
+        test_dataset  = dinv.datasets.SimpleFastMRISliceDataset("/home/s2558406/RDS/data/fastmri/brain", file_name="fastmri_brain_singlecoil_filter_test.pt") 
 
     # Simulate and save random measurements
     dataset_path = dinv.datasets.generate_dataset(
@@ -120,7 +120,7 @@ else:
         device=device,
         save_dir=model_dir.replace("models", "data"),
         batch_size=1,
-        dataset_filename="dinv_dataset_paper" + (f"_{args.data}" if args.data != "knee" else "") + (f"_{args.acc}" if args.acc != 8 else "") + ("_noisy" if args.physics == "noisy" else "") + ("_single" if args.physics == "single" else "") + ("_temp" if args.temp_singlecoil_filter else "")
+        dataset_filename="dinv_dataset_paper" + (f"_{args.data}" if args.data != "knee" else "") + (f"_{args.acc}" if args.acc != 8 else "") + ("_noisy" if args.physics == "noisy" else "") + ("_single" if args.physics == "single" else "") + ("_filter" if args.singlecoil_filter else "")
     )
 
     # Load saved datasets
@@ -414,4 +414,5 @@ if not args.no_save:
 # python scripts/train_paper.py --loss weighted-ssdu-ablation-1 --data brain --epochs 120 --save_model -lr 1e-4
 
 # python scripts/train_paper.py --model varnet --physics multicoil --acc 8 --n_coils 16 --data brain -b 4 --loss diffeo-mo-ei --adj_mc -lr 1e-3 --epochs 30 --save_model --save_gt
-# python scripts/train_paper.py --physics multicoil --acc 6 --n_coils 16 --data brain -b 4 --loss moi -lr 1e-3 --epochs 50 --no_save --simulated --simulated2 --temp_rss
+# python scripts/train_paper.py --physics multicoil --acc 6 --data brain -b 4 --loss moi -lr 1e-3 --epochs 100 --no_save
+# python scripts/train_paper.py --acc 6 --data brain -b 4 --loss moi -lr 1e-3 --epochs 100 --no_save --singlecoil_filter
