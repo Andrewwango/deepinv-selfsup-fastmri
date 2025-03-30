@@ -83,7 +83,7 @@ if args.physics == "multicoil":
 
     rss = "_rss" if args.temp_rss else ""
     if args.simulated:
-        train_dataset = SimulatedLocalDataset(f"/home/s2558406/RDS/data/fastmri/brain/multicoil_train_slices_{args.acc}_{args.n_coils}_train{rss}", simulate_coils=args.simulate_coils, simulate2=args.simulated2, physics_generator=physics_generator)
+        train_dataset = SimulatedLocalDataset(f"/home/s2558406/RDS/data/fastmri/brain/multicoil_train_slices_{args.acc}_{args.n_coils}_train{rss}", simulate_coils=args.simulate_coils, simulated2=args.simulated2, physics_generator=physics_generator)
         test_dataset  = SimulatedLocalDataset(f"/home/s2558406/RDS/data/fastmri/brain/multicoil_train_slices_{args.acc}_{args.n_coils}_test{rss}", simulate_coils=args.simulate_coils, simulated2=args.simulated2, physics_generator=physics_generator)
     else:
         train_dataset = dinv.datasets.LocalDataset(f"/home/s2558406/RDS/data/fastmri/brain/multicoil_train_slices_{args.acc}_{args.n_coils}_train{rss}")
