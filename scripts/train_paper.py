@@ -404,3 +404,4 @@ if not args.no_save:
 # python scripts/train_paper.py --loss weighted-ssdu-ablation-1 --data brain --epochs 120 --save_model -lr 1e-4
 
 # python scripts/train_paper.py --model varnet --physics multicoil --acc 8 --n_coils 16 --data brain -b 4 --loss diffeo-mo-ei --adj_mc -lr 1e-3 --epochs 30 --save_model --save_gt
+# python scripts/train_paper.py --physics multicoil --acc 2 --n_coils 16 --data brain -b 4 --loss diffeo-mo-ei -lr 1e-3 --epochs 50 --simulated

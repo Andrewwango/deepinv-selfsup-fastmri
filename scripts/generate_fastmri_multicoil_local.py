@@ -45,14 +45,16 @@ if __name__ == "__main__":
         rng=rng_cpu
     )
     assert mask_generator.n_center == 20
+    
+    rss = "_rss" if args.target_method == "rss" else ""
 
     train_dataset = get_dataset(train_fnames, mask_generator, args.img_size, args.n_coils, slice_index="middle+1", target_method=args.target_method)
     print(len(train_dataset)) #66*3
-    train_dataset.save_local_dataset(f"/home/s2558406/RDS/data/fastmri/brain/multicoil_train_slices_{args.acc}_{args.n_coils}_train")
+    train_dataset.save_local_dataset(f"/home/s2558406/RDS/data/fastmri/brain/multicoil_train_slices_{args.acc}_{args.n_coils}_train{rss}")
 
     test_dataset  = get_dataset(test_fnames,  mask_generator, args.img_size, args.n_coils, slice_index="middle", target_method=args.target_method)
     print(len(test_dataset)) #83-66=17
-    test_dataset.save_local_dataset(f"/home/s2558406/RDS/data/fastmri/brain/multicoil_train_slices_{args.acc}_{args.n_coils}_test")
+    test_dataset.save_local_dataset(f"/home/s2558406/RDS/data/fastmri/brain/multicoil_train_slices_{args.acc}_{args.n_coils}_test{rss}")
 
 # python scripts/generate_fastmri_multicoil_local.py --acc 8
-# python scripts/generate_fastmri_multicoil_local.py --acc 4 --target_method rss
+# python scripts/generate_fastmri_multicoil_local.py --acc 8 --target_method rss
