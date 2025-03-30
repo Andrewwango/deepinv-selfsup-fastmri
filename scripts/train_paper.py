@@ -35,6 +35,7 @@ parser.add_argument("--n_coils", type=int, default=16)
 parser.add_argument("--compare_dagger", action="store_true")
 parser.add_argument("--adj_mc", action="store_true")
 parser.add_argument("--simulated", action="store_true")
+parser.add_argument("--simulated2", action="store_true")
 parser.add_argument("--temp_rss", action="store_true")
 parser.add_argument("--simulate_coils", type=int, default=0)
 args = parser.parse_args()
@@ -58,8 +59,9 @@ match args.physics:
         sigma = 0.1
         physics.noise_model = dinv.physics.GaussianNoise(sigma, rng=rng)
     case "multicoil":
-        #physics = dinv.physics.MultiCoilMRI(device=device)
-        physics_generator = dinv.physics.generator.RandomMaskGenerator(img_size=img_size, acceleration=args.acc, center_fraction=0.0625, rng=rng, device=device)
+        if not args.simulated2:
+            physics = dinv.physics.MultiCoilMRI(device=device)
+            physics_generator = dinv.physics.generator.RandomMaskGenerator(img_size=img_size, acceleration=args.acc, center_fraction=0.0625, rng=rng, device=device)
     case "single":
         physics.update(**physics_generator.step())
 
@@ -81,8 +83,8 @@ if args.physics == "multicoil":
 
     rss = "_rss" if args.temp_rss else ""
     if args.simulated:
-        train_dataset = SimulatedLocalDataset(f"/home/s2558406/RDS/data/fastmri/brain/multicoil_train_slices_{args.acc}_{args.n_coils}_train{rss}", simulate_coils=args.simulate_coils)
-        test_dataset  = SimulatedLocalDataset(f"/home/s2558406/RDS/data/fastmri/brain/multicoil_train_slices_{args.acc}_{args.n_coils}_test{rss}", simulate_coils=args.simulate_coils)
+        train_dataset = SimulatedLocalDataset(f"/home/s2558406/RDS/data/fastmri/brain/multicoil_train_slices_{args.acc}_{args.n_coils}_train{rss}", simulate_coils=args.simulate_coils, simulate2=args.simulated2, physics_generator=physics_generator)
+        test_dataset  = SimulatedLocalDataset(f"/home/s2558406/RDS/data/fastmri/brain/multicoil_train_slices_{args.acc}_{args.n_coils}_test{rss}", simulate_coils=args.simulate_coils, simulated2=args.simulated2, physics_generator=physics_generator)
     else:
         train_dataset = dinv.datasets.LocalDataset(f"/home/s2558406/RDS/data/fastmri/brain/multicoil_train_slices_{args.acc}_{args.n_coils}_train{rss}")
         test_dataset  = dinv.datasets.LocalDataset(f"/home/s2558406/RDS/data/fastmri/brain/multicoil_train_slices_{args.acc}_{args.n_coils}_test{rss}")        
@@ -407,4 +409,4 @@ if not args.no_save:
 # python scripts/train_paper.py --loss weighted-ssdu-ablation-1 --data brain --epochs 120 --save_model -lr 1e-4
 
 # python scripts/train_paper.py --model varnet --physics multicoil --acc 8 --n_coils 16 --data brain -b 4 --loss diffeo-mo-ei --adj_mc -lr 1e-3 --epochs 30 --save_model --save_gt
-# python scripts/train_paper.py --physics multicoil --acc 6 --n_coils 16 --data brain -b 4 --loss moi -lr 1e-3 --epochs 50 --no_save --simulated --temp_rss
+# python scripts/train_paper.py --physics multicoil --acc 6 --n_coils 16 --data brain -b 4 --loss moi -lr 1e-3 --epochs 50 --no_save --simulated --simulated2 --temp_rss

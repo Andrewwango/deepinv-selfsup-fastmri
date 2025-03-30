@@ -10,6 +10,8 @@ from .ensure import ENSURELoss
 from deepinv.loss.metric import PSNR, SSIM, Metric
 from deepinv.physics.mri import MRIMixin, MultiCoilMRI, MRI
 from deepinv.loss.mc import MCLoss
+from deepinv.physics.generator import GaussianMaskGenerator
+from deepinv.physics.generator.base import seed_from_string
 
 class SumMetric(Metric):
     def __init__(self, *metrics: Metric):
@@ -45,21 +47,35 @@ class AdjMCLoss(MCLoss):
 
 from deepinv.datasets.fastmri import LocalDataset
 class SimulatedLocalDataset(LocalDataset):
-    def __init__(self, *args, simulate_coils=0, **kwargs):
+    def __init__(self, *args, simulate_coils=0, simulated2=False, physics_generator: GaussianMaskGenerator=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.simulate_coils = simulate_coils
+        self.simulated2 = simulated2
+        self.physics_generator = physics_generator
 
     def __getitem__(self, idx):
         x, _, params = super().__getitem__(idx)
         params = {"mask" : params["mask"]} #discard coil_maps
         
+        if self.simulated2:
+            # crop x
+            x = MRIMixin().crop(x, shape=self.physics_generator.img_size[-2:])
+            # normalise x
+            x = (x - x.min()) / (x.max() - x.min())
+            # discard mask
+            params["mask"] = self.physics_generator.step(seed=seed_from_string(str(self.files[idx])))["mask"].squeeze(0)
+
         if self.simulate_coils == 0:
-            # temp use MRI instead - uncomment line 64 too
-            #physics = MultiCoilMRI(img_size=x.shape[-2:], coil_maps=None, **params)
-            physics = MRI(img_size=x.shape[-2:], mask=params["mask"])
+            physics = MultiCoilMRI(img_size=x.shape[-2:], coil_maps=None, **params)
+            
+            if self.simulated2:
+                physics = MRI(img_size=x.shape[-2:], mask=params["mask"])
         else:
             physics = MultiCoilMRI(img_size=x.shape[-2:], coil_maps=self.simulate_coils, **params)
 
         y = physics(x.unsqueeze(0)).squeeze(0)
-        #params["coil_maps"] = physics.coil_maps.squeeze(0)
+        
+        if not self.simulated2:
+            params["coil_maps"] = physics.coil_maps.squeeze(0)
+        
         return x, y, params
