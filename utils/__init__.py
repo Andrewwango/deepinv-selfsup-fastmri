@@ -54,10 +54,12 @@ class SimulatedLocalDataset(LocalDataset):
         params = {"mask" : params["mask"]} #discard coil_maps
         
         if self.simulate_coils == 0:
-            physics = MultiCoilMRI(img_size=x.shape[-2:], coil_maps=None, **params)
+            # temp use MRI instead - uncomment line 64 too
+            #physics = MultiCoilMRI(img_size=x.shape[-2:], coil_maps=None, **params)
+            physics = MRI(img_size=x.shape[-2:], mask=params["mask"])
         else:
             physics = MultiCoilMRI(img_size=x.shape[-2:], coil_maps=self.simulate_coils, **params)
 
         y = physics(x.unsqueeze(0)).squeeze(0)
-        params["coil_maps"] = physics.coil_maps.squeeze(0)
+        #params["coil_maps"] = physics.coil_maps.squeeze(0)
         return x, y, params
