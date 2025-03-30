@@ -38,6 +38,7 @@ parser.add_argument("--simulated", action="store_true")
 parser.add_argument("--simulated2", action="store_true")
 parser.add_argument("--temp_rss", action="store_true")
 parser.add_argument("--simulate_coils", type=int, default=0)
+parser.add_argument("--temp_singlecoil_filter", action="store_true")
 args = parser.parse_args()
 
 torch.manual_seed(args.global_seed)
@@ -95,14 +96,18 @@ else:
         case "brain":
             file_name = "fastmri_brain_singlecoil.pt"
 
-    dataset = dinv.datasets.SimpleFastMRISliceDataset(
-        model_dir.replace("models", "data"),
-        file_name=file_name,
-        train=True,
-        train_percent=1.,
-        download=True,
-    )
-    train_dataset, test_dataset = torch.utils.data.random_split(dataset, (0.8, 0.2), generator=rng_cpu)
+    if not args.temp_singlecoil_filter:
+        dataset = dinv.datasets.SimpleFastMRISliceDataset(
+            model_dir.replace("models", "data"),
+            file_name=file_name,
+            train=True,
+            train_percent=1.,
+            download=True,
+        )
+        train_dataset, test_dataset = torch.utils.data.random_split(dataset, (0.8, 0.2), generator=rng_cpu)
+    else:
+        train_dataset = dinv.datasets.SimpleFastMRISliceDataset(model_dir.replace("models", "data"), file_name="fastmri_brain_singlecoil_filter_train.pt") 
+        test_dataset  = dinv.datasets.SimpleFastMRISliceDataset(model_dir.replace("models", "data"), file_name="fastmri_brain_singlecoil_filter_test.pt") 
 
     # Simulate and save random measurements
     dataset_path = dinv.datasets.generate_dataset(
