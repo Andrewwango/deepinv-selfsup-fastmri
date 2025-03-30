@@ -120,7 +120,7 @@ else:
         device=device,
         save_dir=model_dir.replace("models", "data"),
         batch_size=1,
-        dataset_filename="dinv_dataset_paper" + (f"_{args.data}" if args.data != "knee" else "") + (f"_{args.acc}" if args.acc != 8 else "") + ("_noisy" if args.physics == "noisy" else "") + ("_single" if args.physics == "single" else "")
+        dataset_filename="dinv_dataset_paper" + (f"_{args.data}" if args.data != "knee" else "") + (f"_{args.acc}" if args.acc != 8 else "") + ("_noisy" if args.physics == "noisy" else "") + ("_single" if args.physics == "single" else "") + ("_temp" if args.temp_singlecoil_filter else "")
     )
 
     # Load saved datasets
