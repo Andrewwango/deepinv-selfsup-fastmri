@@ -34,6 +34,7 @@ parser.add_argument("--norm_metrics", action="store_true")
 parser.add_argument("--n_coils", type=int, default=16)
 parser.add_argument("--compare_dagger", action="store_true")
 parser.add_argument("--adj_mc", action="store_true")
+parser.add_argument("--simulated", action="store_true")
 args = parser.parse_args()
 
 torch.manual_seed(args.global_seed)
@@ -63,17 +64,10 @@ match args.physics:
 # %%
 # Define unrolled network
 denoiser = dinv.models.UNet(2, 2, scales=4, batch_norm=False)
-class TempModel(torch.nn.Module):
-    def __init__(self, backbone, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.model = backbone
-    def forward(self, y, physics, **kwargs):
-        #print(y.shape, physics.mask.shape, physics.coil_maps.shape)
-        return self.model.forward(y, physics, **kwargs)
 match args.model:
     case "modl":
         #model = lambda: dinv.utils.demo.demo_mri_model(denoiser=denoiser, num_iter=args.unroll, device=device).to(device)
-        model = lambda: TempModel(dinv.utils.demo.demo_mri_model(denoiser=denoiser, num_iter=args.unroll, device=device).to(device)).to(device)
+        model = lambda: dinv.utils.demo.demo_mri_model(denoiser=denoiser, num_iter=args.unroll, device=device).to(device)
     case "varnet":
         model = lambda: dinv.models.VarNet(denoiser, num_cascades=args.unroll).to(device)
 
@@ -83,8 +77,12 @@ if args.physics == "multicoil":
     if args.data != "brain":
         raise ValueError("data must be brain for multicoil.")
 
-    train_dataset = SimulatedLocalDataset(f"/home/s2558406/RDS/data/fastmri/brain/multicoil_train_slices_{args.acc}_{args.n_coils}_train")
-    test_dataset  = SimulatedLocalDataset(f"/home/s2558406/RDS/data/fastmri/brain/multicoil_train_slices_{args.acc}_{args.n_coils}_test")
+    if args.simulated:
+        train_dataset = SimulatedLocalDataset(f"/home/s2558406/RDS/data/fastmri/brain/multicoil_train_slices_{args.acc}_{args.n_coils}_train")
+        test_dataset  = SimulatedLocalDataset(f"/home/s2558406/RDS/data/fastmri/brain/multicoil_train_slices_{args.acc}_{args.n_coils}_test")
+    else:
+        train_dataset = dinv.datasets.LocalDataset(f"/home/s2558406/RDS/data/fastmri/brain/multicoil_train_slices_{args.acc}_{args.n_coils}_train")
+        test_dataset  = dinv.datasets.LocalDataset(f"/home/s2558406/RDS/data/fastmri/brain/multicoil_train_slices_{args.acc}_{args.n_coils}_test")        
 else:
     match args.data:
         case "knee":
