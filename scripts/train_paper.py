@@ -35,6 +35,7 @@ parser.add_argument("--n_coils", type=int, default=16)
 parser.add_argument("--compare_dagger", action="store_true")
 parser.add_argument("--adj_mc", action="store_true")
 parser.add_argument("--simulated", action="store_true")
+parser.add_argument("--temp_rss", action="store_true")
 args = parser.parse_args()
 
 torch.manual_seed(args.global_seed)
@@ -77,12 +78,13 @@ if args.physics == "multicoil":
     if args.data != "brain":
         raise ValueError("data must be brain for multicoil.")
 
+    rss = "_rss" if args.temp_rss else ""
     if args.simulated:
-        train_dataset = SimulatedLocalDataset(f"/home/s2558406/RDS/data/fastmri/brain/multicoil_train_slices_{args.acc}_{args.n_coils}_train")
-        test_dataset  = SimulatedLocalDataset(f"/home/s2558406/RDS/data/fastmri/brain/multicoil_train_slices_{args.acc}_{args.n_coils}_test")
+        train_dataset = SimulatedLocalDataset(f"/home/s2558406/RDS/data/fastmri/brain/multicoil_train_slices_{args.acc}_{args.n_coils}_train{rss}")
+        test_dataset  = SimulatedLocalDataset(f"/home/s2558406/RDS/data/fastmri/brain/multicoil_train_slices_{args.acc}_{args.n_coils}_test{rss}")
     else:
-        train_dataset = dinv.datasets.LocalDataset(f"/home/s2558406/RDS/data/fastmri/brain/multicoil_train_slices_{args.acc}_{args.n_coils}_train")
-        test_dataset  = dinv.datasets.LocalDataset(f"/home/s2558406/RDS/data/fastmri/brain/multicoil_train_slices_{args.acc}_{args.n_coils}_test")        
+        train_dataset = dinv.datasets.LocalDataset(f"/home/s2558406/RDS/data/fastmri/brain/multicoil_train_slices_{args.acc}_{args.n_coils}_train{rss}")
+        test_dataset  = dinv.datasets.LocalDataset(f"/home/s2558406/RDS/data/fastmri/brain/multicoil_train_slices_{args.acc}_{args.n_coils}_test{rss}")        
 else:
     match args.data:
         case "knee":
@@ -404,4 +406,4 @@ if not args.no_save:
 # python scripts/train_paper.py --loss weighted-ssdu-ablation-1 --data brain --epochs 120 --save_model -lr 1e-4
 
 # python scripts/train_paper.py --model varnet --physics multicoil --acc 8 --n_coils 16 --data brain -b 4 --loss diffeo-mo-ei --adj_mc -lr 1e-3 --epochs 30 --save_model --save_gt
-# python scripts/train_paper.py --physics multicoil --acc 2 --n_coils 16 --data brain -b 4 --loss diffeo-mo-ei -lr 1e-3 --epochs 50 --simulated
+# python scripts/train_paper.py --physics multicoil --acc 2 --n_coils 16 --data brain -b 4 --loss diffeo-mo-ei -lr 1e-3 --epochs 50 --simulated --temp_rss
