@@ -57,4 +57,4 @@ if __name__ == "__main__":
     test_dataset.save_local_dataset(f"/home/s2558406/RDS/data/fastmri/brain/multicoil_train_slices_{args.acc}_{args.n_coils}_test{rss}")
 
 # python scripts/generate_fastmri_multicoil_local.py --acc 8
-# python scripts/generate_fastmri_multicoil_local.py --acc 8 --target_method rss
+# python scripts/generate_fastmri_multicoil_local.py --acc 6 --target_method rss
