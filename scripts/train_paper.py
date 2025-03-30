@@ -36,6 +36,7 @@ parser.add_argument("--compare_dagger", action="store_true")
 parser.add_argument("--adj_mc", action="store_true")
 parser.add_argument("--simulated", action="store_true")
 parser.add_argument("--temp_rss", action="store_true")
+parser.add_argument("--simulate_coils", type=int, default=0)
 args = parser.parse_args()
 
 torch.manual_seed(args.global_seed)
@@ -80,8 +81,8 @@ if args.physics == "multicoil":
 
     rss = "_rss" if args.temp_rss else ""
     if args.simulated:
-        train_dataset = SimulatedLocalDataset(f"/home/s2558406/RDS/data/fastmri/brain/multicoil_train_slices_{args.acc}_{args.n_coils}_train{rss}")
-        test_dataset  = SimulatedLocalDataset(f"/home/s2558406/RDS/data/fastmri/brain/multicoil_train_slices_{args.acc}_{args.n_coils}_test{rss}")
+        train_dataset = SimulatedLocalDataset(f"/home/s2558406/RDS/data/fastmri/brain/multicoil_train_slices_{args.acc}_{args.n_coils}_train{rss}", simulate_coils=args.simulate_coils)
+        test_dataset  = SimulatedLocalDataset(f"/home/s2558406/RDS/data/fastmri/brain/multicoil_train_slices_{args.acc}_{args.n_coils}_test{rss}", simulate_coils=args.simulate_coils)
     else:
         train_dataset = dinv.datasets.LocalDataset(f"/home/s2558406/RDS/data/fastmri/brain/multicoil_train_slices_{args.acc}_{args.n_coils}_train{rss}")
         test_dataset  = dinv.datasets.LocalDataset(f"/home/s2558406/RDS/data/fastmri/brain/multicoil_train_slices_{args.acc}_{args.n_coils}_test{rss}")        

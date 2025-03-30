@@ -45,10 +45,19 @@ class AdjMCLoss(MCLoss):
 
 from deepinv.datasets.fastmri import LocalDataset
 class SimulatedLocalDataset(LocalDataset):
+    def __init__(self, *args, simulate_coils=0, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.simulate_coils = simulate_coils
+
     def __getitem__(self, idx):
         x, _, params = super().__getitem__(idx)
         params = {"mask" : params["mask"]} #discard coil_maps
-        physics = MultiCoilMRI(img_size=x.shape[-2:], coil_maps=None, **params)
+        
+        if self.simulate_coils == 0:
+            physics = MultiCoilMRI(img_size=x.shape[-2:], coil_maps=None, **params)
+        else:
+            physics = MultiCoilMRI(img_size=x.shape[-2:], coil_maps=self.simulate_coils, **params)
+
         y = physics(x.unsqueeze(0)).squeeze(0)
         params["coil_maps"] = physics.coil_maps.squeeze(0)
         return x, y, params
