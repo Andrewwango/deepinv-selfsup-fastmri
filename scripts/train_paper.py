@@ -106,8 +106,10 @@ else:
         )
         train_dataset, test_dataset = torch.utils.data.random_split(dataset, (0.8, 0.2), generator=rng_cpu)
     else:
-        train_dataset = dinv.datasets.SimpleFastMRISliceDataset("/home/s2558406/RDS/data/fastmri/brain", file_name="fastmri_brain_singlecoil_filter_train.pt") 
-        test_dataset  = dinv.datasets.SimpleFastMRISliceDataset("/home/s2558406/RDS/data/fastmri/brain", file_name="fastmri_brain_singlecoil_filter_test.pt") 
+        #train_dataset = dinv.datasets.SimpleFastMRISliceDataset("/home/s2558406/RDS/data/fastmri/brain", file_name="fastmri_brain_singlecoil_filter_train.pt") 
+        #test_dataset  = dinv.datasets.SimpleFastMRISliceDataset("/home/s2558406/RDS/data/fastmri/brain", file_name="fastmri_brain_singlecoil_filter_test.pt") 
+        dataset = dinv.datasets.SimpleFastMRISliceDataset("/home/s2558406/RDS/data/fastmri/brain", file_name="fastmri_brain_singlecoil_temp.pt",)
+        train_dataset, test_dataset = torch.utils.data.random_split(dataset, (0.8, 0.2), generator=rng_cpu)
 
     # Simulate and save random measurements
     dataset_path = dinv.datasets.generate_dataset(
