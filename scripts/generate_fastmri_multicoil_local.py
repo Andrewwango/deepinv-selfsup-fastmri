@@ -7,7 +7,7 @@ from deepinv.datasets import FastMRISliceDataset
 from deepinv.datasets.fastmri import FullMultiCoilFastMRITransform
 from deepinv.physics.generator import RandomMaskGenerator
 
-def get_dataset(fnames, mask_generator, img_size, n_coils, slice_index="middle", target_method="A_dagger"):
+def get_dataset(fnames, mask_generator, img_size, slice_index="middle", target_method="A_dagger"):
     return FastMRISliceDataset(
         "/home/s2558406/RDS/data/fastmri/brain/multicoil_train",
         slice_index=slice_index,
@@ -49,11 +49,11 @@ if __name__ == "__main__":
     
     rss = "_rss" if args.target_method == "rss" else ""
 
-    train_dataset = get_dataset(train_fnames, mask_generator, args.img_size, args.n_coils, slice_index="middle", target_method=args.target_method)
+    train_dataset = get_dataset(train_fnames, mask_generator, args.img_size, slice_index="middle", target_method=args.target_method)
     print(len(train_dataset)) #66*3
     train_dataset.save_local_dataset(f"/home/s2558406/RDS/data/fastmri/brain/multicoil_train_slices_{args.acc}_train{rss}")
 
-    test_dataset  = get_dataset(test_fnames,  mask_generator, args.img_size, args.n_coils, slice_index="middle", target_method=args.target_method)
+    test_dataset  = get_dataset(test_fnames,  mask_generator, args.img_size, slice_index="middle", target_method=args.target_method)
     print(len(test_dataset)) #83-66=17
     test_dataset.save_local_dataset(f"/home/s2558406/RDS/data/fastmri/brain/multicoil_train_slices_{args.acc}_test{rss}")
 
