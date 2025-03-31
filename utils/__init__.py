@@ -45,7 +45,7 @@ class AdjMCLoss(MCLoss):
     def forward(self, y, x_net, physics, **kwargs):
         return self.metric(physics.A_adjoint(physics.A(x_net)), physics.A_adjoint(y))
 
-from deepinv.datasets.fastmri import LocalDataset
+from deepinv.datasets.fastmri import LocalDataset, SimpleFastMRISliceDataset
 class SimulatedLocalDataset(LocalDataset):
     def __init__(self, *args, simulate_coils=0, simulated2=False, physics_generator: GaussianMaskGenerator=None, **kwargs):
         super().__init__(*args, **kwargs)
@@ -79,3 +79,24 @@ class SimulatedLocalDataset(LocalDataset):
             params["coil_maps"] = physics.coil_maps.squeeze(0)
         
         return x, y, params
+
+class SimulatedSimpleFastMRISliceDataset(SimpleFastMRISliceDataset):
+    def __init__(self, *args, simulate_coils=0, physics_generator: GaussianMaskGenerator = None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.simulate_coils = simulate_coils
+        self.physics_generator = physics_generator        
+
+    def __getitem__(self, idx):
+        x = super().__getitem__(idx)
+
+        mask = self.physics_generator.step(seed=idx + 10000)["mask"]
+
+        if self.simulate_coils == 0:
+            physics = MultiCoilMRI(img_size=x.shape[-2:], coil_maps=None, mask=mask)
+        else:
+            physics = MultiCoilMRI(img_size=x.shape[-2:], coil_maps=self.simulate_coils, mask=mask)
+
+        y = physics(x.unsqueeze(0)).squeeze(0)
+
+        return x, y, {"mask": mask.squeeze(0), "coil_maps": physics.coil_maps.squeeze(0)}
+
