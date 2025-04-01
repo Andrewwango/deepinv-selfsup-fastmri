@@ -73,8 +73,7 @@ match args.physics:
 denoiser = dinv.models.UNet(2, 2, scales=4, batch_norm=False)
 match args.model:
     case "modl":
-        #model = lambda: dinv.utils.demo.demo_mri_model(denoiser=denoiser, num_iter=args.unroll, device=device).to(device)
-        model = lambda: dinv.utils.demo.demo_mri_model(denoiser=denoiser, num_iter=args.unroll, device=device).to(device)
+        model = lambda: MoDL(denoiser=denoiser, num_iter=args.unroll).to(device)
     case "varnet":
         model = lambda: dinv.models.VarNet(denoiser, num_cascades=args.unroll).to(device)
 

@@ -6,6 +6,7 @@ from .gan import SkipConvDiscriminator
 from .robust_ssdu import RobustSplittingLoss
 from .identity_transform import IdentityTransform
 from .ensure import ENSURELoss
+from .modl import MoDL
 
 from deepinv.loss.metric import PSNR, SSIM, Metric
 from deepinv.physics.mri import MRIMixin, MultiCoilMRI, MRI
