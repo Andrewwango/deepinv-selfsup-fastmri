@@ -1,8 +1,12 @@
 *.onnx
+temp/*
 wandb/*
 !wandb/wandb/
 wandb/wandb/*
 !wandb/wandb/.temp
+models/old/*
+models/paper/*
+models/ambient-diffusion-mri/*
 *.h5
 *.pt
 *.tif
@@ -10,6 +14,8 @@ wandb/wandb/*
 *.pkl
 *.gif
 *.tar.gz
+temp*
+old/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -23,7 +29,6 @@ __pycache__/
 .Python
 build/
 develop-eggs/
-dist/
 downloads/
 eggs/
 .eggs/

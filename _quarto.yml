@@ -1,5 +1,14 @@
-project:
-  output-dir: docs
-
-
-
+format:
+  html:
+    toc: true
+    description: '<a href="https://github.com/Andrewwango/deepinv-selfsup-fastmri/blob/main/demo.ipynb" target="_blank">Open in GitHub</a>.'
+  revealjs:
+    toc: true
+    toc-title: "Agenda"
+    toc-depth: 2
+    slide-level: 3
+    scrollable: true
+    echo: true
+    output: true
+    auto-stretch: false
+    slide-number: true
